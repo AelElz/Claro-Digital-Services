@@ -1,0 +1,70 @@
+/*
+ * --enter is written by the scrub in Formula.jsx: 0 while the panel is still
+ * a viewport away, 1 once it has landed over the hero.
+ */
+.formula .panel__inner {
+  transform: scale(calc(0.86 + var(--enter, 1) * 0.14));
+  transform-origin: 50% 100%;
+  will-change: transform;
+}
+
+.formula__steps {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: clamp(24px, 3.4vw, 56px);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  counter-reset: none;
+}
+
+.formula__step {
+  position: relative;
+  padding-top: clamp(22px, 2.4vw, 32px);
+  border-top: 1px solid var(--card-light-line);
+}
+
+.formula__n {
+  display: block;
+  margin-bottom: clamp(28px, 4vw, 56px);
+  font-size: var(--fs-label);
+  font-weight: 500;
+  color: var(--crimson);
+}
+
+.formula__title {
+  margin: 0 0 12px;
+  font-size: clamp(1.4rem, 2.2vw, 1.85rem);
+  font-weight: 500;
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+}
+
+.formula__body {
+  margin: 0;
+  max-width: 38ch;
+  color: var(--ink-dim);
+}
+
+@media (max-width: 860px) {
+  .formula__steps {
+    grid-template-columns: 1fr;
+    gap: 28px;
+  }
+
+  .formula__n {
+    margin-bottom: 16px;
+  }
+}
+
+@media (max-width: 680px) {
+  .formula .panel__inner {
+    transform: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .formula .panel__inner {
+    transform: none;
+  }
+}

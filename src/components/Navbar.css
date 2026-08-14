@@ -1,0 +1,300 @@
+/*
+ * Fixed liquid-glass pill, full width minus 12px a side. It reads the panel
+ * behind it each frame and swaps palette, so it stays legible crossing from
+ * a dark chapter to a light one.
+ */
+.navbar {
+  position: fixed;
+  top: 12px;
+  left: 12px;
+  right: 12px;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  gap: clamp(12px, 2vw, 28px);
+  height: var(--nav-h);
+  padding: 0 8px 0 clamp(14px, 1.6vw, 22px);
+  border: 1px solid var(--nav-line);
+  border-radius: 999px;
+  background: var(--nav-fill);
+  backdrop-filter: blur(20px) saturate(1.5);
+  -webkit-backdrop-filter: blur(20px) saturate(1.5);
+  color: var(--nav-ink);
+  transition:
+    background-color 0.5s var(--ease-out),
+    border-color 0.5s var(--ease-out),
+    color 0.5s var(--ease-out);
+}
+
+.navbar--dark {
+  --nav-fill: rgba(255, 255, 255, 0.07);
+  --nav-line: rgba(255, 255, 255, 0.14);
+  --nav-ink: var(--white);
+  --nav-ink-dim: var(--white-dim);
+  --nav-pill: rgba(255, 255, 255, 0.92);
+  --nav-pill-ink: var(--ink);
+  --logo-counter: #000;
+}
+
+.navbar--light {
+  --nav-fill: rgba(253, 253, 253, 0.6);
+  --nav-line: rgba(66, 16, 28, 0.12);
+  --nav-ink: var(--ink);
+  --nav-ink-dim: var(--ink-dim);
+  --nav-pill: var(--ink);
+  --nav-pill-ink: var(--off-white);
+  --logo-counter: var(--off-white);
+}
+
+.navbar .logo {
+  --logo-w: 84px;
+  color: var(--nav-ink);
+}
+
+/* ---- Links ----------------------------------------------------------- */
+
+.navbar__links {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  margin-inline: auto;
+}
+
+/*
+ * Position and transition are written imperatively (see place() in
+ * Navbar.jsx). Nothing here may animate `transform`: the pill is centred
+ * with translateY(-50%), and a transform animation replaces that outright,
+ * which drops the pill half its own height mid-animation and snaps it back.
+ */
+.navbar__indicator {
+  position: absolute;
+  top: 50%;
+  left: 0;
+  width: 0;
+  height: 38px;
+  border-radius: 999px;
+  background: var(--nav-pill);
+  transform: translateY(-50%);
+  opacity: 0;
+  pointer-events: none;
+}
+
+.navbar__link {
+  position: relative;
+  z-index: 1;
+  padding: 0 clamp(9px, 0.85vw, 14px);
+  line-height: 38px;
+  font-size: 0.92rem;
+  font-weight: 400;
+  white-space: nowrap;
+  color: var(--nav-ink-dim);
+  transition: color 0.3s var(--ease-out);
+}
+
+.navbar__link:hover {
+  color: var(--nav-ink);
+}
+
+.navbar__link--active {
+  color: var(--nav-pill-ink);
+}
+
+/* ---- Actions --------------------------------------------------------- */
+
+.navbar__actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.navbar__schedule {
+  padding: 0 20px;
+  line-height: 46px;
+  border-radius: 999px;
+  border: 1px solid var(--nav-line);
+  background: var(--nav-fill);
+  font-size: 0.92rem;
+  white-space: nowrap;
+  color: var(--nav-ink);
+  transition:
+    background-color 0.3s var(--ease-out),
+    border-color 0.3s var(--ease-out);
+}
+
+.navbar__schedule:hover {
+  border-color: var(--nav-ink);
+}
+
+.navbar__contact {
+  padding: 0 22px;
+  line-height: 48px;
+  border-radius: 999px;
+  background: var(--grad-contact);
+  font-size: 0.92rem;
+  white-space: nowrap;
+  color: var(--white);
+  transition:
+    box-shadow 0.35s var(--ease-out),
+    transform 0.35s var(--ease-pop);
+}
+
+.navbar__contact:hover,
+.navbar__contact:focus-visible {
+  transform: translateY(-1px);
+  box-shadow:
+    0 0 20px rgba(227, 53, 93, 0.5),
+    0 0 52px rgba(227, 53, 93, 0.28);
+}
+
+/* ---- Mobile ---------------------------------------------------------- */
+
+.navbar__toggle {
+  display: none;
+  align-items: center;
+  gap: 9px;
+  margin-inline-start: auto;
+  padding: 0 16px;
+  line-height: 42px;
+  border: 1px solid var(--nav-line);
+  border-radius: 999px;
+  background: none;
+  font-size: 0.9rem;
+  color: var(--nav-ink);
+}
+
+.navbar__toggle-bars,
+.navbar__toggle-bars::before,
+.navbar__toggle-bars::after {
+  display: block;
+  width: 16px;
+  height: 1.5px;
+  background: currentcolor;
+}
+
+.navbar__toggle-bars {
+  position: relative;
+}
+
+.navbar__toggle-bars::before,
+.navbar__toggle-bars::after {
+  content: '';
+  position: absolute;
+  left: 0;
+}
+
+.navbar__toggle-bars::before {
+  top: -5px;
+}
+
+.navbar__toggle-bars::after {
+  top: 5px;
+}
+
+@media (max-width: 1100px) {
+  .navbar {
+    padding-right: 12px;
+  }
+
+  .navbar__toggle {
+    display: inline-flex;
+  }
+
+  .navbar__links {
+    position: absolute;
+    top: calc(100% + 8px);
+    left: 0;
+    right: 0;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 2px;
+    padding: 10px;
+    border: 1px solid var(--nav-line);
+    border-radius: 24px;
+    background: var(--nav-fill);
+    backdrop-filter: blur(20px) saturate(1.5);
+    -webkit-backdrop-filter: blur(20px) saturate(1.5);
+    opacity: 0;
+    transform: translateY(-8px);
+    pointer-events: none;
+    transition:
+      opacity 0.3s var(--ease-out),
+      transform 0.3s var(--ease-out);
+  }
+
+  .navbar__links--open {
+    opacity: 1;
+    transform: none;
+    pointer-events: auto;
+  }
+
+  /* The sliding pill has nothing to slide along once the list stacks. */
+  .navbar__indicator {
+    display: none;
+  }
+
+  .navbar__link {
+    padding: 0 14px;
+    line-height: 44px;
+    color: var(--nav-ink);
+  }
+
+  .navbar__link--active {
+    background: var(--nav-fill);
+    border-radius: 999px;
+  }
+
+  .navbar__schedule {
+    display: none;
+  }
+}
+
+@media (max-width: 560px) {
+  .navbar .logo {
+    --logo-w: 68px;
+  }
+
+  .navbar__contact {
+    padding: 0 16px;
+    line-height: 42px;
+    font-size: 0.85rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .navbar,
+  .navbar__link,
+  .navbar__contact,
+  .navbar__links {
+    transition: none;
+  }
+}
+
+/*
+ * Sits between the two calls to action as a plain text link, so signing in
+ * reads as available without competing with "Contact Us".
+ */
+.navbar__signin {
+  padding: 0 12px;
+  line-height: 46px;
+  font-size: 0.92rem;
+  white-space: nowrap;
+  color: var(--nav-ink-dim);
+  transition: color 0.3s var(--ease-out);
+}
+
+.navbar__signin:hover {
+  color: var(--nav-ink);
+}
+
+@media (max-width: 1100px) {
+  .navbar__signin {
+    padding: 0 8px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .navbar__signin {
+    transition: none;
+  }
+}

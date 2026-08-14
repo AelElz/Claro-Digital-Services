@@ -1,0 +1,126 @@
+#preloader {
+  position: fixed;
+  inset: 0;
+  z-index: 300;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+}
+
+/*
+ * Owns the tint and the backdrop blur, and is never transformed. A
+ * transformed element resamples its own backdrop every frame, which makes
+ * the blur crawl and shimmer. All the scaling happens on .preloader__mark.
+ */
+.preloader__glass {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, var(--bg-a, 1));
+  backdrop-filter: blur(calc(var(--blur, 0) * 1px)) saturate(var(--sat, 1));
+  -webkit-backdrop-filter: blur(calc(var(--blur, 0) * 1px)) saturate(var(--sat, 1));
+}
+
+.preloader__stage {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 100%;
+  padding: 0 24px;
+}
+
+/* ---- Oversized rings behind the mark -------------------------------- */
+
+.preloader__rings {
+  position: absolute;
+  display: grid;
+  place-items: center;
+  width: min(78vw, 62vh);
+  aspect-ratio: 1;
+  pointer-events: none;
+}
+
+.preloader__rings span {
+  grid-area: 1 / 1;
+  width: calc(var(--r) * 100%);
+  aspect-ratio: 1;
+  border: 1px solid rgba(227, 53, 93, 0.55);
+  border-radius: 50%;
+}
+
+.preloader__rings span:last-child {
+  border-color: rgba(255, 255, 255, 0.14);
+}
+
+/* ---- The three logo states ------------------------------------------ */
+
+.preloader__mark {
+  position: relative;
+  display: grid;
+  --logo-w: min(46vw, 300px);
+  width: var(--logo-w);
+  aspect-ratio: 171 / 108;
+  /*
+   * A single drop-shadow reads as a flat blur. The tight bright core, the
+   * wide soft halo and the brightness lift stacked together are what make
+   * it read as LIT. drop-shadow follows the artwork's alpha, so the glow
+   * haloes the letterforms rather than a bounding box.
+   */
+  filter:
+    drop-shadow(0 0 calc(var(--g1, 0) * 1px) rgba(255, 198, 212, 0.95))
+    drop-shadow(0 0 calc(var(--g2, 0) * 1px) rgba(227, 53, 93, 0.55))
+    brightness(var(--gb, 1))
+    blur(calc(var(--mark-blur, 0) * 1px));
+  will-change: transform, opacity, filter;
+}
+
+.preloader__state {
+  grid-area: 1 / 1;
+  /* Wiped left-to-right: 0% fully visible, 100% fully gone. */
+  clip-path: inset(0 0 0 calc(var(--wipe, 0) * 1%));
+}
+
+.preloader__state .logo {
+  --logo-w: inherit;
+  width: 100%;
+  transition: none;
+}
+
+/* Solid silhouettes: the carve takes the same colour as the field. */
+.preloader__state--white .logo {
+  color: var(--white);
+  --logo-counter: var(--white);
+}
+
+.preloader__state--crimson .logo {
+  color: var(--crimson);
+  --logo-counter: var(--crimson);
+}
+
+.preloader__state--real .logo {
+  color: var(--white);
+  --logo-counter: #000;
+}
+
+/* ---- Label ----------------------------------------------------------- */
+
+.preloader__tagline {
+  position: absolute;
+  top: calc(50% + min(14vw, 96px));
+  margin: 0;
+  font-size: clamp(0.8rem, 1.5vw, 1rem);
+  font-weight: 400;
+  letter-spacing: 0.06em;
+  white-space: nowrap;
+  color: var(--white-dim);
+}
+
+.preloader__tagline span {
+  display: inline-block;
+  white-space: pre;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #preloader {
+    display: none;
+  }
+}

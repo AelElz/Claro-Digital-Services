@@ -1,0 +1,118 @@
+.services__list {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: clamp(8px, 1vw, 16px);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/*
+ * A quiet card, not a fill row. Hover lifts it, brightens the edge and warms
+ * the surface, the same restrained language as the primary button, so the
+ * card reads as something you open rather than something that reacts.
+ */
+.services__row {
+  display: block;
+  width: 100%;
+  height: 100%;
+  padding: clamp(18px, 2.2vw, 30px) clamp(20px, 2.4vw, 34px);
+  border: 1px solid var(--card-line);
+  border-radius: 20px;
+  background: var(--card);
+  transition:
+    transform 0.45s var(--ease-out),
+    border-color 0.45s var(--ease-out),
+    background-color 0.45s var(--ease-out),
+    box-shadow 0.45s var(--ease-out);
+}
+
+@media (pointer: fine) {
+  .services__row:hover {
+    transform: translateY(-4px);
+    border-color: rgba(227, 53, 93, 0.55);
+    background: rgba(255, 255, 255, 0.075);
+    box-shadow:
+      0 0 0 1px rgba(227, 53, 93, 0.16),
+      0 18px 44px rgba(0, 0, 0, 0.45),
+      0 0 46px rgba(227, 53, 93, 0.16);
+  }
+}
+
+.services__row:focus-visible {
+  outline: 2px solid var(--crimson);
+  outline-offset: 3px;
+}
+
+.services__text {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.services__kicker {
+  font-size: var(--fs-label);
+  font-weight: 500;
+  color: var(--crimson);
+}
+
+.services__title {
+  margin-top: clamp(24px, 3.2vw, 44px);
+  font-size: clamp(1.35rem, 2.3vw, 1.95rem);
+  font-weight: 500;
+  line-height: 1.14;
+  letter-spacing: -0.02em;
+  color: var(--white);
+}
+
+.services__body {
+  margin-top: 14px;
+  max-width: 42ch;
+  color: var(--white-dim);
+}
+
+.services__cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  margin-top: auto;
+  padding-top: clamp(22px, 2.6vw, 34px);
+  font-size: 0.95rem;
+  color: var(--white-faint);
+}
+
+.services__cta svg {
+  transition: transform 0.4s var(--ease-out);
+}
+
+@media (pointer: fine) {
+  .services__row:hover .services__cta {
+    color: var(--white);
+  }
+
+  .services__row:hover .services__cta svg {
+    transform: translateX(4px);
+  }
+}
+
+@media (max-width: 860px) {
+  .services__list {
+    grid-template-columns: 1fr;
+  }
+
+  .services__title {
+    margin-top: 18px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .services__row,
+  .services__cta,
+  .services__cta svg {
+    transition: none;
+  }
+
+  .services__row:hover {
+    transform: none;
+  }
+}

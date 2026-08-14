@@ -1,0 +1,6 @@
+.mark {
+  display: block;
+  flex: none;
+  /* Native proportions of the symbol, 34.2285 x 30.6876. */
+  aspect-ratio: 34.2285 / 30.6876;
+}

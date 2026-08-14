@@ -1,0 +1,193 @@
+.testimonial__body {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.05fr);
+  gap: clamp(32px, 5vw, 72px);
+  align-items: center;
+}
+
+.testimonial__quote-col {
+  min-width: 0;
+}
+
+.testimonial__figure {
+  position: relative;
+  margin: 0;
+}
+
+.testimonial__quote {
+  position: relative;
+  margin: 0;
+  max-width: 24ch;
+  font-size: clamp(1.4rem, 2.9vw, 2.4rem);
+  font-weight: 400;
+  line-height: 1.24;
+  letter-spacing: -0.02em;
+  text-wrap: balance;
+}
+
+.testimonial__caption {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 8px 18px;
+  margin-top: clamp(22px, 2.8vw, 34px);
+}
+
+.testimonial__author {
+  font-size: 1.15rem;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+}
+
+.testimonial__role {
+  font-size: var(--fs-label);
+  font-weight: 500;
+  color: var(--ink-faint);
+}
+
+/* ---- The delivery metric --------------------------------------------- */
+
+.testimonial__metric {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 14px clamp(18px, 2.6vw, 30px);
+  margin-top: clamp(32px, 4vw, 52px);
+  padding-top: clamp(22px, 2.6vw, 32px);
+  border-top: 1px solid var(--card-light-line);
+}
+
+.testimonial__metric-value {
+  font-size: clamp(1.7rem, 3.2vw, 2.5rem);
+  font-weight: 500;
+  line-height: 1;
+  letter-spacing: -0.03em;
+  color: var(--crimson);
+}
+
+.testimonial__metric-label {
+  max-width: 30ch;
+  color: var(--ink-dim);
+}
+
+/* =====================================================================
+ * The client's page, with a label that rides the pointer
+ * ===================================================================== */
+
+.shot {
+  position: relative;
+  display: block;
+  overflow: hidden;
+  border: 1px solid var(--card-light-line);
+  border-radius: 20px;
+  background: var(--card-light);
+  /* Matches the asset, so the row reserves its space before the image
+     decodes and nothing jumps when it arrives. */
+  aspect-ratio: 1600 / 835;
+  box-shadow: 0 24px 60px rgba(66, 16, 28, 0.14);
+  transition:
+    transform 0.6s var(--ease-out),
+    box-shadow 0.6s var(--ease-out);
+}
+
+.shot__img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: top center;
+  transition: transform 0.9s var(--ease-out);
+}
+
+/* ---- The cursor label ------------------------------------------------ */
+
+.shot__cursor {
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 2;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 11px 18px;
+  border-radius: 999px;
+  background: var(--grad-contact);
+  font-size: 0.92rem;
+  font-weight: 500;
+  white-space: nowrap;
+  color: var(--white);
+  pointer-events: none;
+  box-shadow: 0 8px 26px rgba(227, 53, 93, 0.4);
+  /*
+   * JS writes the translate on every pointer move; this transition is what
+   * makes the label trail rather than snap. scale and opacity are separate
+   * properties, not part of the transform, so the follow and the entrance
+   * never overwrite each other.
+   */
+  opacity: 0;
+  scale: 0.55;
+  transition:
+    transform 0.19s var(--ease-out),
+    opacity 0.28s var(--ease-out),
+    scale 0.36s var(--ease-pop);
+}
+
+/*
+ * Only this element swaps the cursor. The rest of the site keeps the normal
+ * pointer, so the swap reads as a property of the screenshot rather than a
+ * site-wide affectation.
+ */
+@media (pointer: fine) {
+  .shot:hover {
+    cursor: none;
+    transform: translateY(-3px);
+    box-shadow: 0 32px 72px rgba(66, 16, 28, 0.22);
+  }
+
+  .shot:hover .shot__img {
+    transform: scale(1.03);
+  }
+
+  .shot.is-live .shot__cursor {
+    opacity: 1;
+    scale: 1;
+  }
+}
+
+/* Keyboard users get the label parked in the corner instead. */
+.shot:focus-visible {
+  outline: 2px solid var(--crimson);
+  outline-offset: 4px;
+}
+
+.shot:focus-visible .shot__cursor {
+  opacity: 1;
+  scale: 1;
+  transform: translate3d(50%, 50%, 0) translate(-50%, -50%);
+}
+
+@media (max-width: 900px) {
+  .testimonial__body {
+    grid-template-columns: 1fr;
+  }
+
+  .testimonial__quote {
+    max-width: 32ch;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .shot,
+  .shot__img,
+  .shot__cursor {
+    transition: none;
+  }
+
+  .shot:hover {
+    transform: none;
+  }
+
+  .shot:hover .shot__img {
+    transform: none;
+  }
+}

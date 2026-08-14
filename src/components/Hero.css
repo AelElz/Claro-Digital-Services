@@ -1,0 +1,239 @@
+/*
+ * No justify-content override here. The panel is taller than the viewport so
+ * it can dwell; centring the scene in the panel box would drop it to 77svh
+ * and push the name below the fold. .panel__inner is one viewport tall and
+ * sits at the top, so it centres on screen while the panel is pinned.
+ */
+.hero {
+  text-align: center;
+  /* Full-strength grain here: it sits over the lit canvas, not over text. */
+  --grain-opacity: 0.19;
+}
+
+/*
+ * One viewport tall, not the full panel. The panel carries ~55svh of dwell
+ * below the fold that is never on screen, and stretching the canvas over it
+ * meant painting half again as many pixels every frame for nothing.
+ */
+.hero__bg {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 100svh;
+  z-index: 0;
+}
+
+/*
+ * --p is the hero's scroll progress, written once a frame by the scrub. The
+ * content lifts and dissolves while the curtain behind it pushes back, so
+ * the two planes come apart in depth.
+ */
+.hero__inner {
+  opacity: calc(1 - var(--p, 0) * 1.15);
+  transform: translate3d(0, calc(var(--p, 0) * -70px), 0);
+  will-change: transform, opacity;
+}
+
+.hero__content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.hero__eyebrow {
+  color: rgba(255, 255, 255, 0.72);
+  animation: hero-in 0.9s var(--ease-out) 0.05s backwards;
+}
+
+/* ---- The name -------------------------------------------------------- */
+
+.hero__name {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0 0.24em;
+  margin: 0;
+  font-size: var(--fs-hero);
+  font-weight: 500;
+  line-height: 0.98;
+  letter-spacing: -0.03em;
+  color: var(--white);
+}
+
+/*
+ * Each word rises out of its own clipped box, so the letters appear from
+ * behind the line above rather than fading in place.
+ */
+.hero__word {
+  display: block;
+  overflow: hidden;
+  padding-block: 0.06em;
+  margin-block: -0.06em;
+}
+
+.hero__word > span {
+  display: block;
+  animation: hero-rise 1.05s var(--ease-out) backwards;
+}
+
+.hero__word:nth-child(1) > span {
+  animation-delay: 0.15s;
+}
+
+.hero__word:nth-child(2) > span {
+  animation-delay: 0.26s;
+}
+
+.hero__tagline {
+  margin: clamp(14px, 1.6vw, 22px) 0 0;
+  font-size: clamp(1.15rem, 2.4vw, 1.9rem);
+  font-weight: 400;
+  line-height: 1.2;
+  letter-spacing: -0.02em;
+  color: var(--crimson);
+  animation: hero-in 0.9s var(--ease-out) 0.4s backwards;
+}
+
+.hero__subtitle {
+  max-width: 46ch;
+  margin: clamp(16px, 1.8vw, 24px) 0 0;
+  font-size: var(--fs-lede);
+  line-height: 1.55;
+  color: var(--white-dim);
+  animation: hero-in 0.9s var(--ease-out) 0.5s backwards;
+}
+
+.hero__actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 12px;
+  margin-top: clamp(28px, 3.4vw, 44px);
+  animation: hero-in 0.9s var(--ease-out) 0.6s backwards;
+}
+
+/* ---- Stats ----------------------------------------------------------- */
+
+.hero__stats {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: clamp(28px, 5vw, 72px);
+  margin: clamp(44px, 6vw, 80px) 0 0;
+  animation: hero-in 0.9s var(--ease-out) 0.72s backwards;
+}
+
+.hero__stat dt {
+  font-size: clamp(1.7rem, 3.2vw, 2.6rem);
+  font-weight: 500;
+  line-height: 1;
+  letter-spacing: -0.03em;
+  color: var(--white);
+}
+
+.hero__stat dt span {
+  color: var(--crimson);
+}
+
+.hero__stat dd {
+  margin: 8px 0 0;
+  font-size: var(--fs-label);
+  font-weight: 400;
+  color: var(--white-faint);
+}
+
+/* ---- Scroll cue ------------------------------------------------------ */
+
+/*
+ * Anchored to the first viewport of the panel, not its bottom. The panel is
+ * taller than the screen now, so `bottom` would park the cue off-screen.
+ */
+.hero__cue {
+  position: absolute;
+  left: 50%;
+  top: calc(100svh - 82px);
+  z-index: 2;
+  display: block;
+  width: 1px;
+  height: 54px;
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.14);
+  transform: translateX(-50%);
+}
+
+.hero__cue span {
+  display: block;
+  width: 100%;
+  height: 40%;
+  background: var(--crimson);
+  animation: hero-cue 2.1s var(--ease-out) infinite;
+}
+
+@keyframes hero-cue {
+  0% {
+    transform: translateY(-100%);
+  }
+  60%,
+  100% {
+    transform: translateY(250%);
+  }
+}
+
+@keyframes hero-rise {
+  from {
+    transform: translateY(105%);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+
+@keyframes hero-in {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@media (max-width: 680px) {
+  .hero {
+    min-height: 100svh;
+  }
+
+  .hero__inner {
+    /* No sticky stack on mobile, so nothing scrubs, keep it legible. */
+    opacity: 1;
+    transform: none;
+  }
+
+  .hero__stats {
+    gap: 24px 36px;
+  }
+
+  /* The panel is content-height here, so there is no fixed spot for it. */
+  .hero__cue {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero__eyebrow,
+  .hero__word > span,
+  .hero__tagline,
+  .hero__subtitle,
+  .hero__actions,
+  .hero__stats,
+  .hero__cue span {
+    animation: none;
+  }
+
+  .hero__inner {
+    opacity: 1;
+    transform: none;
+  }
+}

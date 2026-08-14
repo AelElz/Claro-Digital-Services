@@ -1,0 +1,702 @@
+/*
+ * Claro Digital design system.
+ *
+ * Palette is the one sampled from the Figma "Landing Page" frame; the layout
+ * and motion vocabulary follow the Beyondex port brief: alternating
+ * dark/light chapters, sticky layer-over-layer depth, glass nav, film grain,
+ * progressive-blur edges.
+ */
+
+:root {
+  /* ---- Palette. Three anchors plus the two gradients. ---------------- */
+  --black: #000;
+  --white: #fff;
+  --off-white: #fdfdfd;
+
+  /* Dark maroon, text on light panels, deepest tone on dark ones. */
+  --ink: #42101c;
+  --crimson: #e3355d;
+  --wine: #7d1d33;
+  --plum: #a82947;
+
+  /* Secondary text, per surface. */
+  --white-dim: rgba(255, 255, 255, 0.64);
+  --ink-dim: rgba(66, 16, 28, 0.64);
+  --white-faint: rgba(255, 255, 255, 0.38);
+  --ink-faint: rgba(66, 16, 28, 0.42);
+
+  /* Glass. The nav's 50% white is far too bright away from the light, so
+     cards on dark surfaces get their own much dimmer value. */
+  --glass: rgba(255, 255, 255, 0.5);
+  --card: rgba(255, 255, 255, 0.055);
+  --card-line: rgba(255, 255, 255, 0.13);
+  --card-light: rgba(66, 16, 28, 0.04);
+  --card-light-line: rgba(66, 16, 28, 0.12);
+
+  --grad-contact: linear-gradient(to right, var(--wine) 0%, var(--crimson) 100%);
+  --grad-cta: linear-gradient(to right, var(--ink) 0%, var(--plum) 155.18%);
+
+  /* ---- Type ----------------------------------------------------------
+   *
+   * One typeface for the entire page. Bodoni is loaded for the logo
+   * wordmark only, because that IS the Claro mark; nothing else uses it.
+   * Labels stay in the same family, size and case as body copy: uppercase
+   * with wide tracking reads as a second typeface and cheapens the page.
+   */
+  --font-sans: 'Inter Tight', system-ui, 'Segoe UI', Roboto, sans-serif;
+  --font-logo: 'Bodoni Moda', Georgia, 'Times New Roman', serif;
+
+  /* Fluid throughout. Only two weights are ever used, 400 and 500. */
+  --fs-hero: clamp(3.2rem, 10.5vw, 9.5rem);
+  --fs-title: clamp(2rem, 4.6vw, 3.9rem);
+  --fs-lede: clamp(1.15rem, 1.75vw, 1.5rem);
+  --fs-body: clamp(1.05rem, 1.3vw, 1.2rem);
+  --fs-label: clamp(0.95rem, 1.05vw, 1.05rem);
+
+  /* ---- Layout -------------------------------------------------------- */
+  --container: 1240px;
+  --pad-x: clamp(20px, 4vw, 48px);
+  --nav-h: 64px;
+
+  /* ---- Motion -------------------------------------------------------- */
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-pop: cubic-bezier(0.34, 1.4, 0.64, 1);
+
+  /* Film-grain tile, one small repeating feTurbulence square. */
+  --grain-tile: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.82' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23n)' opacity='0.45'/%3E%3C/svg%3E");
+
+  color-scheme: dark;
+  font-family: var(--font-sans);
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+/*
+ * `position: sticky` is silently ignored when ANY ancestor scrolls or clips,
+ * so html/body must stay free of overflow-x. The panel stack is the whole
+ * depth effect and it fails with no error, so this is load-bearing.
+ */
+html {
+  scrollbar-width: none;
+}
+
+html::-webkit-scrollbar {
+  display: none;
+}
+
+body {
+  margin: 0;
+  background: var(--black);
+  color: var(--white);
+  font-size: var(--fs-body);
+  line-height: 1.55;
+}
+
+/* Lenis drives the scroll; it needs the native scrollbar to stay live. */
+html.lenis,
+html.lenis body {
+  height: auto;
+}
+
+.lenis.lenis-smooth {
+  scroll-behavior: auto !important;
+}
+
+#root {
+  min-height: 100svh;
+}
+
+button {
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+img {
+  max-width: 100%;
+}
+
+/* Hidden until the intro hands over, so nothing flashes behind the glass. */
+html.is-loading,
+html.is-loading body {
+  overflow: hidden;
+}
+
+.container {
+  width: min(var(--container), 100% - 2 * var(--pad-x));
+  margin-inline: auto;
+}
+
+/* =====================================================================
+ * Panel stack
+ *
+ * Sections alternate dark/light and each is sticky, so later panels slide
+ * OVER earlier ones while the covered panel dims underneath. JS assigns the
+ * ascending z-index and the sticky offset (see usePanelStack).
+ * ===================================================================== */
+
+/*
+ * Because every panel pins, a chapter stays on screen for exactly its own
+ * height of scrolling: at 100svh each one is covered the moment you start
+ * reading it. The extra --dwell is empty scroll distance that holds the
+ * pinned chapter in place long enough to actually read it.
+ */
+.panel {
+  position: relative;
+  min-height: calc(100svh + var(--dwell, 55svh));
+  overflow: clip;
+  display: flex;
+  flex-direction: column;
+  /*
+   * flex-start, not center. The panel is taller than the viewport now, so
+   * centring in the panel box would push the content below the fold while
+   * the panel is pinned at the top. The inner carries the centring instead.
+   */
+  justify-content: flex-start;
+}
+
+/*
+ * The last panel gets no dwell.
+ *
+ * Dwell is empty space below a panel's content, and it is invisible for
+ * every other panel because the next one pins over it before it can scroll
+ * into view. The last panel has nothing above it in the stack and, being
+ * main's final child, no room to pin either: its sticky range is zero, so it
+ * scrolls normally and that empty space rides up the bottom of the screen as
+ * a growing black band before the footer arrives.
+ */
+.panel:last-child {
+  min-height: 100svh;
+}
+
+.panel--dark {
+  background: var(--black);
+  color: var(--white);
+  /* The colour the symbol's spiral is carved back out in. */
+  --logo-counter: var(--black);
+}
+
+.panel--light {
+  background: var(--off-white);
+  color: var(--ink);
+  --logo-counter: var(--off-white);
+}
+
+/*
+ * The visible scene: exactly one viewport tall and sitting at the top of the
+ * panel, so it is centred on screen for the whole time the panel is pinned.
+ */
+.panel__inner {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  width: 100%;
+  min-height: 100svh;
+  padding-block: clamp(96px, 12vh, 160px);
+}
+
+/*
+ * Dims the panel as the next one covers it. Opacity is driven from JS
+ * (--shade) so it tracks scroll position rather than a fixed duration.
+ */
+.panel__shade {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  pointer-events: none;
+  opacity: var(--shade, 0);
+  background: var(--black);
+}
+
+.panel--light .panel__shade {
+  background: var(--ink);
+}
+
+/* ---- Film grain, dark panels only, never on the off-white ---------- */
+.panel--dark .panel__grain {
+  position: absolute;
+  /*
+   * Negative, not 0, and a percentage of the panel rather than a fixed
+   * height. A parent-sized layer drags its own edge into frame when it
+   * translates and sweeps a visible seam across the section.
+   *
+   * The margin must scale with the panel. Pinning it to a viewport height
+   * left the layer short of a 155svh panel, and the grain simply stopped
+   * partway down: a hard horizontal edge between textured and flat black,
+   * which slid up and down as the panel settled into its sticky offset.
+   *
+   * -14% is 1.6x the panel's area, against 4x at the original -50%, and
+   * still twice the 5% drift in the keyframes, so no edge can reach frame.
+   */
+  inset: -14%;
+  z-index: 1;
+  pointer-events: none;
+  /*
+   * Much lighter on the text chapters than in the hero. Grain re-seeds
+   * roughly seven times a second, which is what makes it read as film: over
+   * the hero's lit canvas that is texture, but over flat black behind body
+   * copy the same strength reads as the panel strobing.
+   */
+  opacity: var(--grain-opacity, 0.07);
+  background-image: var(--grain-tile);
+  /*
+   * steps(1, end), not a smooth ease. Interpolating makes the grain slide
+   * like a texture; stepping re-seeds it each frame, which is what actually
+   * reads as film grain.
+   */
+  animation: grain-shift 0.7s steps(1, end) infinite;
+}
+
+@keyframes grain-shift {
+  0% {
+    transform: translate(0, 0);
+  }
+  20% {
+    transform: translate(-4%, 3%);
+  }
+  40% {
+    transform: translate(3%, -5%);
+  }
+  60% {
+    transform: translate(-2%, -3%);
+  }
+  80% {
+    transform: translate(4%, 2%);
+  }
+}
+
+/* =====================================================================
+ * Progressive-blur edges
+ *
+ * Three stacked layers, each a heavier blur over a shorter mask, so the edge
+ * dissolves instead of ending in a hard band. Blur and saturation ONLY, a
+ * white gradient "sheen" on top reads as a translucent white rectangle.
+ * Glass has to come from refracting what is behind it, never from painting
+ * over it.
+ * ===================================================================== */
+
+.edge-blur {
+  position: fixed;
+  left: 0;
+  right: 0;
+  height: 120px;
+  z-index: 60;
+  pointer-events: none;
+  backdrop-filter: blur(3px) saturate(1.25);
+  -webkit-backdrop-filter: blur(3px) saturate(1.25);
+}
+
+.edge-blur::before,
+.edge-blur::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+}
+
+.edge-blur::before {
+  backdrop-filter: blur(10px) saturate(1.4);
+  -webkit-backdrop-filter: blur(10px) saturate(1.4);
+}
+
+.edge-blur::after {
+  backdrop-filter: blur(26px) saturate(1.5);
+  -webkit-backdrop-filter: blur(26px) saturate(1.5);
+}
+
+.edge-blur--top {
+  top: 0;
+  mask-image: linear-gradient(to bottom, #000 30%, transparent 100%);
+  -webkit-mask-image: linear-gradient(to bottom, #000 30%, transparent 100%);
+}
+
+.edge-blur--top::before {
+  mask-image: linear-gradient(to bottom, #000 14%, transparent 64%);
+  -webkit-mask-image: linear-gradient(to bottom, #000 14%, transparent 64%);
+}
+
+.edge-blur--top::after {
+  mask-image: linear-gradient(to bottom, #000 0%, transparent 38%);
+  -webkit-mask-image: linear-gradient(to bottom, #000 0%, transparent 38%);
+}
+
+/*
+ * The bottom edge gets a single pass, not three.
+ *
+ * Each backdrop-filter layer re-samples everything painted behind it on
+ * every frame, and six full-width passes was the largest single cost while
+ * scrolling. The top edge keeps its three, because that is the one sitting
+ * under the nav where the glass actually reads; down here one heavier blur
+ * over a longer mask is indistinguishable and costs a third as much.
+ */
+.edge-blur--bottom {
+  bottom: 0;
+  height: 96px;
+  backdrop-filter: blur(14px) saturate(1.4);
+  -webkit-backdrop-filter: blur(14px) saturate(1.4);
+  mask-image: linear-gradient(to top, #000 10%, transparent 100%);
+  -webkit-mask-image: linear-gradient(to top, #000 10%, transparent 100%);
+}
+
+.edge-blur--bottom::before,
+.edge-blur--bottom::after {
+  display: none;
+}
+
+/* =====================================================================
+ * Shared type + reveal primitives
+ * ===================================================================== */
+
+/*
+ * Eyebrow: the Claro spiral mark inline before the text, same family and
+ * size as body copy. Uppercase with wide tracking reads as a different
+ * typeface and cheapens it, so the mark carries the emphasis instead.
+ */
+.eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6em;
+  margin: 0 0 clamp(18px, 2.4vw, 28px);
+  font-size: var(--fs-label);
+  font-weight: 500;
+  color: var(--crimson);
+}
+
+.eyebrow__mark {
+  width: 1.1em;
+  color: var(--crimson);
+}
+
+.section-title {
+  margin: 0;
+  font-size: var(--fs-title);
+  font-weight: 500;
+  line-height: 1.06;
+  /*
+   * Large type looks indented next to small type even when the CSS boxes
+   * match, because glyph side bearing scales with size. Corrected in `em`
+   * so it holds across the clamp, and logical so RTL corrects the far edge.
+   */
+  margin-inline-start: -0.045em;
+  letter-spacing: -0.02em;
+}
+
+.section-lede {
+  max-width: 46ch;
+  margin: clamp(18px, 2vw, 26px) 0 0;
+  font-size: var(--fs-lede);
+  line-height: 1.55;
+  color: var(--white-dim);
+}
+
+.panel--light .section-lede {
+  color: var(--ink-dim);
+}
+
+/* IntersectionObserver toggles .is-in; --i staggers children. */
+.reveal {
+  opacity: 0;
+  transform: translateY(22px);
+  transition:
+    opacity 0.8s var(--ease-out),
+    transform 0.8s var(--ease-out);
+  transition-delay: calc(var(--i, 0) * 90ms);
+}
+
+.reveal.is-in {
+  opacity: 1;
+  transform: none;
+}
+
+/* =====================================================================
+ * Buttons
+ * ===================================================================== */
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 14px;
+  height: 56px;
+  padding: 0 8px 0 26px;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  font-size: 1rem;
+  font-weight: 400;
+  white-space: nowrap;
+  transition:
+    box-shadow 0.35s var(--ease-out),
+    border-color 0.35s var(--ease-out),
+    background-color 0.35s var(--ease-out),
+    transform 0.35s var(--ease-pop);
+}
+
+.btn--primary {
+  border-color: rgba(255, 255, 255, 0.6);
+  background: var(--grad-cta);
+  color: var(--white);
+}
+
+.btn--primary:hover,
+.btn--primary:focus-visible {
+  border-color: rgba(255, 255, 255, 0.95);
+  transform: translateY(-2px);
+  box-shadow:
+    0 0 0 1px rgba(227, 53, 93, 0.35),
+    0 0 22px rgba(227, 53, 93, 0.55),
+    0 0 60px rgba(227, 53, 93, 0.35),
+    0 0 110px rgba(227, 53, 93, 0.2);
+}
+
+.btn__icon {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 42px;
+  height: 40px;
+  border-radius: 999px;
+  background: var(--off-white);
+  color: var(--ink);
+  transition: transform 0.35s var(--ease-pop);
+}
+
+.btn:hover .btn__icon {
+  transform: translateX(3px);
+}
+
+.btn--ghost {
+  padding-inline: 26px;
+  border-color: rgba(255, 255, 255, 0.28);
+  color: var(--white);
+}
+
+.btn--ghost:hover,
+.btn--ghost:focus-visible {
+  border-color: rgba(255, 255, 255, 0.7);
+  background: rgba(255, 255, 255, 0.06);
+  transform: translateY(-2px);
+}
+
+.panel--light .btn--ghost {
+  border-color: rgba(66, 16, 28, 0.24);
+  color: var(--ink);
+}
+
+.panel--light .btn--ghost:hover,
+.panel--light .btn--ghost:focus-visible {
+  border-color: rgba(66, 16, 28, 0.6);
+  background: rgba(66, 16, 28, 0.05);
+}
+
+.btn:active {
+  transform: translateY(0);
+}
+
+/* =====================================================================
+ * Circular hover reveal
+ *
+ * Rows fill on hover, always sweeping out from the left edge.
+ * useCircularReveal publishes --s; everything below is CSS.
+ *
+ * The disc is a FIXED 400px element scaled up to whatever diameter is
+ * needed to reach the row's far corner, rather than an element built at
+ * that diameter. Both look identical, but the compositor rasterises a layer
+ * at its own size and then scales the result on the GPU: sizing the element
+ * to fit a full-width row meant rasterising ~2500x2500 to show a 1200x110
+ * sliver of it, which is what made these sections judder. At 400px that is
+ * about a fortieth of the pixels, and the fill still covers the whole row.
+ * The mesh gradient goes softer as it scales, which on an abstract wash is
+ * not a loss worth paying for.
+ * ===================================================================== */
+
+:root {
+  --fill-size: 800px;
+}
+
+.reveal-row {
+  position: relative;
+  display: block;
+  /*
+   * fit-content, so the fill ends where the text ends rather than running
+   * out to the column edge.
+   */
+  width: fit-content;
+  max-width: 100%;
+  padding: clamp(18px, 2.2vw, 30px) clamp(20px, 2.4vw, 34px);
+  border-radius: 20px;
+  /*
+   * The fill circle is sized to reach the row's farthest corner, so it is
+   * always larger than the row. Without this it escapes and sweeps a huge
+   * disc across the page.
+   */
+  overflow: hidden;
+  isolation: isolate;
+  transition: transform 0.62s var(--ease-out);
+}
+
+.reveal-row__fill {
+  position: absolute;
+  /*
+   * Centred on the left edge at mid height. Fixed, not the pointer's entry
+   * point: the fill always sweeps left to right, so the gesture is the same
+   * every time regardless of which way the cursor came in.
+   */
+  left: 0;
+  top: 50%;
+  z-index: 0;
+  width: var(--fill-size);
+  height: var(--fill-size);
+  margin-left: calc(var(--fill-size) / -2);
+  margin-top: calc(var(--fill-size) / -2);
+  border-radius: 50%;
+  transform: scale(0);
+  transition: transform 0.62s var(--ease-out);
+  pointer-events: none;
+  /*
+   * A mesh of four offset blooms over the base wine, not a flat fill, flat
+   * colour at this size reads as a plastic swatch.
+   *
+   * Every stop stays inside the crimson family. One of these blooms used to
+   * be --ink at 95%, which is nearly black: scaled up over a dark card it
+   * swept a large black smear across the row on hover, which read as the
+   * panel glitching rather than as a fill.
+   */
+  background:
+    radial-gradient(circle at 30% 25%, rgba(227, 53, 93, 0.95), transparent 55%),
+    radial-gradient(circle at 74% 30%, rgba(168, 41, 71, 0.9), transparent 52%),
+    radial-gradient(circle at 24% 76%, rgba(125, 29, 51, 0.95), transparent 58%),
+    radial-gradient(circle at 80% 78%, rgba(227, 53, 93, 0.75), transparent 55%),
+    var(--wine);
+}
+
+/* Sits above the fill, which shares the same stacking context. */
+.reveal-row__text {
+  position: relative;
+  z-index: 1;
+}
+
+@media (pointer: fine) {
+  /*
+   * Only the small fit-content rows scale. On a full-width card or table row
+   * the same 1.035 lifts a very large box, which re-rasterises its text and
+   * its border every frame and reads as a judder rather than a lift.
+   */
+  .reveal-row:not(.reveal-row--block):hover {
+    transform: scale(1.035);
+  }
+
+  /*
+   * --s is how far the fixed-size disc has to grow to reach the far corner.
+   *
+   * No will-change. Promoting the disc on hover means the compositor spins
+   * up a fresh layer, and one clipped by the row's rounded corners, at the
+   * exact moment it also has to scale it: the row flashes black for a frame
+   * or two while that rasterises. The disc animates a plain transform, which
+   * the compositor already handles without the hint.
+   */
+  .reveal-row:hover .reveal-row__fill {
+    transform: scale(var(--s, 1));
+  }
+
+  /* Wide rows travel further, so the fill needs longer to feel unhurried. */
+  .reveal-row--block .reveal-row__fill {
+    transition-duration: 0.8s;
+  }
+
+  /* Text follows the fill a beat later, so it never flips on bare surface. */
+  .reveal-row__text {
+    transition: color 0.4s var(--ease-out) 0.1s;
+  }
+
+  .reveal-row:hover .reveal-row__text,
+  .reveal-row:hover .reveal-row__text * {
+    color: var(--off-white);
+  }
+}
+
+/* Keyboard users get the same state without the pointer geometry. */
+.reveal-row:focus-visible {
+  outline: 2px solid var(--crimson);
+  outline-offset: 4px;
+}
+
+/* =====================================================================
+ * Reduced motion, every animated thing needs a static fallback.
+ * ===================================================================== */
+
+@media (prefers-reduced-motion: reduce) {
+  .panel__grain {
+    animation: none;
+  }
+
+  .reveal {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+
+  .btn,
+  .btn__icon {
+    transition: none;
+  }
+
+  .btn:hover,
+  .btn:focus-visible {
+    transform: none;
+  }
+
+  .reveal-row,
+  .reveal-row__fill,
+  .reveal-row__text {
+    transition: none;
+  }
+
+  .reveal-row:hover {
+    transform: none;
+  }
+}
+
+/* =====================================================================
+ * Mobile, the sticky stack is desktop-only.
+ * ===================================================================== */
+
+@media (max-width: 680px) {
+  .panel {
+    /*
+     * JS clears the inline `top` when it drops out of sticky. A leftover
+     * `top` on a relative element offsets it and tears holes between
+     * sections.
+     */
+    position: relative;
+    /* Nothing pins here, so the dwell would just be dead empty space. */
+    min-height: auto;
+  }
+
+  .panel__inner {
+    min-height: auto;
+    padding-block: clamp(72px, 12vh, 104px);
+  }
+
+  .panel__shade {
+    display: none;
+  }
+
+  .edge-blur {
+    height: 72px;
+  }
+
+  .edge-blur--bottom {
+    display: none;
+  }
+}

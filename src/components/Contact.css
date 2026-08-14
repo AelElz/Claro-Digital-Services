@@ -1,0 +1,117 @@
+.contact__display {
+  margin: 0;
+  font-size: clamp(3.4rem, 13vw, 11rem);
+  font-weight: 500;
+  line-height: 0.92;
+  letter-spacing: -0.04em;
+  /* Optical correction, the glyph side bearing on display type is wide
+     enough to read as an indent next to the eyebrow above it. */
+  margin-inline-start: -0.05em;
+  background: linear-gradient(
+    100deg,
+    var(--white) 0%,
+    var(--white) 38%,
+    var(--crimson) 78%,
+    var(--plum) 100%
+  );
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* ---- Ticker ---------------------------------------------------------- */
+
+.contact__marquee {
+  overflow: hidden;
+  margin: clamp(26px, 3.4vw, 44px) 0 clamp(56px, 7vw, 96px);
+  padding-block: 14px;
+  border-block: 1px solid var(--card-line);
+  mask-image: linear-gradient(to right, transparent, #000 8%, #000 92%, transparent);
+  -webkit-mask-image: linear-gradient(to right, transparent, #000 8%, #000 92%, transparent);
+}
+
+.contact__track {
+  display: flex;
+  width: max-content;
+  gap: clamp(28px, 4vw, 64px);
+  /* One third of the track, because the list is tripled. */
+  animation: contact-marquee 26s linear infinite;
+}
+
+.contact__track span {
+  font-size: var(--fs-label);
+  font-weight: 500;
+  white-space: nowrap;
+  color: var(--white-faint);
+}
+
+@keyframes contact-marquee {
+  to {
+    transform: translateX(-33.333%);
+  }
+}
+
+/* ---- Closing block --------------------------------------------------- */
+
+.contact__grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
+  gap: clamp(28px, 4vw, 64px);
+  align-items: end;
+}
+
+.contact__title {
+  margin: 0;
+  font-size: clamp(2.1rem, 5vw, 4.2rem);
+  font-weight: 500;
+  line-height: 1.04;
+  letter-spacing: -0.03em;
+  margin-inline-start: -0.045em;
+}
+
+.contact__title span {
+  display: block;
+}
+
+.contact__body {
+  margin: 0;
+  max-width: 42ch;
+  font-size: var(--fs-lede);
+  color: var(--white-dim);
+}
+
+.contact__actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 16px clamp(18px, 2.4vw, 30px);
+  margin-top: clamp(24px, 3vw, 38px);
+}
+
+.contact__email {
+  font-size: var(--fs-label);
+  font-weight: 500;
+  color: var(--white-faint);
+  transition: color 0.35s var(--ease-out);
+}
+
+.contact__email:hover {
+  color: var(--crimson);
+}
+
+@media (max-width: 860px) {
+  .contact__grid {
+    grid-template-columns: 1fr;
+    align-items: start;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .contact__track {
+    animation: none;
+  }
+
+  .contact__email {
+    transition: none;
+  }
+}

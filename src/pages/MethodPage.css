@@ -1,0 +1,199 @@
+.method {
+  position: relative;
+  min-height: 100svh;
+  background: var(--black);
+  color: var(--white);
+  --logo-counter: var(--black);
+}
+
+.method__inner {
+  padding-block: clamp(120px, 16vh, 200px) clamp(72px, 10vh, 120px);
+}
+
+.method__head {
+  max-width: 52ch;
+  margin-bottom: clamp(56px, 8vw, 96px);
+}
+
+/* ---- Phases ---------------------------------------------------------- */
+
+.method__phases {
+  display: grid;
+  gap: clamp(20px, 2.4vw, 30px);
+  margin: 0 0 clamp(72px, 10vw, 120px);
+  padding: 0;
+  list-style: none;
+}
+
+.method__phase {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1.5fr) minmax(0, 1fr);
+  gap: clamp(20px, 3vw, 48px);
+  align-items: start;
+  padding: clamp(24px, 3vw, 38px);
+  border: 1px solid var(--card-line);
+  border-radius: 24px;
+  background: var(--card);
+}
+
+.method__n {
+  font-size: var(--fs-label);
+  font-weight: 500;
+  color: var(--crimson);
+}
+
+.method__phase-title {
+  margin: 0 0 12px;
+  font-size: clamp(1.3rem, 2.2vw, 1.8rem);
+  font-weight: 500;
+  line-height: 1.14;
+  letter-spacing: -0.02em;
+}
+
+.method__phase-text {
+  margin: 0;
+  max-width: 52ch;
+  color: var(--white-dim);
+}
+
+.method__deliverables h3 {
+  margin: 0 0 14px;
+  font-size: var(--fs-label);
+  font-weight: 500;
+  color: var(--white-faint);
+}
+
+.method__deliverables ul {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.method__deliverables li {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 10px;
+  align-items: start;
+  font-size: 0.98rem;
+  color: var(--white-dim);
+}
+
+.method__deliverables svg {
+  margin-top: 0.3em;
+  color: var(--crimson);
+}
+
+/* ---- Principles ------------------------------------------------------ */
+
+.method__section-title {
+  margin: 0 0 clamp(28px, 4vw, 48px);
+  font-size: clamp(1.6rem, 3.2vw, 2.6rem);
+  font-weight: 500;
+  letter-spacing: -0.02em;
+}
+
+.method__principle-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: clamp(20px, 2.6vw, 34px);
+}
+
+.method__principle h3 {
+  margin: 0 0 10px;
+  padding-top: clamp(18px, 2vw, 24px);
+  border-top: 1px solid var(--card-line);
+  font-size: clamp(1.1rem, 1.7vw, 1.35rem);
+  font-weight: 500;
+  letter-spacing: -0.01em;
+}
+
+.method__principle p {
+  margin: 0;
+  max-width: 44ch;
+  color: var(--white-dim);
+}
+
+/* ---- Stats ----------------------------------------------------------- */
+
+.method__stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: clamp(28px, 5vw, 80px);
+  margin: clamp(64px, 9vw, 104px) 0;
+  padding-block: clamp(32px, 4vw, 52px);
+  border-block: 1px solid var(--card-line);
+}
+
+.method__stats dt {
+  font-size: clamp(1.8rem, 3.4vw, 2.8rem);
+  font-weight: 500;
+  line-height: 1;
+  letter-spacing: -0.03em;
+}
+
+.method__stats dt span {
+  color: var(--crimson);
+}
+
+.method__stats dd {
+  margin: 8px 0 0;
+  font-size: var(--fs-label);
+  color: var(--white-faint);
+}
+
+/* ---- Closing --------------------------------------------------------- */
+
+.method__cta h2 {
+  margin: 0;
+  font-size: clamp(1.9rem, 4vw, 3.2rem);
+  font-weight: 500;
+  letter-spacing: -0.03em;
+  margin-inline-start: -0.045em;
+}
+
+.method__cta p {
+  margin: 16px 0 0;
+  max-width: 46ch;
+  font-size: var(--fs-lede);
+  color: var(--white-dim);
+}
+
+.method__cta-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: clamp(26px, 3.4vw, 40px);
+}
+
+/* The ghost button reads against the panel, not a light surface. */
+.method .btn--ghost {
+  border-color: rgba(255, 255, 255, 0.28);
+  color: var(--white);
+}
+
+@media (max-width: 900px) {
+  .method__phase {
+    grid-template-columns: auto minmax(0, 1fr);
+  }
+
+  .method__deliverables {
+    grid-column: 2;
+  }
+
+  .method__principle-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 560px) {
+  .method__phase {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+
+  .method__deliverables {
+    grid-column: 1;
+  }
+}

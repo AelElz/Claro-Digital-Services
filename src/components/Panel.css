@@ -1,0 +1,28 @@
+/*
+ * Section header block shared by every chapter, eyebrow, title, lede.
+ */
+.panel__head {
+  max-width: 62ch;
+  margin-bottom: clamp(48px, 6vw, 84px);
+}
+
+/* Two-column head: title left, lede right, for the wider chapters. */
+.panel__head--split {
+  display: grid;
+  grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
+  gap: clamp(24px, 4vw, 64px);
+  align-items: end;
+  max-width: none;
+}
+
+.panel__head--split .section-lede {
+  margin-top: 0;
+  padding-bottom: 0.35em;
+}
+
+@media (max-width: 860px) {
+  .panel__head--split {
+    grid-template-columns: 1fr;
+    align-items: start;
+  }
+}

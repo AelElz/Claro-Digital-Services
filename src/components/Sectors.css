@@ -1,0 +1,208 @@
+.sectors__stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: clamp(28px, 5vw, 80px);
+  margin: 0 0 clamp(40px, 5vw, 68px);
+  padding-bottom: clamp(36px, 4.4vw, 60px);
+  border-bottom: 1px solid var(--card-light-line);
+}
+
+.sectors__stats dt {
+  font-size: clamp(1.7rem, 3.2vw, 2.6rem);
+  font-weight: 500;
+  line-height: 1;
+  letter-spacing: -0.03em;
+}
+
+.sectors__stats dt span {
+  color: var(--crimson);
+}
+
+.sectors__stats dd {
+  margin: 8px 0 0;
+  font-size: var(--fs-label);
+  font-weight: 500;
+  color: var(--ink-faint);
+}
+
+.sectors__body {
+  display: grid;
+  grid-template-columns: minmax(0, 0.78fr) minmax(0, 1.22fr);
+  gap: clamp(24px, 3.6vw, 56px);
+  align-items: start;
+}
+
+/* ---- Sector list ----------------------------------------------------- */
+
+.sectors__nav {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.sectors__tab {
+  /*
+   * Inherits width: fit-content from .reveal-row, so the fill stops where
+   * the sector name stops rather than running to the column edge.
+   */
+  padding: 12px 20px;
+  border: 0;
+  border-radius: 999px;
+  background: none;
+  font-size: clamp(1rem, 1.5vw, 1.15rem);
+  font-weight: 400;
+  text-align: left;
+  color: var(--ink-dim);
+  transition:
+    transform 0.62s var(--ease-out),
+    color 0.4s var(--ease-out);
+}
+
+.sectors__tab--active {
+  color: var(--ink);
+}
+
+.sectors__tab--active::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 50%;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--crimson);
+  transform: translate(-2px, -50%);
+}
+
+/* ---- Detail ---------------------------------------------------------- */
+
+.sectors__detail {
+  padding: clamp(26px, 3.2vw, 44px);
+  border: 1px solid var(--card-light-line);
+  border-radius: 26px;
+  background: var(--card-light);
+  animation: sector-in 0.6s var(--ease-out) backwards;
+}
+
+@keyframes sector-in {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.sectors__kicker {
+  margin: 0;
+  font-size: var(--fs-label);
+  font-weight: 500;
+  color: var(--crimson);
+}
+
+.sectors__title {
+  margin: clamp(16px, 2vw, 24px) 0 0;
+  font-size: clamp(1.5rem, 2.7vw, 2.2rem);
+  font-weight: 500;
+  line-height: 1.12;
+  letter-spacing: -0.02em;
+}
+
+.sectors__lede {
+  margin: 14px 0 0;
+  max-width: 52ch;
+  color: var(--ink-dim);
+}
+
+.sectors__points {
+  display: grid;
+  gap: 12px;
+  margin: clamp(24px, 3vw, 34px) 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.sectors__points li {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 12px;
+  align-items: start;
+  font-size: 0.98rem;
+  color: var(--ink-dim);
+}
+
+.sectors__points svg {
+  margin-top: 0.28em;
+  color: var(--crimson);
+}
+
+.sectors__case {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px clamp(14px, 2vw, 24px);
+  margin-top: clamp(26px, 3.2vw, 38px);
+  padding-top: clamp(20px, 2.4vw, 28px);
+  border-top: 1px solid var(--card-light-line);
+}
+
+.sectors__case-label {
+  font-size: var(--fs-label);
+  font-weight: 500;
+  color: var(--ink-faint);
+}
+
+.sectors__case-name {
+  font-size: 1.15rem;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+}
+
+.sectors__case-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-inline-start: auto;
+  font-size: 0.95rem;
+  color: var(--crimson);
+  transition: gap 0.35s var(--ease-out);
+}
+
+.sectors__case-cta:hover {
+  gap: 13px;
+}
+
+@media (max-width: 900px) {
+  .sectors__body {
+    grid-template-columns: 1fr;
+  }
+
+  .sectors__nav {
+    flex-direction: row;
+    flex-wrap: wrap;
+  }
+
+  .sectors__tab--active::before {
+    display: none;
+  }
+
+  .sectors__case-cta {
+    margin-inline-start: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sectors__detail {
+    animation: none;
+  }
+
+  .sectors__tab,
+  .sectors__case-cta {
+    transition: none;
+  }
+}
