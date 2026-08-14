@@ -1,10 +1,8 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "comment": "Routes are client-side, so any path that is not a real file has to fall through to index.html or a refresh on /contact 404s. Static files are matched before rewrites, so /assets and the SVGs are unaffected.",
-  "rewrites": [{ "source": "/((?!assets/).*)", "destination": "/index.html" }],
+  "rewrites": [{ "source": "/(.*)", "destination": "/index.html" }],
   "headers": [
     {
-      "comment": "Vite fingerprints every built asset, so the filename changes whenever the contents do. That makes them safe to cache forever: a repeat visit, a reload and a scroll all reuse the copy on disk and hit the network for nothing.",
       "source": "/assets/(.*)",
       "headers": [
         {
@@ -14,7 +12,6 @@
       ]
     },
     {
-      "comment": "The logo and favicon are served from /public under fixed names, so they cannot be immutable. A day of freshness with a week of stale-while-revalidate keeps them instant without pinning an old file.",
       "source": "/(simbol|favicon).svg",
       "headers": [
         {
@@ -24,7 +21,6 @@
       ]
     },
     {
-      "comment": "index.html is the only file that must always be revalidated. It is what points at the fingerprinted assets, so caching it would pin visitors to an old deploy. must-revalidate still allows a 304, which costs one small round trip and no download.",
       "source": "/(.*)",
       "headers": [
         {
