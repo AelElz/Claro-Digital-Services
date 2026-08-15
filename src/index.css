@@ -38,13 +38,13 @@
 
   /* ---- Type ----------------------------------------------------------
    *
-   * One typeface for the entire page. Bodoni is loaded for the logo
-   * wordmark only, because that IS the Claro mark; nothing else uses it.
+   * One typeface for the whole page, and only one webfont to download: the
+   * wordmark is vector artwork, so the serif it was set in is not loaded at
+   * runtime and cannot arrive late or substitute.
    * Labels stay in the same family, size and case as body copy: uppercase
    * with wide tracking reads as a second typeface and cheapens the page.
    */
   --font-sans: 'Inter Tight', system-ui, 'Segoe UI', Roboto, sans-serif;
-  --font-logo: 'Bodoni Moda', Georgia, 'Times New Roman', serif;
 
   /* Fluid throughout. Only two weights are ever used, 400 and 500. */
   --fs-hero: clamp(3.2rem, 10.5vw, 9.5rem);
@@ -183,14 +183,11 @@ html.is-loading body {
 .panel--dark {
   background: var(--black);
   color: var(--white);
-  /* The colour the symbol's spiral is carved back out in. */
-  --logo-counter: var(--black);
 }
 
 .panel--light {
   background: var(--off-white);
   color: var(--ink);
-  --logo-counter: var(--off-white);
 }
 
 /*
@@ -297,6 +294,15 @@ html.is-loading body {
   pointer-events: none;
   backdrop-filter: blur(3px) saturate(1.25);
   -webkit-backdrop-filter: blur(3px) saturate(1.25);
+}
+
+/*
+ * Set while a full-screen layer is open (see freezeBackground). The blurs
+ * are completely occluded by it, and a stacked backdrop-filter under a
+ * moving opaque sheet is composited every frame for nothing.
+ */
+.is-covered .edge-blur {
+  display: none;
 }
 
 .edge-blur::before,
@@ -698,5 +704,35 @@ html.is-loading body {
 
   .edge-blur--bottom {
     display: none;
+  }
+
+  /*
+   * One blur pass on a phone, not three.
+   *
+   * Every backdrop-filter re-samples everything painted behind it, and it
+   * does so again for any frame in which anything changed, including the
+   * frame that answers a tap. Stacking three of them full-width across the
+   * top of the screen is the single most expensive thing a phone GPU is
+   * asked to do here, and at this size the progressive falloff they build is
+   * not perceptible anyway.
+   */
+  .edge-blur::before,
+  .edge-blur::after {
+    display: none;
+  }
+
+  .edge-blur--top {
+    backdrop-filter: blur(12px) saturate(1.35);
+    -webkit-backdrop-filter: blur(12px) saturate(1.35);
+  }
+
+  /*
+   * The grain holds still. Re-seeding it seven times a second means
+   * repainting a layer larger than the panel, on four panels, forever, on
+   * the device least able to afford it. The texture is what matters; the
+   * flicker is a luxury for machines with a fan.
+   */
+  .panel__grain {
+    animation: none;
   }
 }

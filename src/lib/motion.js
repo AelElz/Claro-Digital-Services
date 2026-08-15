@@ -27,8 +27,18 @@ const writes = []
 let lastY = -1
 let dirty = true
 let running = false
+let covered = false
 
 function frame(time) {
+  /*
+   * Nothing behind a full-screen layer is worth a frame. Most effects skip a
+   * still frame on their own, but the hero canvas repaints for the pointer
+   * light whether or not the page moved, and it is a viewport-sized canvas:
+   * left running, it competes with the menu's own animation for exactly the
+   * frames that animation needs.
+   */
+  if (covered) return
+
   const y = window.scrollY
   // Most effects only depend on scroll, so they can skip a still frame.
   const moved = dirty || y !== lastY
@@ -119,6 +129,31 @@ function tick(time) {
 }
 
 /*
+ * Put the page behind a full-screen layer to sleep: it stops scrolling, and
+ * every scroll-driven effect stops painting.
+ *
+ * The scroll half goes through Lenis rather than the usual `overflow:
+ * hidden` on body. `position: sticky` is ignored when any ancestor clips,
+ * and the entire chapter stack is sticky, so locking the scroll that way
+ * would silently collapse the depth effect for as long as the menu was open,
+ * and leave the page a different shape underneath when it closed.
+ *
+ * With reduced motion there is no Lenis to stop. The layer is opaque and
+ * fixed, so a page scrolling behind it costs nothing but the position you
+ * come back to; that is a fair trade against breaking the stack.
+ */
+export function freezeBackground(frozen) {
+  covered = frozen
+  // Whatever the effects missed while covered, recompute on the first frame
+  // back rather than waiting for the next scroll to mark them dirty.
+  if (!frozen) dirty = true
+
+  if (!lenis) return
+  if (frozen) lenis.stop()
+  else lenis.start()
+}
+
+/*
  * Where an element sits in the document, ignoring sticky.
  *
  * Every panel is sticky, and a pinned panel lies about its position twice
@@ -177,7 +212,14 @@ export function scrollTo(target, { immediate = true, history: push = false } = {
      * costs a read and guarantees the jump is not clamped short.
      */
     lenis.resize()
-    lenis.scrollTo(y, { immediate })
+    /*
+     * force, so a jump the app asked for still lands while the scroll is
+     * frozen behind a full-screen layer. Without it, closing the menu and
+     * scrolling home in the same click is silently a no-op: the state change
+     * that lifts the freeze has not been committed yet, and a stopped Lenis
+     * drops the request.
+     */
+    lenis.scrollTo(y, { immediate, force: true })
     return
   }
   window.scrollTo({ top: y, behavior: immediate ? 'auto' : 'smooth' })
@@ -226,3 +268,37 @@ export function initHistoryNav() {
 
 export const clamp = (value, min = 0, max = 1) =>
   value < min ? min : value > max ? max : value
+
+/*
+ * A cached rect, for pointer handlers.
+ *
+ * Calling getBoundingClientRect() inside a pointermove handler forces a
+ * synchronous layout on every event, and when the same handler then writes a
+ * style, the two thrash each other: read, write, read, write, once per event,
+ * all of it inside the window the browser is measuring for INP.
+ *
+ * A rect only moves when the page scrolls or the window resizes, so cache it
+ * and invalidate on exactly those two. Pointer handling then costs
+ * arithmetic and nothing else.
+ */
+export function trackRect(element) {
+  let rect = null
+  const invalidate = () => {
+    rect = null
+  }
+
+  window.addEventListener('scroll', invalidate, { passive: true })
+  window.addEventListener('resize', invalidate)
+
+  const read = () => {
+    if (!rect) rect = element.getBoundingClientRect()
+    return rect
+  }
+
+  read.stop = () => {
+    window.removeEventListener('scroll', invalidate)
+    window.removeEventListener('resize', invalidate)
+  }
+
+  return read
+}

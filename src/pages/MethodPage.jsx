@@ -13,22 +13,31 @@ function MethodPage() {
     <>
       <Navbar />
 
+      {/*
+       * Four bands rather than one column. Each one owns its own surface, so
+       * the page warms from near black at the top to the footer's maroon at
+       * the bottom instead of being a single flat black field.
+       */}
       <main className="method" ref={revealRef}>
-        <div className="container method__inner">
-          <header className="method__head">
-            <p className="eyebrow reveal">
-              <Mark className="eyebrow__mark" />
-              {method.eyebrow}
-            </p>
-            <h1 className="section-title reveal" style={{ '--i': 1 }}>
-              {method.title}
-            </h1>
-            <p className="section-lede reveal" style={{ '--i': 2 }}>
-              {method.lede}
-            </p>
-          </header>
+        <span className="method__aura" aria-hidden="true" />
+        <span className="method__grain" aria-hidden="true" />
 
-          <ol className="method__phases">
+        <section className="method__band method__band--intro">
+          <div className="container method__inner">
+            <header className="method__head">
+              <p className="eyebrow reveal">
+                <Mark className="eyebrow__mark" />
+                {method.eyebrow}
+              </p>
+              <h1 className="section-title reveal" style={{ '--i': 1 }}>
+                {method.title}
+              </h1>
+              <p className="section-lede reveal" style={{ '--i': 2 }}>
+                {method.lede}
+              </p>
+            </header>
+
+            <ol className="method__phases">
             {method.phases.map((phase, index) => (
               <li className="method__phase reveal" key={phase.n} style={{ '--i': index + 1 }}>
                 <span className="method__n">{phase.n}</span>
@@ -59,9 +68,12 @@ function MethodPage() {
                 </div>
               </li>
             ))}
-          </ol>
+            </ol>
+          </div>
+        </section>
 
-          <section className="method__principles">
+        <section className="method__band method__band--principles">
+          <div className="container">
             <h2 className="method__section-title reveal">{method.principlesTitle}</h2>
             <div className="method__principle-grid">
               {method.principles.map((principle, index) => (
@@ -75,9 +87,12 @@ function MethodPage() {
                 </article>
               ))}
             </div>
-          </section>
+          </div>
+        </section>
 
-          <dl className="method__stats reveal">
+        <section className="method__band method__band--stats">
+          <div className="container">
+            <dl className="method__stats reveal">
             {method.stats.map((stat) => (
               <div key={stat.label}>
                 <dt>
@@ -87,9 +102,12 @@ function MethodPage() {
                 <dd>{stat.label}</dd>
               </div>
             ))}
-          </dl>
+            </dl>
+          </div>
+        </section>
 
-          <section className="method__cta reveal">
+        <section className="method__band method__band--cta">
+          <div className="container method__cta reveal">
             <h2>{method.ctaTitle}</h2>
             <p>{method.ctaBody}</p>
             <div className="method__cta-actions">
@@ -111,8 +129,8 @@ function MethodPage() {
                 {method.ctaSecondary}
               </Link>
             </div>
-          </section>
-        </div>
+          </div>
+        </section>
       </main>
 
       <Footer />

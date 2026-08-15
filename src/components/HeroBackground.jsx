@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react'
-import { onFrame, reducedMotion } from '../lib/motion'
+import { onFrame, reducedMotion, trackRect } from '../lib/motion'
 import './HeroBackground.css'
 
 /*
@@ -152,8 +152,12 @@ function HeroBackground() {
       return () => window.removeEventListener('resize', redraw)
     }
 
+    /* Cached, so a pointer crossing the hero does not force a layout on
+       every event just to normalise its position. */
+    const rectOf = trackRect(canvas)
+
     const onMove = (event) => {
-      const rect = canvas.getBoundingClientRect()
+      const rect = rectOf()
       pointer.tx = (event.clientX - rect.left) / rect.width
       pointer.ty = (event.clientY - rect.top) / rect.height
     }
@@ -176,6 +180,7 @@ function HeroBackground() {
 
     return () => {
       stop()
+      rectOf.stop()
       window.removeEventListener('resize', resize)
       window.removeEventListener('pointermove', onMove)
     }

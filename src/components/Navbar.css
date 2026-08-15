@@ -13,7 +13,10 @@
   align-items: center;
   gap: clamp(12px, 2vw, 28px);
   height: var(--nav-h);
-  padding: 0 8px 0 clamp(14px, 1.6vw, 22px);
+  /* The right side carries more padding than the left: the burger is a bare
+     mark with no pill around it, so it needs the inset to sit off the edge
+     the way the logo does. */
+  padding: 0 clamp(18px, 2.2vw, 32px) 0 clamp(14px, 1.6vw, 22px);
   border: 1px solid var(--nav-line);
   border-radius: 999px;
   background: var(--nav-fill);
@@ -26,6 +29,12 @@
     color 0.5s var(--ease-out);
 }
 
+/*
+ * The menu panel gets its own fill rather than reusing --nav-fill. The nav
+ * sits on a blurred slab of the page and reads fine at 7% white; a panel
+ * hanging over live copy at that value leaves the section text legible
+ * through its own links.
+ */
 .navbar--dark {
   --nav-fill: rgba(255, 255, 255, 0.07);
   --nav-line: rgba(255, 255, 255, 0.14);
@@ -33,7 +42,9 @@
   --nav-ink-dim: var(--white-dim);
   --nav-pill: rgba(255, 255, 255, 0.92);
   --nav-pill-ink: var(--ink);
-  --logo-counter: #000;
+  --nav-menu-fill: rgba(20, 5, 11, 0.88);
+  --nav-menu-hover: rgba(255, 255, 255, 0.09);
+  --nav-drawer-fill: #150409;
 }
 
 .navbar--light {
@@ -43,11 +54,15 @@
   --nav-ink-dim: var(--ink-dim);
   --nav-pill: var(--ink);
   --nav-pill-ink: var(--off-white);
-  --logo-counter: var(--off-white);
+  --nav-menu-fill: rgba(253, 253, 253, 0.94);
+  --nav-menu-hover: rgba(66, 16, 28, 0.06);
+  --nav-drawer-fill: var(--off-white);
 }
 
+/* Wider than the old box for the same presence: the artwork is a true 3:1
+   lockup, where the rebuilt one was 1.6:1 with air around it. */
 .navbar .logo {
-  --logo-w: 84px;
+  --logo-w: 104px;
   color: var(--nav-ink);
 }
 
@@ -100,51 +115,289 @@
   color: var(--nav-pill-ink);
 }
 
+/* ---- Services menu --------------------------------------------------- */
+
+/*
+ * A link that carries a menu is wrapped so the panel has something to hang
+ * from. The wrapper is the flex child of .navbar__links now, so it is also
+ * what place() measures for the pill; it must stay exactly as wide as the
+ * link inside it, which is why the panel is absolute and out of flow.
+ */
+.navbar__item {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.navbar__caret {
+  margin-inline-start: 5px;
+  vertical-align: -1px;
+  opacity: 0.7;
+  /* Longhand: `transform` here would be independent of nothing today, but
+     the nav is one place where a shorthand transform has already cost an
+     afternoon. Keep every transform in the bar composable. */
+  rotate: 0deg;
+  transition: rotate 0.3s var(--ease-out);
+}
+
+.navbar__item:hover .navbar__caret,
+.navbar__item:focus-within .navbar__caret {
+  rotate: 180deg;
+}
+
+/*
+ * The padding is a hover bridge. The panel is offset 8px below the bar to
+ * match the mobile drawer, and without a hoverable strip spanning that gap
+ * the menu closes the instant the pointer leaves the link.
+ */
+.navbar__menu {
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  z-index: 2;
+  translate: -50% 0;
+  padding-top: 21px;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition:
+    opacity 0.25s var(--ease-out),
+    visibility 0.25s;
+}
+
+.navbar__item:hover .navbar__menu,
+.navbar__item:focus-within .navbar__menu {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+}
+
+/* The UA list margin is 1em, which would push the panel a further 17px off
+   the bar and reopen the hover gap the bridge exists to close. */
+.navbar__menu-list {
+  min-width: 232px;
+  margin: 0;
+  padding: 8px;
+  list-style: none;
+  border: 1px solid var(--nav-line);
+  border-radius: 22px;
+  background: var(--nav-menu-fill);
+  backdrop-filter: blur(20px) saturate(1.5);
+  -webkit-backdrop-filter: blur(20px) saturate(1.5);
+  box-shadow: 0 18px 44px rgba(0, 0, 0, 0.28);
+  translate: 0 -6px;
+  transition:
+    translate 0.3s var(--ease-out),
+    background-color 0.5s var(--ease-out),
+    border-color 0.5s var(--ease-out);
+}
+
+.navbar__item:hover .navbar__menu-list,
+.navbar__item:focus-within .navbar__menu-list {
+  translate: 0 0;
+}
+
+.navbar__menu-link {
+  display: block;
+  padding: 10px 14px;
+  border-radius: 999px;
+  font-size: 0.9rem;
+  white-space: nowrap;
+  color: var(--nav-ink-dim);
+  transition:
+    background-color 0.25s var(--ease-out),
+    color 0.25s var(--ease-out);
+}
+
+.navbar__menu-link:hover,
+.navbar__menu-link:focus-visible {
+  background: var(--nav-menu-hover);
+  color: var(--nav-ink);
+}
+
 /* ---- Actions --------------------------------------------------------- */
 
+/*
+ * Sign in and the burger are the whole right end now. The gap between them
+ * is wide enough that they read as two separate things rather than one
+ * control with an icon.
+ */
 .navbar__actions {
   display: flex;
   align-items: center;
   gap: 8px;
+  /* On top of the bar's own flex gap, not instead of it: the two together
+     put roughly 34px between the pill and the bars at desktop width. */
+  margin-inline-end: clamp(2px, 0.7vw, 10px);
 }
 
-.navbar__schedule {
-  padding: 0 20px;
-  line-height: 46px;
-  border-radius: 999px;
-  border: 1px solid var(--nav-line);
-  background: var(--nav-fill);
-  font-size: 0.92rem;
-  white-space: nowrap;
-  color: var(--nav-ink);
+/* ---- Burger ---------------------------------------------------------- */
+
+/*
+ * Straight from design/hamburger menu icon.svg: two 48x1 crimson bars, 6px
+ * apart. Drawn as spans rather than the file itself so each bar can travel
+ * and turn on its own; the box keeps the asset's 48:7 proportion through
+ * --burger-w so the X stays square at every size.
+ */
+.navbar__burger {
+  --burger-w: 48px;
+  position: relative;
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--burger-w);
+  height: 44px;
+  padding: 0;
+  border: 0;
+  border-radius: 10px;
+  background: none;
+}
+
+/*
+ * The bars are the mark, not the target. On a small phone the icon is 26px
+ * wide, which is under the 44px a thumb needs, and widening the icon itself
+ * would push it back off the edge of the bar. This is out of flow, so it
+ * costs no layout.
+ */
+.navbar__burger::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  min-width: 44px;
+  min-height: 44px;
+  width: 100%;
+  height: 100%;
+  translate: -50% -50%;
+}
+
+.navbar__burger-bars {
+  position: relative;
+  display: block;
+  width: 100%;
+  height: 7px;
+}
+
+.navbar__burger-bars span {
+  position: absolute;
+  left: 0;
+  width: 100%;
+  height: 1px;
+  background: var(--crimson);
+  /*
+   * Longhands, never a `transform` shorthand: each bar has to hold a
+   * translate and a rotate at the same time, and a shorthand would make the
+   * second one replace the first.
+   *
+   * The two never run together. Travelling and turning at once is what made
+   * this read as a tumble: the bars swept through each other diagonally and
+   * the eye lost which line was which. Split into two phases it folds.
+   *
+   * This declaration is the CLOSING order, because a transition is governed
+   * by the style being transitioned TO. Closing: unwind the X first, then
+   * let the bars separate. Opening reverses it below.
+   */
   transition:
-    background-color 0.3s var(--ease-out),
-    border-color 0.3s var(--ease-out);
+    rotate 0.16s var(--ease-out),
+    translate 0.24s var(--ease-out) 0.12s,
+    background-color 0.3s var(--ease-out);
 }
 
-.navbar__schedule:hover {
-  border-color: var(--nav-ink);
+.navbar__burger-bars span:first-child {
+  top: 0;
 }
 
-.navbar__contact {
-  padding: 0 22px;
-  line-height: 48px;
-  border-radius: 999px;
-  background: var(--grad-contact);
-  font-size: 0.92rem;
-  white-space: nowrap;
-  color: var(--white);
+.navbar__burger-bars span:last-child {
+  bottom: 0;
+}
+
+/*
+ * Opening: the bars meet on the centre line first, and only then turn. The
+ * turn carries --ease-pop, which overshoots a couple of degrees and settles,
+ * so the X arrives rather than just stopping.
+ *
+ * 0.12 + 0.24 = 0.36s end to end, within a frame or two of the sheet's
+ * 0.34s, so the icon and the menu finish together.
+ */
+.navbar[data-menu='open'] .navbar__burger-bars span {
   transition:
-    box-shadow 0.35s var(--ease-out),
-    transform 0.35s var(--ease-pop);
+    translate 0.16s var(--ease-out),
+    rotate 0.24s var(--ease-pop) 0.12s,
+    background-color 0.3s var(--ease-out);
 }
 
-.navbar__contact:hover,
-.navbar__contact:focus-visible {
-  transform: translateY(-1px);
-  box-shadow:
-    0 0 20px rgba(227, 53, 93, 0.5),
-    0 0 52px rgba(227, 53, 93, 0.28);
+.navbar[data-menu='open'] .navbar__burger-bars span:first-child {
+  translate: 0 3px;
+  rotate: 45deg;
+}
+
+.navbar[data-menu='open'] .navbar__burger-bars span:last-child {
+  translate: 0 -3px;
+  rotate: -45deg;
+}
+
+/*
+ * A hairline is a small thing to aim at, so the icon answers the pointer
+ * before it is clicked. Scale sits on the box, not on the bars, where it
+ * would have to share a longhand with their own transforms.
+ */
+.navbar__burger-bars {
+  scale: 1;
+  transition: scale 0.3s var(--ease-pop);
+}
+
+.navbar__burger:hover .navbar__burger-bars {
+  scale: 1.06;
+}
+
+.navbar__burger:hover .navbar__burger-bars span {
+  background: #ff6f92;
+}
+
+.navbar__burger:focus-visible {
+  outline: 2px solid var(--crimson);
+  outline-offset: 6px;
+}
+
+/* ---- With the menu open ---------------------------------------------- */
+
+/*
+ * Only the mark and the burger stay. The bar itself gives up its glass, so
+ * there is no pill outline floating on the menu, and it holds the dark
+ * palette whatever chapter is underneath, because what is underneath is now
+ * the menu.
+ */
+.navbar[data-menu='open'] {
+  --nav-ink: var(--white);
+  --nav-ink-dim: var(--white-dim);
+  border-color: transparent;
+  background: transparent;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+.navbar__links,
+.navbar__actions,
+.navbar__toggle {
+  transition:
+    opacity 0.3s var(--ease-out),
+    visibility 0.3s;
+}
+
+/*
+ * Hidden rather than merely transparent: a control behind a modal must not
+ * be reachable by Tab. The submenu is named explicitly because it sets its
+ * own visibility and pointer-events on mobile, and a descendant that does
+ * that survives its ancestor being hidden.
+ */
+.navbar[data-menu='open'] .navbar__links,
+.navbar[data-menu='open'] .navbar__menu,
+.navbar[data-menu='open'] .navbar__actions,
+.navbar[data-menu='open'] .navbar__toggle {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
 }
 
 /* ---- Mobile ---------------------------------------------------------- */
@@ -152,43 +405,14 @@
 .navbar__toggle {
   display: none;
   align-items: center;
-  gap: 9px;
   margin-inline-start: auto;
-  padding: 0 16px;
-  line-height: 42px;
+  padding: 0 14px;
+  line-height: 40px;
   border: 1px solid var(--nav-line);
   border-radius: 999px;
   background: none;
-  font-size: 0.9rem;
+  font-size: 0.88rem;
   color: var(--nav-ink);
-}
-
-.navbar__toggle-bars,
-.navbar__toggle-bars::before,
-.navbar__toggle-bars::after {
-  display: block;
-  width: 16px;
-  height: 1.5px;
-  background: currentcolor;
-}
-
-.navbar__toggle-bars {
-  position: relative;
-}
-
-.navbar__toggle-bars::before,
-.navbar__toggle-bars::after {
-  content: '';
-  position: absolute;
-  left: 0;
-}
-
-.navbar__toggle-bars::before {
-  top: -5px;
-}
-
-.navbar__toggle-bars::after {
-  top: 5px;
 }
 
 @media (max-width: 1100px) {
@@ -211,21 +435,37 @@
     padding: 10px;
     border: 1px solid var(--nav-line);
     border-radius: 24px;
-    background: var(--nav-fill);
-    backdrop-filter: blur(20px) saturate(1.5);
-    -webkit-backdrop-filter: blur(20px) saturate(1.5);
+    /*
+     * Solid, not glass. The bar is a small pill and reads fine at 7% white,
+     * but the drawer covers a third of a phone screen: the page runs
+     * straight through it and the links land on whatever happens to be
+     * behind them. An opaque panel also drops a full-screen backdrop-filter
+     * pass on the device least able to afford one.
+     */
+    background: var(--nav-drawer-fill);
+    box-shadow: 0 20px 44px rgba(0, 0, 0, 0.42);
     opacity: 0;
     transform: translateY(-8px);
     pointer-events: none;
+    /*
+     * visibility, not opacity alone. A transparent drawer still occupies the
+     * top third of a phone screen: its links stay hit-testable and stay in
+     * the tab order, so a closed menu quietly eats taps meant for the page
+     * behind it. It also rides along so the menu-open rule can fade the
+     * drawer out rather than snapping it away.
+     */
+    visibility: hidden;
     transition:
       opacity 0.3s var(--ease-out),
-      transform 0.3s var(--ease-out);
+      transform 0.3s var(--ease-out),
+      visibility 0.3s;
   }
 
   .navbar__links--open {
     opacity: 1;
     transform: none;
     pointer-events: auto;
+    visibility: visible;
   }
 
   /* The sliding pill has nothing to slide along once the list stacks. */
@@ -244,52 +484,183 @@
     border-radius: 999px;
   }
 
-  .navbar__schedule {
-    display: none;
+  /*
+   * A disclosure, not a permanent list. Tapping the row opens it; the two
+   * rows animate as one because the grid track goes 0fr to 1fr, which is the
+   * only way to transition to a height nobody has measured.
+   */
+  .navbar__item {
+    display: grid;
+    grid-template-rows: auto 0fr;
+    align-items: stretch;
+    transition: grid-template-rows 0.32s var(--ease-out);
+  }
+
+  .navbar__item[data-sub='open'] {
+    grid-template-rows: auto 1fr;
+  }
+
+  /* The caret earns its place here: it is the only sign the row opens. */
+  .navbar__caret {
+    margin-inline-start: auto;
+    opacity: 0.85;
+  }
+
+  .navbar__item .navbar__link {
+    display: flex;
+    align-items: center;
+  }
+
+  .navbar__item[data-sub='open'] .navbar__caret {
+    rotate: 180deg;
+  }
+
+  /*
+   * Only inside an OPEN drawer.
+   *
+   * `visibility` and `pointer-events` are both overridable by a descendant:
+   * a child that sets them back on becomes visible and clickable again
+   * however firmly its ancestor was hidden. Turning the submenu on for the
+   * whole breakpoint therefore left four invisible service links floating
+   * over the hero, swallowing every tap that landed on them, and covering
+   * the first two entries of the full-screen menu.
+   */
+  .navbar__menu {
+    position: static;
+    z-index: auto;
+    translate: none;
+    padding: 0;
+    /* The row collapses to a zero-height track, so this has to be able to
+       be shorter than its own content. */
+    min-height: 0;
+    overflow: hidden;
+  }
+
+  /* Interactive only once the drawer is open AND the row is disclosed:
+     visibility and pointer-events are both overridable by a descendant, so
+     a hidden ancestor is not enough on its own. */
+  .navbar__links--open .navbar__item[data-sub='open'] .navbar__menu {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+  }
+
+  .navbar__menu-list {
+    min-width: 0;
+    padding: 2px 0 6px 14px;
+    border: 0;
+    border-radius: 0;
+    background: none;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    box-shadow: none;
+    translate: none;
+  }
+
+  .navbar__menu-link {
+    padding: 9px 14px;
   }
 }
 
 @media (max-width: 560px) {
   .navbar .logo {
-    --logo-w: 68px;
+    --logo-w: 86px;
   }
 
-  .navbar__contact {
-    padding: 0 16px;
-    line-height: 42px;
-    font-size: 0.85rem;
+  /* The bars keep the asset's proportion, they just get shorter. */
+  .navbar__burger {
+    --burger-w: 30px;
+  }
+}
+
+/*
+ * 320px phones. Four controls, a 296px pill: at the 560px sizes they added
+ * up to 320 and the burger hung 10px past the glass and off the screen.
+ * Everything gives a little rather than one thing being dropped, because all
+ * four are the only route to something.
+ */
+@media (max-width: 400px) {
+  .navbar {
+    gap: 8px;
+    padding: 0 12px;
+  }
+
+  .navbar .logo {
+    --logo-w: 70px;
+  }
+
+  .navbar__toggle {
+    padding: 0 11px;
+    font-size: 0.82rem;
+  }
+
+  .navbar__signin {
+    padding: 0 11px;
+    font-size: 0.82rem;
+  }
+
+  .navbar__actions {
+    margin-inline-end: 0;
+  }
+
+  .navbar__burger {
+    --burger-w: 26px;
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
   .navbar,
   .navbar__link,
-  .navbar__contact,
-  .navbar__links {
+  .navbar__links,
+  .navbar__caret,
+  .navbar__menu,
+  .navbar__menu-list,
+  .navbar__menu-link,
+  .navbar__actions,
+  .navbar__toggle,
+  .navbar__burger-bars,
+  .navbar__burger-bars span {
     transition: none;
+  }
+
+  /* The icon still becomes an X, it just gets there without the journey. */
+  .navbar__burger:hover .navbar__burger-bars {
+    scale: 1;
+  }
+
+  /* The panel still appears and disappears, it just no longer travels. */
+  .navbar__menu-list {
+    translate: none;
   }
 }
 
 /*
- * Sits between the two calls to action as a plain text link, so signing in
- * reads as available without competing with "Contact Us".
+ * The one action left in the bar. It keeps the outlined pill the chapter
+ * links do not have, so it reads as a control rather than a sixth tab, and
+ * its 38px box matches the sliding pill's so the whole right side sits on
+ * one line.
  */
 .navbar__signin {
-  padding: 0 12px;
-  line-height: 46px;
+  padding: 0 18px;
+  line-height: 38px;
+  border: 1px solid var(--nav-line);
+  border-radius: 999px;
   font-size: 0.92rem;
   white-space: nowrap;
-  color: var(--nav-ink-dim);
-  transition: color 0.3s var(--ease-out);
+  color: var(--nav-ink);
+  transition:
+    color 0.3s var(--ease-out),
+    border-color 0.3s var(--ease-out);
 }
 
-.navbar__signin:hover {
-  color: var(--nav-ink);
+.navbar__signin:hover,
+.navbar__signin:focus-visible {
+  border-color: var(--nav-ink);
 }
 
 @media (max-width: 1100px) {
   .navbar__signin {
-    padding: 0 8px;
+    padding: 0 14px;
   }
 }
 

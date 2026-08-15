@@ -4,6 +4,7 @@ import Link from './Link'
 import Mark from './Mark'
 import shot from '../assets/kintsugi-people.jpg'
 import { testimonial } from '../content'
+import { trackRect } from '../lib/motion'
 import { useReveal } from '../hooks/useReveal'
 import './Testimonial.css'
 
@@ -27,9 +28,12 @@ function Testimonial() {
     if (!window.matchMedia('(pointer: fine)').matches) return
 
     const label = frame.querySelector('.shot__cursor')
+    /* Cached: this handler writes a style, so reading the rect back on every
+       event would thrash layout for the whole time the pointer is inside. */
+    const rectOf = trackRect(frame)
 
     const place = (event) => {
-      const rect = frame.getBoundingClientRect()
+      const rect = rectOf()
       const x = event.clientX - rect.left
       const y = event.clientY - rect.top
       label.style.transform = `translate3d(${x}px, ${y}px, 0) translate(-50%, -50%)`
@@ -52,6 +56,7 @@ function Testimonial() {
     frame.addEventListener('pointerleave', onLeave)
 
     return () => {
+      rectOf.stop()
       frame.removeEventListener('pointerenter', onEnter)
       frame.removeEventListener('pointermove', place)
       frame.removeEventListener('pointerleave', onLeave)

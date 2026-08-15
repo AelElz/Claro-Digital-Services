@@ -16,8 +16,7 @@
 }
 
 .footer__brand .logo {
-  --logo-w: 116px;
-  --logo-counter: var(--ink);
+  --logo-w: 150px;
 }
 
 .footer__blurb {

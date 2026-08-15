@@ -1,0 +1,143 @@
+/*
+ * Proportions come straight from design/Design 6.svg: a 1225 x 157 pill on a
+ * 1920 frame, fully rounded, white at 10%. Everything here is expressed
+ * against --prompt-h so the bar scales as one object.
+ */
+.prompt {
+  --prompt-h: clamp(56px, 7.4vw, 92px);
+
+  display: flex;
+  align-items: center;
+  gap: clamp(14px, 1.6vw, 26px);
+  width: min(1225px, 100%);
+  height: var(--prompt-h);
+  padding: 0 calc(var(--prompt-h) * 0.28);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(14px) saturate(1.3);
+  -webkit-backdrop-filter: blur(14px) saturate(1.3);
+  color: #ffe1e9;
+  user-select: none;
+}
+
+/* ---- The two bar icons ----------------------------------------------- */
+
+/*
+ * Plus and clear are the same cross in the artwork, one of them turned 45
+ * degrees. Drawn with a pseudo-element pair rather than two SVGs, because at
+ * this size they are two rectangles.
+ */
+.prompt__icon {
+  position: relative;
+  flex: none;
+  width: calc(var(--prompt-h) * 0.31);
+  height: calc(var(--prompt-h) * 0.31);
+  rotate: 0deg;
+}
+
+.prompt__icon::before,
+.prompt__icon::after {
+  content: '';
+  position: absolute;
+  inset: 50% 0 auto;
+  height: 2px;
+  border-radius: 2px;
+  background: currentcolor;
+  translate: 0 -50%;
+}
+
+.prompt__icon::after {
+  inset: 0 50% auto auto;
+  width: 2px;
+  height: 100%;
+  translate: 50% 0;
+}
+
+.prompt__clear {
+  rotate: 45deg;
+  opacity: 0.9;
+}
+
+/* ---- The line -------------------------------------------------------- */
+
+.prompt__text {
+  flex: 1;
+  min-width: 0;
+  font-size: calc(var(--prompt-h) * 0.34);
+  line-height: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  color: var(--white);
+}
+
+.prompt__caret {
+  display: inline-block;
+  width: 2px;
+  height: 1em;
+  margin-inline-start: 2px;
+  vertical-align: -0.14em;
+  background: var(--white);
+  animation: prompt-blink 1.05s steps(1, end) infinite;
+}
+
+@keyframes prompt-blink {
+  0%,
+  50% {
+    opacity: 1;
+  }
+  50.01%,
+  100% {
+    opacity: 0;
+  }
+}
+
+/* ---- Right-hand controls --------------------------------------------- */
+
+.prompt__divider {
+  flex: none;
+  width: 2px;
+  height: calc(var(--prompt-h) * 0.62);
+  border-radius: 2px;
+  background: #ff93ae;
+  opacity: 0.75;
+}
+
+.prompt__mic {
+  flex: none;
+  width: calc(var(--prompt-h) * 0.42);
+  height: calc(var(--prompt-h) * 0.42);
+}
+
+.prompt__send {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: calc(var(--prompt-h) * 0.68);
+  height: calc(var(--prompt-h) * 0.68);
+  border-radius: calc(var(--prompt-h) * 0.16);
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.prompt__send svg {
+  width: 62%;
+  height: 62%;
+}
+
+@media (max-width: 620px) {
+  .prompt {
+    gap: 10px;
+    padding: 0 16px;
+  }
+
+  /* The mic is the one control that carries no meaning here. */
+  .prompt__mic,
+  .prompt__divider {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .prompt__caret {
+    animation: none;
+  }
+}

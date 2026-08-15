@@ -1,9 +1,113 @@
+/*
+ * The page is red, not black.
+ *
+ * Flat black under every section made the page read as an absence rather
+ * than a surface. These four grounds are the house maroon (--ink, #42101c)
+ * mixed down toward black in even steps, so the page warms as it descends
+ * and hands over to the footer, which is --ink itself, without a seam.
+ *
+ * Ink is the only hue involved; nothing here introduces a colour the design
+ * system does not already carry.
+ */
 .method {
+  --ground-1: #0d0307;
+  --ground-2: #170510;
+  --ground-3: #210812;
+  --ground-4: #2e0b16;
+
+  /*
+   * Cards are a flat dark red, one clear step up from the ground they sit
+   * on. Hairline warmed to match: white on maroon reads blue-grey.
+   */
+  --method-card: #280a12;
+  --method-panel: #3a1220;
+  --method-line: rgba(255, 214, 224, 0.14);
+  --method-line-strong: rgba(227, 53, 93, 0.42);
+
   position: relative;
+  /*
+   * A column, so the closing band absorbs any height left over by
+   * min-height. Without it that leftover shows the page's own darkest
+   * ground directly against the footer's maroon, which is a hard seam
+   * exactly where the two are supposed to meet.
+   */
+  display: flex;
+  flex-direction: column;
   min-height: 100svh;
-  background: var(--black);
+  background: var(--ground-1);
   color: var(--white);
-  --logo-counter: var(--black);
+  isolation: isolate;
+  /*
+   * The bloom is 145% of the width and centred, so it hangs 22% past each
+   * edge and made the whole document wider than the screen: a phone could
+   * scroll the page sideways. Safe to clip here because nothing on this page
+   * is sticky; it would silently kill the home page's chapter stack.
+   */
+  overflow: clip;
+}
+
+/* ---- Bands ----------------------------------------------------------- */
+
+/*
+ * Each band paints its own ground and fades into the next, so the steps
+ * between them are never a visible line across the page.
+ */
+.method__band {
+  position: relative;
+  z-index: 1;
+}
+
+.method__band--intro {
+  background: linear-gradient(to bottom, var(--ground-1) 0%, var(--ground-2) 100%);
+}
+
+.method__band--principles {
+  padding-block: clamp(64px, 9vh, 110px);
+  background: linear-gradient(to bottom, var(--ground-2) 0%, var(--ground-3) 100%);
+}
+
+.method__band--stats {
+  padding-block: clamp(8px, 2vh, 24px);
+  background: linear-gradient(to bottom, var(--ground-3) 0%, var(--ground-3) 60%, var(--ground-4) 100%);
+}
+
+.method__band--cta {
+  flex: 1;
+  padding-block: clamp(56px, 8vh, 96px) clamp(90px, 13vh, 150px);
+  background: linear-gradient(to bottom, var(--ground-4) 0%, var(--ink) 100%);
+}
+
+/*
+ * The bloom behind the opening, the same crimson the hero uses. Fixed to the
+ * top of the page rather than the viewport, so it belongs to the heading and
+ * scrolls away with it.
+ */
+.method__aura {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  z-index: 0;
+  width: min(1500px, 145%);
+  aspect-ratio: 2 / 1;
+  translate: -50% -42%;
+  background: radial-gradient(
+    closest-side,
+    rgba(227, 53, 93, 0.44) 0%,
+    rgba(168, 41, 71, 0.2) 46%,
+    rgba(125, 29, 51, 0) 80%
+  );
+  pointer-events: none;
+}
+
+/* Same film grain the dark chapters carry, so the ground has a texture
+   rather than being a clean field of colour. */
+.method__grain {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  background-image: var(--grain-tile);
+  opacity: 0.34;
+  pointer-events: none;
 }
 
 .method__inner {
@@ -20,20 +124,31 @@
 .method__phases {
   display: grid;
   gap: clamp(20px, 2.4vw, 30px);
-  margin: 0 0 clamp(72px, 10vw, 120px);
+  margin: 0;
   padding: 0;
   list-style: none;
 }
 
+/*
+ * One flat colour. A gradient wash across a card this size never resolves
+ * into anything: it just makes the surface look uncertain about what colour
+ * it is. The separation from the ground comes from the step in tone and the
+ * hairline, which is all it needs.
+ */
 .method__phase {
   display: grid;
   grid-template-columns: auto minmax(0, 1.5fr) minmax(0, 1fr);
   gap: clamp(20px, 3vw, 48px);
   align-items: start;
   padding: clamp(24px, 3vw, 38px);
-  border: 1px solid var(--card-line);
+  border: 1px solid var(--method-line);
   border-radius: 24px;
-  background: var(--card);
+  background: var(--method-card);
+  transition: border-color 0.4s var(--ease-out);
+}
+
+.method__phase:hover {
+  border-color: var(--method-line-strong);
 }
 
 .method__n {
@@ -60,7 +175,7 @@
   margin: 0 0 14px;
   font-size: var(--fs-label);
   font-weight: 500;
-  color: var(--white-faint);
+  color: rgba(255, 205, 218, 0.5);
 }
 
 .method__deliverables ul {
@@ -103,7 +218,10 @@
 .method__principle h3 {
   margin: 0 0 10px;
   padding-top: clamp(18px, 2vw, 24px);
-  border-top: 1px solid var(--card-line);
+  /* The rule fades out to the right so a row of them reads as four marks
+     rather than one ruled table. */
+  border-top: 1px solid transparent;
+  border-image: linear-gradient(to right, var(--method-line-strong), rgba(255, 214, 224, 0.06)) 1;
   font-size: clamp(1.1rem, 1.7vw, 1.35rem);
   font-weight: 500;
   letter-spacing: -0.01em;
@@ -117,13 +235,19 @@
 
 /* ---- Stats ----------------------------------------------------------- */
 
+/*
+ * The one panel on the page, so the numbers land as a statement rather than
+ * another paragraph. A lighter dark red than the cards, flat like them.
+ */
 .method__stats {
   display: flex;
   flex-wrap: wrap;
   gap: clamp(28px, 5vw, 80px);
-  margin: clamp(64px, 9vw, 104px) 0;
-  padding-block: clamp(32px, 4vw, 52px);
-  border-block: 1px solid var(--card-line);
+  margin: 0;
+  padding: clamp(30px, 4vw, 48px) clamp(26px, 4vw, 52px);
+  border: 1px solid var(--method-line);
+  border-radius: 26px;
+  background: var(--method-panel);
 }
 
 .method__stats dt {
@@ -140,7 +264,7 @@
 .method__stats dd {
   margin: 8px 0 0;
   font-size: var(--fs-label);
-  color: var(--white-faint);
+  color: rgba(255, 205, 218, 0.56);
 }
 
 /* ---- Closing --------------------------------------------------------- */
@@ -169,8 +293,12 @@
 
 /* The ghost button reads against the panel, not a light surface. */
 .method .btn--ghost {
-  border-color: rgba(255, 255, 255, 0.28);
+  border-color: rgba(255, 214, 224, 0.3);
   color: var(--white);
+}
+
+.method .btn--ghost:hover {
+  border-color: var(--method-line-strong);
 }
 
 @media (max-width: 900px) {
@@ -195,5 +323,12 @@
 
   .method__deliverables {
     grid-column: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .method__phase,
+  .method .btn--ghost {
+    transition: none;
   }
 }

@@ -56,9 +56,11 @@
 .preloader__mark {
   position: relative;
   display: grid;
-  --logo-w: min(46vw, 300px);
+  /* Wider than the old box because this is the full lockup: the second line
+     needs the size to stay readable. */
+  --logo-w: min(62vw, 420px);
   width: var(--logo-w);
-  aspect-ratio: 171 / 108;
+  aspect-ratio: 757.43 / 206.68;
   /*
    * A single drop-shadow reads as a flat blur. The tight bright core, the
    * wide soft halo and the brightness lift stacked together are what make
@@ -85,20 +87,21 @@
   transition: none;
 }
 
-/* Solid silhouettes: the carve takes the same colour as the field. */
+/*
+ * Three flat stamps of the same artwork. They used to differ in the carve
+ * colour as well as the fill; the counter is a real hole now, so the colour
+ * is the only thing that changes between them.
+ */
 .preloader__state--white .logo {
   color: var(--white);
-  --logo-counter: var(--white);
 }
 
 .preloader__state--crimson .logo {
   color: var(--crimson);
-  --logo-counter: var(--crimson);
 }
 
 .preloader__state--real .logo {
   color: var(--white);
-  --logo-counter: #000;
 }
 
 /* ---- Label ----------------------------------------------------------- */

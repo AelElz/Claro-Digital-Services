@@ -1,0 +1,36 @@
+<svg width="1920" height="990" viewBox="0 0 1920 990" fill="none" xmlns="http://www.w3.org/2000/svg">
+<g filter="url(#filter0_f_60_40)">
+<ellipse cx="960" cy="965.4" rx="845" ry="807.5" fill="#E99B9B" fill-opacity="0.9"/>
+</g>
+<g filter="url(#filter1_f_60_40)">
+<ellipse cx="960" cy="1117.4" rx="815" ry="807.5" fill="#E3355D"/>
+</g>
+<g filter="url(#filter2_f_60_40)">
+<ellipse cx="959.5" cy="1271.4" rx="779.5" ry="807.5" fill="#7D1D33"/>
+</g>
+<g filter="url(#filter3_f_60_40)">
+<circle cx="960" cy="1332.9" r="717" fill="#390E18"/>
+</g>
+<defs>
+<filter id="filter0_f_60_40" x="-42.9" y="-9.15527e-05" width="2005.8" height="1930.8" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+<feFlood flood-opacity="0" result="BackgroundImageFix"/>
+<feBlend mode="normal" in="SourceGraphic" in2="BackgroundImageFix" result="shape"/>
+<feGaussianBlur stdDeviation="78.95" result="effect1_foregroundBlur_60_40"/>
+</filter>
+<filter id="filter1_f_60_40" x="95" y="259.9" width="1730" height="1715" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+<feFlood flood-opacity="0" result="BackgroundImageFix"/>
+<feBlend mode="normal" in="SourceGraphic" in2="BackgroundImageFix" result="shape"/>
+<feGaussianBlur stdDeviation="25" result="effect1_foregroundBlur_60_40"/>
+</filter>
+<filter id="filter2_f_60_40" x="65" y="348.9" width="1789" height="1845" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+<feFlood flood-opacity="0" result="BackgroundImageFix"/>
+<feBlend mode="normal" in="SourceGraphic" in2="BackgroundImageFix" result="shape"/>
+<feGaussianBlur stdDeviation="57.5" result="effect1_foregroundBlur_60_40"/>
+</filter>
+<filter id="filter3_f_60_40" x="143" y="515.9" width="1634" height="1634" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+<feFlood flood-opacity="0" result="BackgroundImageFix"/>
+<feBlend mode="normal" in="SourceGraphic" in2="BackgroundImageFix" result="shape"/>
+<feGaussianBlur stdDeviation="50" result="effect1_foregroundBlur_60_40"/>
+</filter>
+</defs>
+</svg>

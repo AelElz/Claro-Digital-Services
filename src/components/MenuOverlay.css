@@ -1,0 +1,223 @@
+/*
+ * The full-screen menu.
+ *
+ * Sits above the footer (50) and the fixed edge blurs (60), below the bar
+ * (100), so the logo and the burger stay on top of it and the mark never
+ * disappears. It is a curtain: the sheet drops from the top, the entries
+ * follow it in, staggered.
+ */
+.menu {
+  position: fixed;
+  inset: 0;
+  z-index: 90;
+  display: flex;
+  flex-direction: column;
+  padding: calc(var(--nav-h) + 40px) var(--pad-x) clamp(22px, 3.4vh, 40px);
+  background: var(--black);
+  color: var(--white);
+  visibility: hidden;
+  translate: 0 -100%;
+  /*
+   * Visibility switches at the ends of the travel, not across it: held until
+   * the sheet has finished leaving, and dropped the instant it starts
+   * arriving. Transitioning it instead would leave the panel computing as
+   * hidden on the frame it opens, and focus cannot move into a hidden
+   * element, so the first entry would never receive it.
+   */
+  transition:
+    translate 0.34s var(--ease-out),
+    visibility 0s 0.34s;
+}
+
+.menu[data-state='open'] {
+  visibility: visible;
+  translate: 0 0;
+  transition:
+    translate 0.34s var(--ease-out),
+    visibility 0s;
+}
+
+/* The same crimson wash and film grain the dark chapters carry, so the
+   menu reads as part of the site rather than a plain black modal. */
+.menu::before,
+.menu::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.menu::before {
+  background: radial-gradient(
+    120% 78% at 50% -12%,
+    rgba(227, 53, 93, 0.26) 0%,
+    rgba(125, 29, 51, 0.12) 38%,
+    transparent 72%
+  );
+}
+
+/* No mix-blend-mode. Blending a viewport-sized layer forces the whole sheet
+   to re-render on every frame of its travel; plain opacity composites. */
+.menu::after {
+  background-image: var(--grain-tile);
+  opacity: 0.22;
+}
+
+/* ---- Entries --------------------------------------------------------- */
+
+.menu__nav {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex: 1;
+  align-items: center;
+  justify-content: center;
+}
+
+.menu__list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  text-align: center;
+}
+
+.menu__item {
+  opacity: 0;
+  translate: 0 18px;
+  transition:
+    opacity 0.3s var(--ease-out),
+    translate 0.3s var(--ease-out);
+}
+
+/*
+ * Delay only on the way in. On the way out the whole sheet is leaving, and
+ * a stagger there just makes the close feel slower than the open.
+ *
+ * The last entry lands at 60 + 4x34 + 300 = 496ms. Everything here is timed
+ * to stay under half a second end to end: past that a menu stops feeling
+ * like it opened and starts feeling like it loaded.
+ */
+.menu[data-state='open'] .menu__item {
+  opacity: 1;
+  translate: 0 0;
+  transition-delay: calc(var(--i, 0) * 34ms + 60ms);
+}
+
+.menu__link {
+  display: block;
+  padding: clamp(2px, 0.4vh, 8px) 0;
+  font-size: clamp(2.6rem, 7vw, 5.2rem);
+  font-weight: 500;
+  line-height: 1.08;
+  letter-spacing: -0.02em;
+  color: var(--white);
+  transition: color 0.3s var(--ease-out);
+}
+
+.menu__link:hover,
+.menu__link:focus-visible {
+  color: var(--crimson);
+}
+
+.menu__link[aria-current='page'] {
+  color: var(--crimson);
+}
+
+/* ---- Foot ------------------------------------------------------------ */
+
+.menu__foot {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  opacity: 0;
+  translate: 0 10px;
+  transition:
+    opacity 0.3s var(--ease-out),
+    translate 0.3s var(--ease-out);
+}
+
+.menu[data-state='open'] .menu__foot {
+  opacity: 1;
+  translate: 0 0;
+  transition-delay: 0.2s;
+}
+
+.menu__copyright {
+  margin: 0;
+  font-size: 0.88rem;
+  color: var(--white-faint);
+}
+
+.menu__legal {
+  display: flex;
+  gap: clamp(18px, 3vw, 38px);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.menu__legal-link {
+  font-size: 0.88rem;
+  color: var(--white-dim);
+  text-decoration: underline;
+  text-underline-offset: 4px;
+  text-decoration-color: rgba(255, 255, 255, 0.28);
+  transition:
+    color 0.3s var(--ease-out),
+    text-decoration-color 0.3s var(--ease-out);
+}
+
+.menu__legal-link:hover,
+.menu__legal-link:focus-visible {
+  color: var(--white);
+  text-decoration-color: currentcolor;
+}
+
+@media (max-width: 620px) {
+  .menu__foot {
+    flex-direction: column-reverse;
+    align-items: flex-start;
+    gap: 12px;
+  }
+}
+
+/*
+ * Text this size is a 17px target, which is half what a thumb needs. Padded
+ * on touch only, so the desktop row keeps its proportions.
+ */
+@media (pointer: coarse) {
+  .menu__legal-link {
+    display: inline-block;
+    padding: 13px 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .menu,
+  .menu__item,
+  .menu__foot,
+  .menu__link,
+  .menu__legal-link {
+    transition: none;
+  }
+
+  /* No curtain and no stagger; it is simply there or it is not. */
+  .menu,
+  .menu[data-state='open'] .menu__item,
+  .menu[data-state='open'] .menu__foot {
+    translate: none;
+  }
+
+  .menu[data-state='open'] .menu__item,
+  .menu[data-state='open'] .menu__foot {
+    transition-delay: 0s;
+  }
+
+  .menu__item,
+  .menu__foot {
+    translate: none;
+  }
+}

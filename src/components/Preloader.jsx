@@ -170,13 +170,13 @@ function Preloader({ onDone }) {
         {/* Three stacked states; the top two wipe away to reveal the real mark. */}
         <div className="preloader__mark" ref={markRef}>
           <div className="preloader__state preloader__state--real">
-            <Logo as="div" />
+            <Logo as="div" full />
           </div>
           <div className="preloader__state preloader__state--crimson" ref={crimsonRef}>
-            <Logo as="div" />
+            <Logo as="div" full />
           </div>
           <div className="preloader__state preloader__state--white" ref={whiteRef}>
-            <Logo as="div" />
+            <Logo as="div" full />
           </div>
         </div>
 

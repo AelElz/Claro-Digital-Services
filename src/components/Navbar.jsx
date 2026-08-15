@@ -1,7 +1,9 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
 import Link from './Link'
 import Logo from './Logo'
-import { nav } from '../content'
+import MenuOverlay from './MenuOverlay'
+/* `menu` is also the name of a nav link's submenu below, hence the alias. */
+import { nav, menu as menuContent } from '../content'
 import { onFrame, scrollTo } from '../lib/motion'
 import { useRouter } from '../lib/router-context'
 import './Navbar.css'
@@ -40,9 +42,13 @@ function Navbar() {
   const [theme, setTheme] = useState('dark')
   const [active, setActive] = useState(0)
   const [open, setOpen] = useState(false)
+  const [menuOpen, setMenuOpen] = useState(false)
+  /* Drawer only: the disclosure state of the row that carries a submenu. */
+  const [subOpen, setSubOpen] = useState(false)
 
   const linkRefs = useRef([])
   const indicatorRef = useRef(null)
+  const burgerRef = useRef(null)
   /* False until the pill has been placed once, so it never slides in from 0. */
   const armed = useRef(false)
 
@@ -127,31 +133,68 @@ function Navbar() {
     navigate(`/${href}`)
   }
 
-  const select = (index, href) => (event) => {
+  const select = (index, href, hasSubmenu) => (event) => {
     event.preventDefault()
+
+    /*
+     * Inside the open drawer, a row that owns a submenu discloses it rather
+     * than navigating. There is no hover on a phone, so tapping the row is
+     * the only gesture available to reach what is under it, and the drawer
+     * only exists below 1100px: if it is open, we are on a small screen.
+     *
+     * Home itself is not lost. The logo sits a thumb away in the same bar
+     * and goes to the top of the home page from anywhere.
+     */
+    if (hasSubmenu && open) {
+      setSubOpen((wasOpen) => !wasOpen)
+      return
+    }
+
+    /*
+     * A mouse click leaves the link focused, and the Home menu opens on
+     * :focus-within, so it would hang open over the page long after the
+     * scroll has left the nav. Keyboard activation reports detail 0 and must
+     * keep its focus, otherwise tabbing loses its place.
+     */
+    if (event.detail > 0) event.currentTarget.blur()
     setOpen(false)
     setActive(index)
     goToChapter(href)
   }
 
+  /* The logo is the way home from anywhere, including from an open menu. */
   const jump = (href) => (event) => {
     event.preventDefault()
     setOpen(false)
+    setMenuOpen(false)
     goToChapter(href)
   }
 
-  return (
-    <header className={`navbar navbar--${theme}`} data-open={open || undefined}>
+  const bar = (
+    <header
+      className={`navbar navbar--${theme}`}
+      data-open={open || undefined}
+      data-menu={menuOpen ? 'open' : undefined}
+    >
       <Logo onClick={jump('#home')} />
 
+      {/*
+       * The chapter drawer's own button. Plain text, because the bars now
+       * belong to the burger and two identical icons in one bar would read
+       * as two ways to open the same thing.
+       */}
       <button
         type="button"
         className="navbar__toggle"
         aria-expanded={open}
         aria-controls="primary-navigation"
-        onClick={() => setOpen((wasOpen) => !wasOpen)}
+        onClick={() => {
+          // Closing the drawer collapses the disclosure with it, so it opens
+          // the same way every time rather than remembering.
+          setSubOpen(false)
+          setOpen((wasOpen) => !wasOpen)
+        }}
       >
-        <span className="navbar__toggle-bars" aria-hidden="true" />
         Menu
       </button>
 
@@ -162,34 +205,134 @@ function Navbar() {
       >
         <span className="navbar__indicator" ref={indicatorRef} aria-hidden="true" />
 
-        {nav.links.map(({ label, href }, index) => (
-          <a
-            key={label}
-            ref={(el) => {
-              linkRefs.current[index] = el
-            }}
-            className={`navbar__link${index === active ? ' navbar__link--active' : ''}`}
-            href={href}
-            aria-current={index === active ? 'page' : undefined}
-            onClick={select(index, href)}
-          >
-            {label}
-          </a>
-        ))}
+        {nav.links.map(({ label, href, menu: submenu }, index) => {
+          const link = (
+            <a
+              key={label}
+              /*
+               * The pill is placed from offsetLeft/offsetWidth, which are
+               * read against the nearest positioned ancestor. A menu item
+               * wraps its link in a relatively positioned box, so the ref
+               * has to sit on whichever element is the direct child of
+               * .navbar__links, or the pill measures from inside the wrapper
+               * and lands at its left edge.
+               */
+              ref={
+                submenu
+                  ? undefined
+                  : (el) => {
+                      linkRefs.current[index] = el
+                    }
+              }
+              className={`navbar__link${index === active ? ' navbar__link--active' : ''}`}
+              href={href}
+              aria-current={index === active ? 'page' : undefined}
+              /* Only a disclosure while the drawer is open; a plain link
+                 otherwise, which is what it still is on a desktop. */
+              aria-expanded={submenu && open ? subOpen : undefined}
+              onClick={select(index, href, Boolean(submenu))}
+            >
+              {label}
+              {submenu ? (
+                <svg
+                  className="navbar__caret"
+                  viewBox="0 0 24 24"
+                  width="11"
+                  height="11"
+                  fill="none"
+                  aria-hidden="true"
+                >
+                  <path
+                    d="m6 9 6 6 6-6"
+                    stroke="currentColor"
+                    strokeWidth="2.2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </svg>
+              ) : null}
+            </a>
+          )
+
+          if (!submenu) return link
+
+          return (
+            <div
+              key={label}
+              className="navbar__item"
+              data-sub={subOpen ? 'open' : undefined}
+              ref={(el) => {
+                linkRefs.current[index] = el
+              }}
+            >
+              {link}
+
+              {/*
+               * Opened by :hover and :focus-within, so there is no state and
+               * no listener behind it. Closing the mobile panel is the one
+               * thing CSS cannot do, and it rides the bubble from the link
+               * rather than an onClick on <Link>, whose own handler would be
+               * overwritten by a passed one and break client-side routing.
+               */}
+              <div className="navbar__menu" onClick={() => setOpen(false)}>
+                <ul className="navbar__menu-list">
+                  {submenu.map((entry) => (
+                    <li key={entry.to}>
+                      <Link className="navbar__menu-link" to={entry.to}>
+                        {entry.label}
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+          )
+        })}
       </nav>
 
       <div className="navbar__actions">
-        <a className="navbar__schedule" href="#contact" onClick={jump('#contact')}>
-          {nav.schedule}
-        </a>
         <Link className="navbar__signin" to="/sign-in">
           {nav.signIn}
         </Link>
-        <a className="navbar__contact" href="#contact" onClick={jump('#contact')}>
-          {nav.contact}
-        </a>
       </div>
+
+      {/*
+       * The two bars are the design asset (48x1, 6px apart) drawn as spans
+       * rather than the SVG file, so each one can travel and turn on its
+       * own. Longhand `translate` and `rotate` rather than a `transform`
+       * shorthand: they compose, and the bar has to do both at once.
+       */}
+      <button
+        type="button"
+        className="navbar__burger"
+        ref={burgerRef}
+        aria-label={menuOpen ? menuContent.close : menuContent.open}
+        aria-expanded={menuOpen}
+        aria-controls="site-menu"
+        onClick={() => {
+          // Two menus open at once is never the intent, and on mobile the
+          // drawer sits directly under the sheet.
+          setOpen(false)
+          setMenuOpen((wasOpen) => !wasOpen)
+        }}
+      >
+        <span className="navbar__burger-bars" aria-hidden="true">
+          <span />
+          <span />
+        </span>
+      </button>
     </header>
+  )
+
+  return (
+    <>
+      {bar}
+      <MenuOverlay
+        open={menuOpen}
+        onClose={() => setMenuOpen(false)}
+        buttonRef={burgerRef}
+      />
+    </>
   )
 }
 

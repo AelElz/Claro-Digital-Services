@@ -1,69 +1,27 @@
 /*
- * Logo box is 171x108 in design units. Children are placed as percentages of
- * that box, so the fixed aspect ratio keeps every vector's own aspect ratio
- * and relative position intact as the logo scales.
- *
- * Size is driven by --logo-w so the nav, the intro and the footer can each
- * set their own without touching the internal geometry.
+ * Sized by --logo-w alone; the aspect ratio comes from the artwork's own ink
+ * bounds, so the bar, the intro and the footer each set a width and nothing
+ * else. The two ratios are the two viewBoxes in logo-paths.js.
  */
 .logo {
-  position: relative;
   display: block;
   width: var(--logo-w, 104px);
-  aspect-ratio: 171 / 108;
+  aspect-ratio: 621.88 / 206.68;
   flex: none;
   color: var(--white);
-  transition: color 0.5s var(--ease-out), filter 0.35s ease;
+  transition:
+    color 0.5s var(--ease-out),
+    filter 0.35s ease;
 }
 
-.logo__word {
-  position: absolute;
-  left: 0;
-  top: 0;
-  /* 70.899 / 171 of the box width. */
-  font-family: var(--font-logo);
-  font-weight: 400;
-  font-size: calc(var(--logo-w, 104px) * 0.4146);
-  line-height: normal;
-  white-space: nowrap;
+.logo--full {
+  aspect-ratio: 757.43 / 206.68;
 }
 
-.logo__vec {
-  position: absolute;
+.logo__art {
   display: block;
-  overflow: visible;
-}
-
-/* 15.8729 square at (36.243, 25.926) */
-.logo__dot-1 {
-  left: 21.195%;
-  top: 24.005%;
-  width: 9.283%;
-  height: 14.697%;
-}
-
-/* 8.46555 square at (75.132, 49.735) */
-.logo__dot-2 {
-  left: 43.936%;
-  top: 46.051%;
-  width: 4.951%;
-  height: 7.838%;
-}
-
-/* 8.7301 square at (126.454, 48.412) */
-.logo__dot-3 {
-  left: 73.951%;
-  top: 44.826%;
-  width: 5.105%;
-  height: 8.083%;
-}
-
-/* 34.2285 x 30.6876 at (136.772, 49.206) */
-.logo__symbol {
-  left: 79.984%;
-  top: 45.561%;
-  width: 20.017%;
-  height: 28.415%;
+  width: 100%;
+  height: 100%;
 }
 
 a.logo:hover,

@@ -6,13 +6,52 @@
  */
 
 /*
+ * The full-screen menu behind the burger.
+ *
+ * A second, flatter way through the site: the pill nav moves between chapters
+ * of the home page, this moves between pages. About, Work and Insights have
+ * no page yet, so they point at the path they will live at and the router
+ * shows the "still being built" page, the same honest dead end the footer
+ * links use.
+ *
+ * Declared before `nav`, because the nav's Home menu is built from it: object
+ * literals are evaluated in order, so reading it the other way round would
+ * hit the temporal dead zone.
+ */
+export const menu = {
+  open: 'Open menu',
+  close: 'Close menu',
+  links: [
+    { label: 'Home', to: '/' },
+    { label: 'About', to: '/about' },
+    { label: 'Work', to: '/work' },
+    { label: 'Insights', to: '/insights' },
+    { label: 'Contact', to: '/contact' },
+  ],
+  legal: [
+    { label: 'Privacy Policy', to: '/legal/privacy-policy' },
+    { label: 'Terms of Service', to: '/legal/terms-of-service' },
+  ],
+  copyright: '© Claro Digital Services SARL · 2026',
+}
+
+/*
  * The live nav carries two more entries, Blog and FAQ, which are separate
  * routes rather than home-page sections. This is a single-page build, so the
  * pill holds only what it can actually scroll to.
  */
 export const nav = {
   links: [
-    { label: 'Home', href: '#home' },
+    /*
+     * `menu` turns a chapter link into a hover menu, and Home carries it: the
+     * pages are the one thing the pill nav cannot otherwise reach, since
+     * every other entry is a chapter of this page.
+     *
+     * The entries are the burger menu's own, minus Home itself, rather than a
+     * second copy of the same four destinations. One list, so the two can
+     * never drift apart.
+     */
+    { label: 'Home', href: '#home', menu: menu.links.filter((link) => link.to !== '/') },
     { label: 'The Agency', href: '#agency' },
     { label: 'Services', href: '#services' },
     { label: 'Solutions', href: '#sectors' },
@@ -20,9 +59,7 @@ export const nav = {
     { label: 'Clients', href: '#testimonial' },
     { label: 'Contact', href: '#contact' },
   ],
-  schedule: 'Schedule a call',
   signIn: 'Sign in',
-  contact: 'Contact Us',
 }
 
 export const hero = {
@@ -353,6 +390,88 @@ export const method = {
  * Shown for any route that has no page yet, instead of quietly dumping the
  * visitor back on the contact section as if the link had worked.
  */
+/*
+ * The /about page.
+ *
+ * Every number here is one the home page already claims, so the two cannot
+ * drift apart: 70+ engagements, 4.8/5, 12 cities, founded 2022, Tangier.
+ * Nothing is invented, and there are no named people, because we have no
+ * roster to put behind the names.
+ */
+export const about = {
+  eyebrow: 'About us',
+  title: 'A studio built for the long term.',
+  lede: 'Claro is an AI and development agency in Tangier. We build the software companies actually run on: custom applications, internal tools, automated workflows. Not demos, not prototypes that quietly get rebuilt in eighteen months.',
+
+  stage: {
+    eyebrow: 'What we do',
+    title: 'Tell us what you need.',
+    lede: 'Most engagements start as a sentence. Ours start as a conversation about what that sentence is really asking for.',
+    /*
+     * Typed one after another in the prompt bar. Written to sound like the
+     * briefs we actually receive, not like feature bullets.
+     */
+    prompts: [
+      'we got everything you need',
+      'build me a booking platform',
+      'automate my back office',
+      'put an AI agent on my support inbox',
+      'make the whole thing load faster',
+    ],
+  },
+
+  story: {
+    eyebrow: 'Where we come from',
+    title: 'Our story',
+    paragraphs: [
+      'Claro started in 2022 with one conviction: most software fails long before anyone writes a line of code. It fails in the brief, where nobody agreed what success looked like.',
+      'So we put the diagnosis first. Business model, market, objective, constraint. Only then do we design, and only then do we build. It takes longer to start and far less time to finish.',
+      'Seventy engagements later, across twelve cities, that order has not changed. Neither has the rule we hold ourselves to: no delay goes unreported.',
+    ],
+  },
+
+  principles: {
+    eyebrow: 'How we work',
+    title: 'Four things we will not trade away.',
+    items: [
+      {
+        n: '01',
+        title: 'Diagnosis before design',
+        body: 'We ask what the business needs before we ask what the screen should look like. The brief is where projects are won or lost.',
+      },
+      {
+        n: '02',
+        title: 'Built to be handed over',
+        body: 'Your code is readable, documented and yours. No lock-in, no black box, nothing that only we know how to run.',
+      },
+      {
+        n: '03',
+        title: 'AI where it earns its place',
+        body: 'Agents and automation for the repetitive work that drains a team. Not as a label on the invoice.',
+      },
+      {
+        n: '04',
+        title: 'Say it early',
+        body: 'If something slips, you hear it from us the day we know. That single habit is why the number below is what it is.',
+      },
+    ],
+  },
+
+  stats: [
+    { value: '70', suffix: '+', label: 'Engagements delivered' },
+    { value: '4.8', suffix: '/5', label: 'Client satisfaction' },
+    { value: '12', suffix: '+', label: 'Cities in Morocco' },
+    { value: '2022', suffix: '', label: 'Building since' },
+  ],
+
+  cta: {
+    title: 'Have a project in mind?',
+    body: 'Tell us what you are trying to build. We will tell you what it really takes, before you commit to anything.',
+    action: 'Start a project',
+    secondary: 'See our method',
+  },
+}
+
 export const notFound = {
   eyebrow: '404',
   title: 'This one is still being built.',

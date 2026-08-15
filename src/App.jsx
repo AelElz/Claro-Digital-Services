@@ -1,5 +1,6 @@
 import { useEffect } from 'react'
 import Preloader from './components/Preloader'
+import AboutPage from './pages/AboutPage'
 import AuthPage from './pages/AuthPage'
 import ContactPage from './pages/ContactPage'
 import Home from './pages/Home'
@@ -15,6 +16,7 @@ import { useRouter } from './lib/router-context'
  */
 const ROUTES = {
   '/': Home,
+  '/about': AboutPage,
   '/contact': ContactPage,
   '/method': MethodPage,
   '/sign-in': AuthPage,
