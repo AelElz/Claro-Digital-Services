@@ -1,0 +1,153 @@
+/*
+ * The EN / FR pill.
+ *
+ * Geometry is the design asset's, read as proportions of its 113x38 box:
+ * a fully rounded outline, a 4px inset all round, and a highlight that fills
+ * the remaining 30px of height. Every colour is taken from a --nav-* custom
+ * property with a fallback, so the same component works in the bar, where
+ * the palette flips crossing from a dark chapter to a light one, and inside
+ * the full-screen menu, where there is no bar to inherit from.
+ *
+ * The fallbacks are written at the point of use rather than declared on
+ * .lang itself. A declaration here would win over the value inherited from
+ * .navbar--light, and the pill would stay white on a light chapter.
+ */
+.lang {
+  --lang-h: 38px;
+  --lang-pad: 4px;
+  --lang-option-w: 51px;
+
+  position: relative;
+  flex: none;
+  display: flex;
+  align-items: center;
+  height: var(--lang-h);
+  padding: var(--lang-pad);
+  border: 1px solid var(--nav-line, rgba(255, 255, 255, 0.4));
+  border-radius: 999px;
+  transition: border-color 0.5s var(--ease-out);
+}
+
+/*
+ * Position and transition are written imperatively (see place() in
+ * LangToggle.jsx). Nothing here may animate `transform`: the highlight is
+ * centred with translateY(-50%), and a transform animation replaces that
+ * outright, which drops it half its own height mid-slide.
+ */
+.lang__indicator {
+  position: absolute;
+  top: 50%;
+  left: 0;
+  width: 0;
+  height: calc(var(--lang-h) - var(--lang-pad) * 2);
+  border: 1px solid var(--lang-edge, rgba(255, 255, 255, 0.9));
+  border-radius: 999px;
+  /* The asset's #9C9C9C at 20%: a grey wash rather than a white one, so the
+     highlight reads as a recess in the glass and not as a second pill. */
+  background: var(--lang-fill, rgba(156, 156, 156, 0.2));
+  transform: translateY(-50%);
+  opacity: 0;
+  pointer-events: none;
+}
+
+.lang__option {
+  position: relative;
+  z-index: 1;
+  width: var(--lang-option-w);
+  padding: 0;
+  border: 0;
+  background: none;
+  line-height: calc(var(--lang-h) - var(--lang-pad) * 2);
+  /* 12px, the asset's own cap height resolved back to a size. */
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--nav-ink-dim, var(--white-dim));
+  transition: color 0.3s var(--ease-out);
+}
+
+.lang__option:hover {
+  color: var(--nav-ink, var(--white));
+}
+
+.lang__option--active {
+  color: var(--nav-ink, var(--white));
+}
+
+.lang__option:focus-visible {
+  outline: 2px solid var(--crimson);
+  outline-offset: 4px;
+  border-radius: 999px;
+}
+
+/*
+ * The bar gets tight well before the drawer does: at 1100px the Menu button
+ * appears alongside the logo, Sign in, this and the burger. Everything
+ * narrows a little rather than one control being dropped.
+ */
+@media (max-width: 1100px) {
+  .lang {
+    --lang-option-w: 42px;
+  }
+}
+
+/*
+ * Below 560px the bar cannot hold five controls at any size, so the copy in
+ * the bar goes and the copy in the full-screen menu is the way to switch.
+ * The menu's own is never hidden, so the control is always reachable.
+ */
+@media (max-width: 560px) {
+  .navbar .lang {
+    display: none;
+  }
+}
+
+/*
+ * The drawn pill is 38px tall and each half is 42x30, which is well under
+ * the 44px a thumb needs, and on a phone the copy in the menu is the only
+ * way to switch language at all. Growing the control itself would break the
+ * asset's proportions, so the target is an out-of-flow pseudo-element the
+ * way the burger's is: it costs no layout and changes nothing visually.
+ *
+ * Only the height is padded out. Widening past the option's own 42px would
+ * make the two targets overlap across the middle of the pill, where the tap
+ * would land on whichever button comes later in the DOM rather than on the
+ * one under the thumb. 42x44 clears the guidance and stays unambiguous.
+ */
+@media (pointer: coarse) {
+  .lang__option::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 100%;
+    height: 44px;
+    translate: -50% -50%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lang,
+  .lang__option {
+    transition: none;
+  }
+}
+
+/* ---- In the full-screen menu ----------------------------------------- */
+
+/*
+ * Sits in the menu's foot beside the copyright, which is the one part of
+ * the sheet that is a row of small controls rather than a list of large
+ * links. The label is visible here: the foot has room for it, and it says
+ * what the two letters are for.
+ */
+.menu__lang {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.menu__lang-label {
+  margin: 0;
+  font-size: 0.82rem;
+  color: var(--white-dim);
+}

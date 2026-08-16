@@ -1,9 +1,9 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
+import LangToggle from './LangToggle'
 import Link from './Link'
 import Logo from './Logo'
 import MenuOverlay from './MenuOverlay'
-/* `menu` is also the name of a nav link's submenu below, hence the alias. */
-import { nav, menu as menuContent } from '../content'
+import { useContent } from '../content'
 import { onFrame, scrollTo } from '../lib/motion'
 import { useRouter } from '../lib/router-context'
 import './Navbar.css'
@@ -39,6 +39,8 @@ function panelAt(panels, y) {
 
 function Navbar() {
   const { path, navigate } = useRouter()
+  /* `menu` is also the name of a nav link's submenu below, hence the alias. */
+  const { nav, menu: menuContent, a11y } = useContent()
   const [theme, setTheme] = useState('dark')
   const [active, setActive] = useState(0)
   const [open, setOpen] = useState(false)
@@ -72,10 +74,20 @@ function Navbar() {
     pill.style.opacity = '1'
   }, [active])
 
+  /*
+   * `nav` is a dependency even though place() never reads it: the labels do.
+   * "Home" is 76px and "Accueil" is 83px, so a language switch that leaves
+   * the active chapter alone still changes the size of the thing the pill is
+   * sitting on, and without this the pill keeps the previous language's
+   * width and under-hangs the word by seven pixels.
+   *
+   * It re-measures with the travel on, so the pill grows into the new word
+   * rather than snapping.
+   */
   useLayoutEffect(() => {
     place(armed.current)
     armed.current = true
-  }, [place])
+  }, [place, nav])
 
   useEffect(() => {
     // Snap during a resize; following the drag with a 0.42s ease lags badly.
@@ -113,7 +125,10 @@ function Navbar() {
 
       setActive(index)
     })
-  }, [])
+    /* Re-subscribes on a language change. The hrefs are identical in both
+       dictionaries, so nothing about the spy actually moves; this only keeps
+       the closure from holding the previous language's array. */
+  }, [nav])
 
   /*
    * A chapter link means two different things depending on where you are.
@@ -201,7 +216,7 @@ function Navbar() {
       <nav
         id="primary-navigation"
         className={`navbar__links${open ? ' navbar__links--open' : ''}`}
-        aria-label="Primary"
+        aria-label={a11y.primaryNav}
       >
         <span className="navbar__indicator" ref={indicatorRef} aria-hidden="true" />
 
@@ -291,6 +306,11 @@ function Navbar() {
       </nav>
 
       <div className="navbar__actions">
+        {/* Before Sign in, not after: the burger already owns the right end,
+            and a control that changes the whole page should not sit between
+            the one action in the bar and the menu that opens over it. */}
+        <LangToggle />
+
         <Link className="navbar__signin" to="/sign-in">
           {nav.signIn}
         </Link>

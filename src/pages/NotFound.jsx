@@ -2,7 +2,7 @@ import Footer from '../components/Footer'
 import Link from '../components/Link'
 import Mark from '../components/Mark'
 import Navbar from '../components/Navbar'
-import { notFound } from '../content'
+import { useContent } from '../content'
 import { useReveal } from '../hooks/useReveal'
 import { useRouter } from '../lib/router-context'
 import './NotFound.css'
@@ -13,6 +13,7 @@ import './NotFound.css'
  * it obvious the link was understood and simply is not built yet.
  */
 function NotFound() {
+  const { notFound } = useContent()
   const revealRef = useReveal()
   const { path } = useRouter()
 

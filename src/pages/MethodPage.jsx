@@ -2,11 +2,12 @@ import Footer from '../components/Footer'
 import Link from '../components/Link'
 import Mark from '../components/Mark'
 import Navbar from '../components/Navbar'
-import { method } from '../content'
+import { useContent } from '../content'
 import { useReveal } from '../hooks/useReveal'
 import './MethodPage.css'
 
 function MethodPage() {
+  const { method } = useContent()
   const revealRef = useReveal()
 
   return (
@@ -79,7 +80,7 @@ function MethodPage() {
               {method.principles.map((principle, index) => (
                 <article
                   className="method__principle reveal"
-                  key={principle.title}
+                  key={index}
                   style={{ '--i': index + 1 }}
                 >
                   <h3>{principle.title}</h3>

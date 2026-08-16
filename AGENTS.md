@@ -118,6 +118,33 @@ It clamps scrolling to a stale limit after a route change, which does not just
 break jumps, it makes the lower part of a taller page unreachable. Re-measure
 on route change and before programmatic jumps.
 
+### A React key taken from translated copy makes content disappear
+
+`key={item.kicker}` looks stable. It is not: the kicker is copy, so switching
+language changes the key, and React unmounts the element and mounts a new one
+in its place. The replacement arrives without `is-in`, which is `opacity: 0`.
+
+`useReveal` now adopts late-mounted `.reveal` nodes through a MutationObserver,
+so the content comes back. That is a safety net, not a licence: a remount still
+throws away the element and replays its enter animation, so a whole chapter
+visibly re-fades on every switch.
+
+**Key list items on something that is not copy.** An index is right for these
+lists, which are fixed length and never reorder. `formula`, `method.phases` and
+`about.principles.items` carry an `n` and use it.
+
+*Symptom: switching language empties a section, and switching back does not
+bring it back.*
+
+### `place()` must re-run when the labels change, not just the tab
+
+The nav pill is measured from the active link. "Home" is 76px and "Accueil" is
+83px, so a language switch resizes the thing the pill sits on without changing
+which thing it is. `useLayoutEffect` therefore depends on `nav` as well as on
+`place`, or the pill keeps the previous language's width.
+
+*Symptom: the pill under-hangs the word by a few pixels, on one language only.*
+
 ### Hover fill rows need `overflow: hidden`
 
 `.reveal-row` clips the fill disc, which is always larger than the row.
@@ -138,8 +165,27 @@ corners at the same moment it scales makes the row flash black.
 
 ## 3. Patterns to follow
 
-**Copy goes in `src/content.js`.** Never hardcode user-facing text in a
-component.
+**Copy goes in `src/content/`,** read with `useContent()`. Never hardcode
+user-facing text in a component, and that includes `aria-label`: a screen
+reader is a reader. `en.js` and `fr.js` must stay the same shape, down to
+array lengths, or one language silently renders nothing where the other has a
+string.
+
+**Paths, slugs and form field names are locale-independent.** `/about` is
+`/about` in both, because the router matches the path and there is no
+`/a-propos` to match. Client and case-study names are the same string in both
+files, so `/work/klit` resolves the same whichever language you are reading.
+Only the visible label translates.
+
+**State keyed on copy has to be carried across a switch.** A `<select>` value
+is the option's own text, so a language change leaves it holding a string that
+is no longer in the list: the box goes blank and a required field silently
+becomes unsubmittable. `/contact` maps the selection across by index. Prefer
+storing an index over storing a label.
+
+**French punctuation uses ` ` before `? ! : ;`,** written as the escape
+and never as the character. An invisible non-breaking space in a source file
+is deleted by accident and never noticed.
 
 **Navigate with `<Link to>`,** never a bare anchor. It handles client-side
 routing and external URLs (new tab, `rel="noopener noreferrer"`).
@@ -172,7 +218,11 @@ so it never fires. Use a centre-line probe or `threshold: 0`.
 - No source maps shipped
 - No `dangerouslySetInnerHTML`, no `eval`, no `new Function`, no `innerHTML` writes
 - Every `target="_blank"` carries `rel="noopener noreferrer"`
-- The only storage used anywhere is one `sessionStorage` flag for the intro
+- Storage is two entries and neither is personal: one `sessionStorage` flag for
+  the intro, and `claro:locale` in `localStorage`, which holds `en` or `fr`.
+  Every access to it is wrapped, because `localStorage` throws outright in
+  Safari's private mode rather than returning null. Anything read back out of
+  it is validated against the known locales before use.
 
 ### The contact form (`/contact`)
 
@@ -236,9 +286,11 @@ Roughly in order of value.
 3. **Delete the unused assets.** About 1MB in `src/assets/`; only
    `kintsugi-people.jpg` is imported.
 4. **Real authentication**, if accounts are actually wanted. See above.
-5. **French locale.** The client's live site is French and this is a
-   translation. Split `content.js` per locale and add a switch. Layout already
-   uses logical properties, so RTL would not be a rewrite.
+5. **A third locale, if one is ever wanted.** English and French are done.
+   Adding one is a new file in `src/content/`, an entry in `LOCALES`, and
+   nothing else; the toggle measures its own options, so it grows on its own.
+   Layout already uses logical properties, so RTL would not be a rewrite,
+   though the pill would need more than two positions to stay readable.
 6. **Tests.** The invariants in section 2 are exactly what a small Playwright
    suite should assert: no gaps across the scroll, nav targets landing, grain
    coverage, no uncovered band at the bottom.

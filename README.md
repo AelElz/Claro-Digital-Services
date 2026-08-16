@@ -37,16 +37,23 @@ npm run lint
 
 ```
 src/
-  content.js          Every user-facing string on the site. Start here.
+  content/
+    en.js             Every user-facing string, in English. Start here.
+    fr.js             The same strings in French. Identical shape.
+    index.js          useContent(), the dictionaries, and slug().
   index.css           Design tokens, the panel system, shared primitives.
   App.jsx             Route table.
-  main.jsx            Entry, wraps the app in RouterProvider.
+  main.jsx            Entry, wraps the app in LocaleProvider + RouterProvider.
 
   lib/
     motion.js         The single rAF loop, Lenis, scrollTo, history nav.
     router.jsx        Router provider (pathname state + pushState).
     router-context.js The context object, split out so the provider can
                       live in a .jsx file without breaking fast refresh.
+    locale.jsx        Language provider: detection, persistence, <html lang>.
+    locale-context.js The locale context and the list of locales, split out
+                      for the same reason, and to keep content/ and lib/
+                      from importing each other in a cycle.
 
   hooks/
     usePanelStack.js  Turns the home page sections into the sticky stack.
@@ -57,8 +64,11 @@ src/
   pages/              One file per route
 ```
 
-**All copy lives in `src/content.js`.** Nothing user-facing is hardcoded in a
-component. To change wording, change that file and nothing else.
+**All copy lives in `src/content/`.** Nothing user-facing is hardcoded in a
+component; components read it with `const { hero } = useContent()`. To change
+wording, change `en.js` and `fr.js` and nothing else. The two files must keep
+identical shapes, because a key present in one and missing from the other
+renders nothing at all in the other language.
 
 ---
 
@@ -183,7 +193,8 @@ revalidated.
   own mail client. Nothing is transmitted by the site.
 - **`/sign-in` is a prototype, not authentication.** See the security section
   of [AGENTS.md](AGENTS.md) before touching it.
-- **English only.** The client's live site is French, and a language switch
-  would need `content.js` split per locale.
+- **English and French.** The EN/FR pill in the bar switches the whole site.
+  The choice is remembered in `localStorage`; with nothing remembered the
+  browser's own language decides. Routes do not change with language.
 - **No tests.** Verification so far has been runtime measurement in a browser
   console; see AGENTS.md for the approach.

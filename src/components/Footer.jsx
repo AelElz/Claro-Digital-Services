@@ -1,6 +1,6 @@
 import Logo from './Logo'
 import Link from './Link'
-import { footer, slug } from '../content'
+import { slug, useContent } from '../content'
 import { useReveal } from '../hooks/useReveal'
 import './Footer.css'
 
@@ -9,6 +9,7 @@ import './Footer.css'
  * so it must not be assigned a sticky offset of its own.
  */
 function Footer() {
+  const { footer } = useContent()
   const revealRef = useReveal()
 
   return (
@@ -20,8 +21,10 @@ function Footer() {
             <p className="footer__blurb">{footer.blurb}</p>
           </div>
 
+          {/* Index, not the title: a translated key remounts the column on a
+              language switch and it returns without its reveal class. */}
           {footer.columns.map((column, index) => (
-            <nav className="footer__col reveal" key={column.title} style={{ '--i': index + 1 }}>
+            <nav className="footer__col reveal" key={index} style={{ '--i': index + 1 }}>
               <h2 className="footer__col-title">{column.title}</h2>
               <ul>
                 {column.links.map((link) => (

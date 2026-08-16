@@ -1,8 +1,14 @@
 /*
- * Every string on the page, in one place.
+ * Every English string on the page, in one place.
  *
  * Copy is the clarodigi.com home page, translated to English. Nothing here
  * is invented: each block maps to a section of the live site.
+ *
+ * `fr.js` is this file's twin and must keep exactly the same shape: same
+ * keys, same array lengths, same object fields. Anything added here has to
+ * be added there, or the French page renders `undefined` where a string was
+ * expected. Every `to:` path is deliberately identical across the two, since
+ * routes are locale-independent (see content/index.js).
  */
 
 /*
@@ -18,9 +24,11 @@
  * literals are evaluated in order, so reading it the other way round would
  * hit the temporal dead zone.
  */
-export const menu = {
+const menu = {
   open: 'Open menu',
   close: 'Close menu',
+  /* Labels the language toggle, in the bar and in the sheet. */
+  language: 'Language',
   links: [
     { label: 'Home', to: '/' },
     { label: 'About', to: '/about' },
@@ -40,7 +48,7 @@ export const menu = {
  * routes rather than home-page sections. This is a single-page build, so the
  * pill holds only what it can actually scroll to.
  */
-export const nav = {
+const nav = {
   links: [
     /*
      * `menu` turns a chapter link into a hover menu, and Home carries it: the
@@ -62,7 +70,7 @@ export const nav = {
   signIn: 'Sign in',
 }
 
-export const hero = {
+const hero = {
   eyebrow: 'Clarodigi · Morocco',
   name: 'Claro Digital',
   tagline: 'AI & development agency, Morocco.',
@@ -77,7 +85,7 @@ export const hero = {
   ],
 }
 
-export const formula = {
+const formula = {
   eyebrow: 'Our formula',
   title: 'The formula for success.',
   lede: 'Every Claro engagement follows the same architecture, the one that has delivered 70+ projects without a single unreported delay.',
@@ -100,7 +108,7 @@ export const formula = {
   ],
 }
 
-export const services = {
+const services = {
   eyebrow: 'Your success starts here',
   title: 'What do you want to accomplish?',
   items: [
@@ -128,7 +136,7 @@ export const services = {
   cta: 'Explore the service',
 }
 
-export const work = {
+const work = {
   eyebrow: 'Portfolio · 2026 view',
   title: '70+ engagements, 12 cities, 4.8/5 average.',
   lede: 'Selected engagements and the result each one delivered.',
@@ -148,7 +156,7 @@ export const work = {
   footnote: 'Clarodigi · since 2022 · no unreported delay',
 }
 
-export const sectors = {
+const sectors = {
   eyebrow: 'Sectors',
   title: 'We understand your sector.',
   lede: 'We have delivered across 6 sectors, with measurable results every time. Your market has its own stakes. So do our solutions.',
@@ -229,7 +237,7 @@ export const sectors = {
   caseCta: 'View the project',
 }
 
-export const testimonial = {
+const testimonial = {
   eyebrow: 'Trusted testimonials',
   title: 'What our clients say.',
   quote:
@@ -245,7 +253,7 @@ export const testimonial = {
   shotHref: 'https://kintsugi-people.com/',
 }
 
-export const contact = {
+const contact = {
   eyebrow: 'Booking calls for the coming weeks',
   display: "Let's begin.",
   title: ['Ready to build', 'something', 'that lasts?'],
@@ -256,19 +264,6 @@ export const contact = {
 }
 
 /*
- * Turns a label into the path its page would live at. Most of these pages do
- * not exist yet, which is the point: the link carries an honest destination
- * and the router shows the "still being built" page, instead of every dead
- * link quietly dumping the visitor on the contact section.
- */
-export const slug = (label) =>
-  label
-    .toLowerCase()
-    .replace(/&/g, 'and')
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-|-$/g, '')
-
-/*
  * The /sign-in page.
  *
  * This is a front-end prototype: there is no backend, so there is no real
@@ -276,7 +271,7 @@ export const slug = (label) =>
  * the page on purpose, so nobody types a password they use elsewhere into a
  * form that cannot protect it.
  */
-export const auth = {
+const auth = {
   eyebrow: 'Account',
   signIn: {
     title: 'Welcome back.',
@@ -325,7 +320,7 @@ export const auth = {
 }
 
 /* The /method page, taken from clarodigi.com/en/method (already English). */
-export const method = {
+const method = {
   eyebrow: 'Our method',
   title: 'How we work.',
   lede: 'A rigorous 4-phase approach, tested on 70+ projects, that ensures the success of every collaboration.',
@@ -398,7 +393,7 @@ export const method = {
  * Nothing is invented, and there are no named people, because we have no
  * roster to put behind the names.
  */
-export const about = {
+const about = {
   eyebrow: 'About us',
   title: 'A studio built for the long term.',
   lede: 'Claro is an AI and development agency in Tangier. We build the software companies actually run on: custom applications, internal tools, automated workflows. Not demos, not prototypes that quietly get rebuilt in eighteen months.',
@@ -472,7 +467,7 @@ export const about = {
   },
 }
 
-export const notFound = {
+const notFound = {
   eyebrow: '404',
   title: 'This one is still being built.',
   body: "We haven't finished this page yet. Everything else is live, so have a look around, or tell us what you were after and we'll point you at it.",
@@ -482,7 +477,7 @@ export const notFound = {
 }
 
 /* The /contact page, translated from clarodigi.com/contact. */
-export const contactPage = {
+const contactPage = {
   eyebrow: 'Contact',
   title: "Let's start your project.",
   lede: 'Describe what you need and we reply within 24 hours.',
@@ -567,6 +562,8 @@ export const contactPage = {
     },
   ],
   submit: 'Send',
+  /* Subject line of the mailto the form composes. */
+  mailSubject: 'Project enquiry',
   emailLabel: 'Email',
   email: 'contact@clarodigi.com',
   addressLabel: 'Address',
@@ -576,7 +573,7 @@ export const contactPage = {
   back: 'Back to home',
 }
 
-export const footer = {
+const footer = {
   blurb: 'Our team of talented developers is here to turn your ideas into reality.',
   columns: [
     {
@@ -612,4 +609,48 @@ export const footer = {
   contactCta: 'Contact Us',
   legal: '© Claro Digital Services SARL · 2026 · Clarodigi · est. 2022 · Tangier',
   legalLinks: ['Privacy Policy', 'Legal Notice'],
+}
+
+/*
+ * The document head. Set on every locale change, because a page that swaps
+ * its copy and keeps an English tab title has only half changed language,
+ * and the description is what a search engine and a shared link both read.
+ */
+const meta = {
+  title: 'Claro Digital · AI & development agency, Morocco',
+  description:
+    'Claro Digital, AI and development agency in Morocco. Custom solutions for companies building for the long term.',
+}
+
+/*
+ * Names for things that carry no visible label: landmarks, the sector
+ * tablist, the mark in the bar. A screen reader is a reader, so these
+ * translate with everything else.
+ */
+const a11y = {
+  primaryNav: 'Primary',
+  siteMenu: 'Site menu',
+  pages: 'Pages',
+  sectors: 'Sectors',
+  logoHome: 'Claro, home',
+}
+
+export default {
+  meta,
+  a11y,
+  menu,
+  nav,
+  hero,
+  formula,
+  services,
+  work,
+  sectors,
+  testimonial,
+  contact,
+  auth,
+  method,
+  about,
+  notFound,
+  contactPage,
+  footer,
 }

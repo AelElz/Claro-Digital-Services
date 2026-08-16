@@ -1,11 +1,12 @@
 import Panel from './Panel'
 import Link from './Link'
 import Mark from './Mark'
-import { services } from '../content'
+import { useContent } from '../content'
 import { useReveal } from '../hooks/useReveal'
 import './Services.css'
 
 function Services() {
+  const { services } = useContent()
   const revealRef = useReveal()
 
   return (
@@ -22,8 +23,15 @@ function Services() {
         </div>
 
         <ul className="services__list">
+          {/*
+           * Keyed on the index, not on the copy. The list is fixed and never
+           * reorders, and a key taken from a translated string changes when
+           * the language does, which remounts the card: it comes back
+           * without its reveal class, so it fades in again or, before
+           * useReveal learned to adopt new nodes, never reappeared at all.
+           */}
           {services.items.map((item, index) => (
-            <li className="services__item reveal" key={item.kicker} style={{ '--i': index + 1 }}>
+            <li className="services__item reveal" key={index} style={{ '--i': index + 1 }}>
               {/*
                * A plain card, not a fill row. These open the method page, so
                * they behave like the hero's button: a quiet lift on hover

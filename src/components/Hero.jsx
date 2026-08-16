@@ -1,7 +1,7 @@
 import { useEffect, useRef } from 'react'
 import HeroBackground from './HeroBackground'
 import Mark from './Mark'
-import { hero } from '../content'
+import { useContent } from '../content'
 import { clamp, onFrame, scrollTo, write } from '../lib/motion'
 import { useRouter } from '../lib/router-context'
 import './Hero.css'
@@ -13,6 +13,7 @@ import './Hero.css'
  * moving through it rather than past it.
  */
 function Hero() {
+  const { hero } = useContent()
   const { navigate } = useRouter()
   const rootRef = useRef(null)
   const contentRef = useRef(null)

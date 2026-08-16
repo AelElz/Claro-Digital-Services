@@ -1,10 +1,11 @@
 import Panel from './Panel'
 import Mark from './Mark'
-import { contact } from '../content'
+import { useContent } from '../content'
 import { useReveal } from '../hooks/useReveal'
 import './Contact.css'
 
 function Contact() {
+  const { contact } = useContent()
   const revealRef = useReveal()
 
   /* Duplicated so the marquee can wrap seamlessly. */

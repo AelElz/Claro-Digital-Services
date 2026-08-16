@@ -3,12 +3,13 @@ import Panel from './Panel'
 import Link from './Link'
 import Mark from './Mark'
 import shot from '../assets/kintsugi-people.jpg'
-import { testimonial } from '../content'
+import { useContent } from '../content'
 import { trackRect } from '../lib/motion'
 import { useReveal } from '../hooks/useReveal'
 import './Testimonial.css'
 
 function Testimonial() {
+  const { testimonial } = useContent()
   const revealRef = useReveal()
   const shotRef = useRef(null)
 

@@ -1,7 +1,7 @@
 import { useEffect, useRef } from 'react'
 import Panel from './Panel'
 import Mark from './Mark'
-import { formula } from '../content'
+import { useContent } from '../content'
 import { useReveal } from '../hooks/useReveal'
 import { clamp, onFrame } from '../lib/motion'
 import './Formula.css'
@@ -12,6 +12,7 @@ import './Formula.css'
  * coming forward out of the page rather than scrolling onto it.
  */
 function Formula() {
+  const { formula } = useContent()
   const revealRef = useReveal()
   const innerRef = useRef(null)
 

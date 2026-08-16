@@ -9,6 +9,7 @@ import {
   WORD,
   WORDMARK_VIEWBOX,
 } from './logo-paths'
+import { useContent } from '../content'
 import './Logo.css'
 
 /*
@@ -29,7 +30,8 @@ import './Logo.css'
  *             for the intro, where it is large enough to read
  */
 function Logo({ as: Tag = 'a', className = '', full = false, ...rest }) {
-  const props = Tag === 'a' ? { href: '#home', 'aria-label': 'Claro, home', ...rest } : rest
+  const { a11y } = useContent()
+  const props = Tag === 'a' ? { href: '#home', 'aria-label': a11y.logoHome, ...rest } : rest
 
   return (
     <Tag className={`logo${full ? ' logo--full' : ''} ${className}`.trim()} {...props}>

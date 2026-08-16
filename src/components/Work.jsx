@@ -1,12 +1,13 @@
 import Panel from './Panel'
 import Link from './Link'
 import Mark from './Mark'
-import { slug, work } from '../content'
+import { slug, useContent } from '../content'
 import { useCircularReveal } from '../hooks/useCircularReveal'
 import { useReveal } from '../hooks/useReveal'
 import './Work.css'
 
 function Work() {
+  const { work } = useContent()
   const revealRef = useReveal()
   const hoverRef = useCircularReveal()
 
@@ -30,7 +31,7 @@ function Work() {
 
         <div className="work__table" ref={hoverRef}>
           <div className="work__legend reveal" aria-hidden="true">
-            <span>Selected engagements</span>
+            <span>{work.columnLeft}</span>
             <span>{work.columnResult}</span>
           </div>
 

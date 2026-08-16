@@ -2,7 +2,7 @@ import { useMemo, useRef, useState } from 'react'
 import Footer from '../components/Footer'
 import Mark from '../components/Mark'
 import Navbar from '../components/Navbar'
-import { auth } from '../content'
+import { useContent } from '../content'
 import { useReveal } from '../hooks/useReveal'
 import './AuthPage.css'
 
@@ -52,6 +52,7 @@ function strengthOf(password) {
 }
 
 function AuthPage() {
+  const { auth } = useContent()
   const revealRef = useReveal()
   const [mode, setMode] = useState('signIn')
   const [values, setValues] = useState({ name: '', email: '', password: '', confirm: '' })
@@ -78,7 +79,10 @@ function AuthPage() {
     }
 
     return next
-  }, [isSignUp, values])
+    /* `auth` changes identity on a language switch, so the messages have to
+       be recomputed: without it a field that was already invalid would keep
+       showing the previous language's error. */
+  }, [auth, isSignUp, values])
 
   const strength = strengthOf(values.password)
 

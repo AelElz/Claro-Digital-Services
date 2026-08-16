@@ -2,12 +2,13 @@ import { useState } from 'react'
 import Panel from './Panel'
 import Link from './Link'
 import Mark from './Mark'
-import { sectors, slug } from '../content'
+import { slug, useContent } from '../content'
 import { useCircularReveal } from '../hooks/useCircularReveal'
 import { useReveal } from '../hooks/useReveal'
 import './Sectors.css'
 
 function Sectors() {
+  const { sectors, a11y } = useContent()
   const revealRef = useReveal()
   const hoverRef = useCircularReveal()
   const [active, setActive] = useState(0)
@@ -44,7 +45,7 @@ function Sectors() {
         </dl>
 
         <div className="sectors__body reveal" style={{ '--i': 1 }}>
-          <ul className="sectors__nav" ref={hoverRef} role="tablist" aria-label="Sectors">
+          <ul className="sectors__nav" ref={hoverRef} role="tablist" aria-label={a11y.sectors}>
             {sectors.items.map((item, index) => (
               <li key={item.name}>
                 <button

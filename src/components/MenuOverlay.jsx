@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react'
-import { menu } from '../content'
+import LangToggle from './LangToggle'
+import { useContent } from '../content'
 import { freezeBackground, scrollTo } from '../lib/motion'
 import { useRouter } from '../lib/router-context'
 import './MenuOverlay.css'
@@ -18,6 +19,7 @@ import './MenuOverlay.css'
  */
 function MenuOverlay({ open, onClose, buttonRef }) {
   const { path, navigate } = useRouter()
+  const { menu, a11y } = useContent()
   const panelRef = useRef(null)
   const firstLinkRef = useRef(null)
 
@@ -87,9 +89,9 @@ function MenuOverlay({ open, onClose, buttonRef }) {
       data-state={open ? 'open' : 'closed'}
       role="dialog"
       aria-modal="true"
-      aria-label="Site menu"
+      aria-label={a11y.siteMenu}
     >
-      <nav className="menu__nav" aria-label="Pages">
+      <nav className="menu__nav" aria-label={a11y.pages}>
         <ul className="menu__list">
           {menu.links.map(({ label, to }, index) => (
             <li className="menu__item" key={label} style={{ '--i': index }}>
@@ -108,6 +110,16 @@ function MenuOverlay({ open, onClose, buttonRef }) {
       </nav>
 
       <div className="menu__foot">
+        {/*
+         * The bar's own copy of this is hidden below 560px, where five
+         * controls will not fit across a phone. Here it is never hidden, so
+         * the language is always one tap from the burger whatever the size.
+         */}
+        <div className="menu__lang">
+          <p className="menu__lang-label">{menu.language}</p>
+          <LangToggle />
+        </div>
+
         <p className="menu__copyright">{menu.copyright}</p>
         <ul className="menu__legal">
           {menu.legal.map(({ label, to }) => (

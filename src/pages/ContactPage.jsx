@@ -1,8 +1,8 @@
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import Footer from '../components/Footer'
 import Mark from '../components/Mark'
 import Navbar from '../components/Navbar'
-import { contactPage } from '../content'
+import { useContent } from '../content'
 import { useReveal } from '../hooks/useReveal'
 import './ContactPage.css'
 
@@ -31,15 +31,31 @@ const sanitise = (value, max) =>
     .trim()
     .slice(0, max)
 
-function composeMailto(values) {
+/*
+ * Takes the dictionary rather than reaching for it, because there are two of
+ * them now: the labels in the body and the subject line have to be the
+ * language the visitor filled the form in, not whichever one this module
+ * happened to import.
+ */
+function composeMailto(values, contactPage) {
   const lines = contactPage.fields
     .map((field) => [field, sanitise(values[field.name], field.max ?? 200)])
     .filter(([, value]) => value)
     .map(([field, value]) => `${field.label}: ${value}`)
 
+  /*
+   * The select's first option is its own placeholder and carries an empty
+   * value, so an untouched field is already falsy here. Comparing against
+   * that option rather than against the words "Choose" keeps the guard true
+   * in both languages if the empty value is ever dropped.
+   */
+  const placeholder = contactPage.fields.find((field) => field.name === 'service')?.options[0]
   const service = sanitise(values.service, 60)
-  const subject =
-    service && !service.startsWith('Choose') ? `Project enquiry: ${service}` : 'Project enquiry'
+  const chosen = service && service !== placeholder
+
+  const subject = chosen
+    ? `${contactPage.mailSubject}: ${service}`
+    : contactPage.mailSubject
 
   return `mailto:${contactPage.email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(lines.join('\n'))}`
 }
@@ -48,12 +64,42 @@ function composeMailto(values) {
 const MIN_FILL_MS = 3000
 
 function ContactPage() {
+  const { contactPage } = useContent()
   const revealRef = useReveal()
   const [values, setValues] = useState({})
   const openedAt = useRef(Date.now())
 
   const set = (name) => (event) =>
     setValues((current) => ({ ...current, [name]: event.target.value }))
+
+  /*
+   * A select's value is the option's own text, so switching language leaves
+   * it holding a string that no longer appears in the list. The browser
+   * shows an empty box, and `source` is required, so a half-filled form
+   * quietly becomes unsubmittable and the visitor is not told why.
+   *
+   * The options are the same list in both languages, in the same order, so
+   * the answer survives as its index. Anything that does not match is left
+   * alone rather than guessed at.
+   */
+  const previous = useRef(contactPage)
+  useEffect(() => {
+    const before = previous.current
+    previous.current = contactPage
+    if (before === contactPage) return
+
+    setValues((current) => {
+      const next = { ...current }
+      for (const field of contactPage.fields) {
+        if (field.type !== 'select') continue
+        const was = before.fields.find((entry) => entry.name === field.name)
+        const index = was?.options.indexOf(current[field.name]) ?? -1
+        /* Index 0 is the placeholder, which carries an empty value anyway. */
+        if (index > 0) next[field.name] = field.options[index]
+      }
+      return next
+    })
+  }, [contactPage])
 
   const onSubmit = (event) => {
     event.preventDefault()
@@ -63,7 +109,7 @@ function ContactPage() {
     // Time trap: catches the scripted submitters that leave the trap alone.
     if (Date.now() - openedAt.current < MIN_FILL_MS) return
 
-    window.location.href = composeMailto(values)
+    window.location.href = composeMailto(values, contactPage)
   }
 
   return (

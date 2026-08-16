@@ -5,7 +5,7 @@ import Logo from '../components/Logo'
 import Mark from '../components/Mark'
 import Navbar from '../components/Navbar'
 import PromptBar from '../components/PromptBar'
-import { about } from '../content'
+import { useContent } from '../content'
 import { useReveal } from '../hooks/useReveal'
 import { clamp, onFrame, reducedMotion, trackRect, write } from '../lib/motion'
 import './AboutPage.css'
@@ -27,6 +27,7 @@ const DRIFT_PX = 50
  * replace the first.
  */
 function Stage() {
+  const { about } = useContent()
   const frameRef = useRef(null)
   const zoomRef = useRef(null)
   const tiltRef = useRef(null)
@@ -118,6 +119,7 @@ function Stage() {
 }
 
 function AboutPage() {
+  const { about } = useContent()
   const revealRef = useReveal()
 
   return (
@@ -180,7 +182,7 @@ function AboutPage() {
 
           <div className="about__story-body">
             {about.story.paragraphs.map((paragraph, index) => (
-              <p className="reveal" key={paragraph.slice(0, 24)} style={{ '--i': index + 1 }}>
+              <p className="reveal" key={index} style={{ '--i': index + 1 }}>
                 {paragraph}
               </p>
             ))}
@@ -211,7 +213,7 @@ function AboutPage() {
 
         <section className="container about__stats">
           {about.stats.map((stat, index) => (
-            <div className="about__stat reveal" key={stat.label} style={{ '--i': index + 1 }}>
+            <div className="about__stat reveal" key={index} style={{ '--i': index + 1 }}>
               <p className="about__stat-value">
                 {stat.value}
                 <span>{stat.suffix}</span>
