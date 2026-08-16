@@ -292,8 +292,8 @@ html.is-loading body {
   height: 120px;
   z-index: 60;
   pointer-events: none;
-  backdrop-filter: blur(3px) saturate(1.25);
   -webkit-backdrop-filter: blur(3px) saturate(1.25);
+  backdrop-filter: blur(3px) saturate(1.25);
 }
 
 /*
@@ -313,13 +313,13 @@ html.is-loading body {
 }
 
 .edge-blur::before {
-  backdrop-filter: blur(10px) saturate(1.4);
   -webkit-backdrop-filter: blur(10px) saturate(1.4);
+  backdrop-filter: blur(10px) saturate(1.4);
 }
 
 .edge-blur::after {
-  backdrop-filter: blur(26px) saturate(1.5);
   -webkit-backdrop-filter: blur(26px) saturate(1.5);
+  backdrop-filter: blur(26px) saturate(1.5);
 }
 
 .edge-blur--top {
@@ -350,8 +350,8 @@ html.is-loading body {
 .edge-blur--bottom {
   bottom: 0;
   height: 96px;
-  backdrop-filter: blur(14px) saturate(1.4);
   -webkit-backdrop-filter: blur(14px) saturate(1.4);
+  backdrop-filter: blur(14px) saturate(1.4);
   mask-image: linear-gradient(to top, #000 10%, transparent 100%);
   -webkit-mask-image: linear-gradient(to top, #000 10%, transparent 100%);
 }
@@ -430,15 +430,20 @@ html.is-loading body {
  * Buttons
  * ===================================================================== */
 
+/*
+ * Compact by design. At 56px with a 42px disc inside, the pair of buttons
+ * carried more weight than the line of copy above them; at 46 they read as
+ * controls under the sentence rather than competing with it.
+ */
 .btn {
   display: inline-flex;
   align-items: center;
-  gap: 14px;
-  height: 56px;
-  padding: 0 8px 0 26px;
+  gap: 10px;
+  height: 46px;
+  padding: 0 6px 0 20px;
   border: 1px solid transparent;
   border-radius: 999px;
-  font-size: 1rem;
+  font-size: 0.95rem;
   font-weight: 400;
   white-space: nowrap;
   transition:
@@ -448,9 +453,11 @@ html.is-loading body {
     transform 0.35s var(--ease-pop);
 }
 
+/* One flat wine, not the ink-to-plum ramp. A gradient across a pill this
+   small never resolves into anything; it just softens the edge of the shape. */
 .btn--primary {
-  border-color: rgba(255, 255, 255, 0.6);
-  background: var(--grad-cta);
+  border-color: rgba(255, 255, 255, 0.55);
+  background: var(--wine);
   color: var(--white);
 }
 
@@ -469,12 +476,17 @@ html.is-loading body {
   display: grid;
   place-items: center;
   flex: none;
-  width: 42px;
-  height: 40px;
+  width: 34px;
+  height: 34px;
   border-radius: 999px;
   background: var(--off-white);
   color: var(--ink);
   transition: transform 0.35s var(--ease-pop);
+}
+
+.btn__icon svg {
+  width: 15px;
+  height: 15px;
 }
 
 .btn:hover .btn__icon {
@@ -482,7 +494,7 @@ html.is-loading body {
 }
 
 .btn--ghost {
-  padding-inline: 26px;
+  padding-inline: 20px;
   border-color: rgba(255, 255, 255, 0.28);
   color: var(--white);
 }
@@ -722,8 +734,8 @@ html.is-loading body {
   }
 
   .edge-blur--top {
-    backdrop-filter: blur(12px) saturate(1.35);
     -webkit-backdrop-filter: blur(12px) saturate(1.35);
+    backdrop-filter: blur(12px) saturate(1.35);
   }
 
   /*
