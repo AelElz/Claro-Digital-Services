@@ -1,78 +1,258 @@
+/*
+ * The record.
+ *
+ * Written phone first. The base rules below are the 390px design: five
+ * tappable cards, no columns, the client name in the display serif at the
+ * size a thumb-held phone can actually read. The table only appears once
+ * there is width for three columns to say anything.
+ */
+
+/* ---- The chapter's one field ---------------------------------------- */
+
+.work__scene {
+  position: relative;
+  isolation: isolate;
+}
+
+/*
+ * Everything sits above the field, the way .card does with its own. Without
+ * this the positioned field paints over the non-positioned copy, because a
+ * positioned z-index:0 box comes after block-level descendants in the
+ * painting order even when it was written first.
+ */
+.work__scene > *:not(.field) {
+  position: relative;
+  z-index: 1;
+}
+
+/*
+ * Aimed top-right on a phone, where the copy runs the full height and a
+ * light anywhere else sits behind the rows and greys them out. Kept weak:
+ * this is the room the table is lit by, not the subject.
+ */
+.work__scene .work__field {
+  inset: -6% -8%;
+  --fx: 90%;
+  --fy: 7%;
+  --fx2: 2%;
+  --fy2: 48%;
+  --f-strength: 0.5;
+}
+
+/*
+ * Faded out before the scene box ends, at both ends. A gradient simply
+ * clipped by its box leaves a hard horizontal edge between lit and unlit
+ * black exactly where this chapter meets the one above it, and that edge
+ * slides as the panel settles into its sticky offset.
+ */
+.work__scene .work__field::before {
+  -webkit-mask-image: linear-gradient(to bottom, transparent 0%, #000 16%, #000 64%, transparent 100%);
+  mask-image: linear-gradient(to bottom, transparent 0%, #000 16%, #000 64%, transparent 100%);
+}
+
+/*
+ * The field carries .reveal only so useReveal turns it on. That class's
+ * transition is a shorthand, which would replace the field's own and kill
+ * the bloom outright, so `scale` is appended to the property list instead
+ * of the whole declaration being rewritten (BUILD-SPEC). The reveal's 14px
+ * settle is cancelled: a field blooms, it does not slide.
+ */
+html.js .work__field.reveal {
+  translate: none;
+  transition-property: opacity, translate, scale;
+}
+
+/* ---- The list -------------------------------------------------------- */
+
+/* No columns on a phone, so nothing to head. */
 .work__legend {
-  display: flex;
-  justify-content: space-between;
-  padding: 0 clamp(20px, 2.4vw, 34px) 14px;
-  border-bottom: 1px solid var(--card-line);
-  font-size: var(--fs-label);
-  font-weight: 500;
-  color: var(--white-faint);
+  display: none;
 }
 
 .work__list {
+  display: grid;
+  gap: 10px;
   margin: 0;
   padding: 0;
   list-style: none;
 }
 
-.work__item + .work__item {
-  border-top: 1px solid var(--card-line);
-}
-
-.work__row {
+/*
+ * A card, here. .reveal-row supplies the padding, the clipping and the
+ * position the fill disc is measured from; the edge and the ground are the
+ * phone reading of the row.
+ */
+/* Doubled selector: .reveal-row sets width and radius at the same weight,
+   so this must not depend on which stylesheet the bundler emits first. */
+.reveal-row.work__row {
   width: 100%;
-  border-radius: 16px;
+  border: 1px solid var(--line);
+  border-radius: var(--r-card);
+  background: var(--surface);
 }
 
 .work__cells {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 0.8fr) minmax(0, 1.3fr);
-  gap: 16px;
-  align-items: baseline;
+  grid-template-columns: minmax(0, 1fr) 34px;
+  column-gap: 16px;
+  row-gap: 6px;
+  align-items: center;
 }
 
+/*
+ * The client names are the argument, so they are set in the display face.
+ * Bodoni needs the optical indent correction at this size or the column
+ * looks inset next to the small type under it.
+ */
 .work__client {
-  font-size: clamp(1.25rem, 2.1vw, 1.7rem);
-  font-weight: 500;
-  letter-spacing: -0.02em;
+  grid-area: 1 / 1;
+  font-family: var(--font-display);
+  font-size: clamp(1.7rem, 6vw, 2.15rem);
+  font-weight: 400;
+  line-height: 1;
+  letter-spacing: -0.012em;
+  margin-inline-start: -0.055em;
+  color: var(--fg);
 }
 
 .work__city {
+  grid-area: 2 / 1;
   font-size: var(--fs-label);
-  font-weight: 500;
-  color: var(--white-faint);
+  color: var(--fg-2);
 }
 
 .work__result {
-  text-align: right;
-  color: var(--white-dim);
+  grid-area: 3 / 1;
+  font-size: var(--fs-body);
+  line-height: 1.45;
+  color: var(--fg-2);
 }
 
-@media (pointer: fine) {
-  .work__row:hover .work__city,
-  .work__row:hover .work__result {
-    color: rgba(255, 255, 255, 0.78);
-  }
+/*
+ * The affordance a hover fill cannot give a thumb. On a desktop it is a
+ * small confirmation the row is a link; on a phone it is the only thing
+ * saying so, which is why it is present at every size rather than added at
+ * a breakpoint.
+ */
+.work__go {
+  grid-area: 1 / 2 / 4 / 3;
+  display: grid;
+  place-items: center;
+  align-self: center;
+  width: 34px;
+  height: 34px;
+  border: 1px solid var(--line);
+  border-radius: var(--r-pill);
+  color: var(--fg-2);
+  transition:
+    color 0.35s var(--ease-out),
+    border-color 0.35s var(--ease-out),
+    translate 0.35s var(--ease-out);
 }
 
 .work__foot {
   margin: clamp(28px, 3.4vw, 44px) 0 0;
   padding-inline: clamp(20px, 2.4vw, 34px);
   font-size: var(--fs-label);
-  font-weight: 500;
   color: var(--crimson);
 }
 
-@media (max-width: 780px) {
+/*
+ * Touch has no hover, so the press itself has to answer. The whole row is
+ * already far past 44px, so no out-of-flow target is needed here.
+ */
+@media (pointer: coarse) {
+  .work__row:active {
+    border-color: var(--line-2);
+    background: var(--surface-2);
+  }
+}
+
+@media (pointer: fine) {
+  .work__row:hover .work__go {
+    border-color: var(--line-2);
+    translate: 3px 0;
+  }
+}
+
+/* ---- Table --------------------------------------------------------- */
+
+/*
+ * Above the phone breakpoint the cards become rows of one table: hairline
+ * dividers instead of five separate edges, and the three facts line up into
+ * columns that can be read down.
+ */
+@media (min-width: 681px) {
+  /* Same track list as the cells, so the headings sit over their columns. */
   .work__legend {
-    display: none;
+    display: grid;
+    grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.62fr) minmax(0, 1.45fr) 34px;
+    column-gap: clamp(16px, 2vw, 32px);
+    padding: 0 clamp(20px, 2.4vw, 34px) 14px;
+    border-bottom: 1px solid var(--line);
+    font-size: var(--fs-label);
+    color: var(--fg-2);
+  }
+
+  .work__legend span:last-child {
+    grid-column: 3;
+    text-align: right;
+  }
+
+  .work__list {
+    gap: 0;
+  }
+
+  .reveal-row.work__row {
+    border: 0;
+    border-radius: var(--r-inner);
+    background: none;
+  }
+
+  .work__item + .work__item {
+    border-top: 1px solid var(--line);
   }
 
   .work__cells {
-    grid-template-columns: 1fr;
-    gap: 6px;
+    grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.62fr) minmax(0, 1.45fr) 34px;
+    column-gap: clamp(16px, 2vw, 32px);
+    row-gap: 0;
+  }
+
+  .work__client {
+    grid-area: 1 / 1;
+    font-size: clamp(1.45rem, 2.4vw, 2rem);
+  }
+
+  .work__city {
+    grid-area: 1 / 2;
   }
 
   .work__result {
-    text-align: left;
+    grid-area: 1 / 3;
+    text-align: right;
+  }
+
+  .work__go {
+    grid-area: 1 / 4;
+  }
+
+  /* The field can afford to sit lower once the copy is not full-height. */
+  .work__scene .work__field {
+    --fx: 86%;
+    --fy: 12%;
+    --fx2: 4%;
+    --fy2: 86%;
+    --f-strength: 0.55;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .work__go {
+    transition: none;
+  }
+
+  .work__row:hover .work__go {
+    translate: none;
   }
 }

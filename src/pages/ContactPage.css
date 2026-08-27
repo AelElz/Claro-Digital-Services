@@ -1,37 +1,121 @@
 /*
- * Standalone page, so it carries its own dark surface rather than a panel
- * from the stack. No sticky, no dwell, no grain: this is a form, and the
- * chapter machinery would only get in the way of filling it in.
+ * /contact
+ *
+ * The one page on the site where the visitor does something rather than
+ * reads something, so it is built the way the rest of the world is built and
+ * then made to answer back. The form sits in a .card over its own crimson
+ * field, exactly as the closing chapter's gated form does; the details card
+ * beside it takes wine, so the pair reads as one spectrum rather than as two
+ * boxes that happen to be next to each other.
+ *
+ * Everything below the layout is state. The audit found this page had almost
+ * none: no busy state, no confirmation, no failure, and a Send button that
+ * silently did nothing for the first three seconds. A form that gives no
+ * answer is not a quiet form, it is a broken one.
  */
+
 .contact-page {
   position: relative;
+  display: flex;
+  flex-direction: column;
   min-height: 100svh;
   background: var(--black);
-  color: var(--white);
+  color: var(--fg);
+  isolation: isolate;
+  /*
+   * The fields bleed past their cards' corners; clip keeps that off the
+   * document width, which on a phone is the difference between a page and a
+   * page that scrolls sideways.
+   *
+   * Safe only because nothing here is sticky. `overflow: clip` on an
+   * ancestor makes `position: sticky` a silent no-op (AGENTS.md).
+   */
+  overflow: clip;
+}
+
+/*
+ * Film grain over the whole page, the same tile the panels use. Static: this
+ * layer is as tall as the document, and repainting it seven times a second
+ * for a flicker nobody is looking at is a cost the phone pays for nothing.
+ */
+.contact-page__grain {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background-image: var(--grain-tile);
+  background-size: 180px 180px;
+  opacity: 0.05;
 }
 
 .contact-page__inner {
-  padding-block: clamp(120px, 16vh, 200px) clamp(72px, 10vh, 120px);
+  position: relative;
+  z-index: 1;
+  /* Clears the fixed nav, then gives the title room to be the first thing. */
+  padding-block: clamp(104px, 15vh, 176px) clamp(56px, 8vh, 104px);
 }
 
 .contact-page__head {
-  max-width: 46ch;
-  margin-bottom: clamp(44px, 6vw, 76px);
+  margin-bottom: clamp(30px, 5vw, 56px);
 }
 
 .contact-page__body {
   display: grid;
-  grid-template-columns: minmax(0, 1.55fr) minmax(0, 1fr);
-  gap: clamp(32px, 5vw, 76px);
+  gap: clamp(14px, 2.4vw, 22px);
   align-items: start;
 }
 
-/* ---- Form ------------------------------------------------------------ */
+/* ---- The form card ---------------------------------------------------- */
+
+.contact-page__form-card {
+  padding: clamp(20px, 5vw, 40px);
+}
+
+/*
+ * Aimed off the top right corner and faded out well before the inputs. A
+ * field sitting behind a text field is the one place on this site where the
+ * material actively costs legibility, so it lights the head of the card and
+ * leaves the controls on plain ground.
+ */
+.contact-page__form-card .field {
+  --fx: 88%;
+  --fy: -10%;
+  --fx2: -6%;
+  --fy2: 22%;
+  --f-strength: 0.62;
+}
+
+/*
+ * The fade is on the light, not on the whole layer.
+ *
+ * Masking the .field element itself would take the grain down with it, and
+ * the grain is the material rather than decoration on it: the texture runs
+ * the full height of the card while the light stops above the first input.
+ * -webkit- first, standard second, because the minifier treats the pair as
+ * duplicate declarations and keeps the last (AGENTS.md).
+ */
+.contact-page__form-card .field::before {
+  -webkit-mask-image: linear-gradient(to bottom, #000 0%, #000 30%, transparent 62%);
+  mask-image: linear-gradient(to bottom, #000 0%, #000 30%, transparent 62%);
+}
+
+/*
+ * The fields carry .reveal only so useReveal turns them on. That class's
+ * transition is a shorthand and would replace the field's own, killing the
+ * bloom outright, so `scale` is appended to the property list instead of the
+ * declaration being rewritten (BUILD-SPEC). The 14px settle is cancelled: a
+ * field blooms, it does not slide.
+ */
+html.js .contact-page__field.reveal {
+  translate: none;
+  transition-property: opacity, translate, scale;
+}
+
+/* ---- The form --------------------------------------------------------- */
 
 .contact-form {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: clamp(16px, 2vw, 24px);
+  gap: clamp(14px, 2.4vw, 20px);
 }
 
 /* Off-screen rather than display:none, which some bots skip. */
@@ -45,21 +129,15 @@
 }
 
 .contact-form__field {
-  display: flex;
-  flex-direction: column;
-  gap: 9px;
+  display: grid;
+  gap: 8px;
   min-width: 0;
-}
-
-.contact-form__field--wide,
-.contact-form__submit {
-  grid-column: 1 / -1;
 }
 
 .contact-form__label {
   font-size: var(--fs-label);
   font-weight: 500;
-  color: var(--white-dim);
+  color: var(--fg-2);
 }
 
 .contact-form__label em {
@@ -68,32 +146,69 @@
   color: var(--crimson);
 }
 
+/* ---- The control, and every state it has ------------------------------ */
+
 .contact-form__input {
   width: 100%;
-  padding: 14px 16px;
-  border: 1px solid var(--card-line);
-  border-radius: 14px;
-  background: var(--card);
+  min-height: 48px;
+  padding: 13px 15px;
+  border: 1px solid var(--line);
+  border-radius: var(--r-inner);
+  background: var(--surface-2);
   font: inherit;
-  font-size: 1rem;
-  color: var(--white);
+  font-size: var(--fs-body);
+  color: var(--fg);
   transition:
-    border-color 0.3s var(--ease-out),
-    background-color 0.3s var(--ease-out);
+    border-color 0.28s var(--ease-out),
+    background-color 0.28s var(--ease-out),
+    box-shadow 0.28s var(--ease-out);
 }
 
 .contact-form__input::placeholder {
-  color: var(--white-faint);
+  color: var(--fg-2);
 }
 
-.contact-form__input:hover {
-  border-color: rgba(255, 255, 255, 0.26);
+/* Hover: the edge lifts. Nothing moves, because a text field that shifts
+   under the pointer is harder to aim at, not friendlier. */
+.contact-form__input:hover:not(:disabled) {
+  border-color: var(--line-2);
 }
 
+/*
+ * Focus draws its own ring rather than the global outline, so the ring
+ * follows the input's radius instead of boxing it. It is a two-part
+ * indicator, border and halo, which survives Windows high contrast because
+ * the border is a real border.
+ */
 .contact-form__input:focus-visible {
   outline: none;
   border-color: var(--crimson);
-  background: rgba(255, 255, 255, 0.08);
+  background: var(--surface);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--crimson) 26%, transparent);
+}
+
+/*
+ * :user-invalid, not :invalid. :invalid matches every empty required field
+ * from the first paint, so the form would open already covered in errors
+ * before anyone had typed anything. This fires only once the visitor has
+ * actually left a field in a state the browser rejects, and the browser's
+ * own message says what is wrong in its own language.
+ */
+.contact-form__input:user-invalid {
+  border-color: var(--crimson);
+  background: color-mix(in srgb, var(--crimson) 7%, var(--surface-2));
+}
+
+.contact-form__input:user-invalid:focus-visible {
+  background: color-mix(in srgb, var(--crimson) 9%, var(--surface));
+}
+
+/* Disabled while the mail client is being handed the message. */
+.contact-form__input:disabled {
+  border-color: var(--line);
+  background: var(--surface);
+  color: var(--fg-2);
+  cursor: not-allowed;
 }
 
 textarea.contact-form__input {
@@ -102,30 +217,182 @@ textarea.contact-form__input {
   line-height: 1.55;
 }
 
-/* The native menu is light, so its options need a colour that survives it. */
-select.contact-form__input option {
+/*
+ * The native menu is the OS's, not ours. color-scheme: dark on :root gets it
+ * drawn dark; these two keep the option rows on the family rather than on
+ * whatever grey the platform picks for a dark list.
+ */
+.contact-form__input--select option {
   background: var(--ink);
-  color: var(--white);
+  color: var(--fg);
+}
+
+/* The cap, drawn only once it is close enough to matter. Digits only, so it
+   carries nothing to translate, and maxLength is still the control. */
+.contact-form__count {
+  justify-self: end;
+  font-size: var(--fs-label);
+  color: var(--fg-2);
+}
+
+/* ---- Send, and the wait in front of it -------------------------------- */
+
+.contact-form__foot {
+  display: grid;
+  justify-items: start;
+  margin-top: clamp(4px, 1vw, 10px);
 }
 
 .contact-form__submit {
-  justify-self: start;
-  margin-top: clamp(6px, 1vw, 12px);
+  position: relative;
+  /* Clips the arming bar to the pill. */
+  overflow: hidden;
 }
 
-/* ---- Details --------------------------------------------------------- */
+/*
+ * The three-second minimum fill time used to be an invisible exit from
+ * onSubmit. It is a visible state now: the button is plainly unavailable and
+ * a hairline fills across it toward the moment it is not. It never says why,
+ * because telling a scripted submitter what it tripped is what makes the
+ * check worthless, and a person only ever sees a control that arrives a
+ * beat after the form does.
+ */
+.contact-form__submit:disabled {
+  cursor: not-allowed;
+  border-color: var(--line-2);
+  background: var(--surface-2);
+  color: var(--fg-2);
+  box-shadow: none;
+}
+
+.contact-form__submit:disabled .btn__icon {
+  background: var(--surface);
+  color: var(--fg-2);
+}
+
+.contact-form__submit[data-state='sending'] {
+  cursor: progress;
+}
+
+.contact-form__arm {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  z-index: 2;
+  width: 100%;
+  height: 2px;
+  background: var(--crimson);
+  transform-origin: left center;
+  scale: 0 1;
+  animation: contact-arm var(--arm, 3000ms) linear forwards;
+}
+
+@keyframes contact-arm {
+  to {
+    scale: 1 1;
+  }
+}
+
+.contact-form__spinner {
+  animation: contact-spin 0.8s linear infinite;
+}
+
+@keyframes contact-spin {
+  to {
+    rotate: 360deg;
+  }
+}
+
+/* ---- The answer -------------------------------------------------------
+ *
+ * One live region, mounted from the first paint and filled later. A region
+ * that appears at the same instant as its text is not reliably announced, so
+ * this element is always in the tree and only its contents change; empty, it
+ * has no box and no margin, so it costs no space while it waits.
+ */
+
+.contact-form__status {
+  display: flex;
+  justify-self: stretch;
+  align-items: flex-start;
+  gap: 10px;
+  font-size: var(--fs-label);
+  line-height: 1.5;
+  color: var(--fg-2);
+}
+
+.contact-form__status[data-state='sent'],
+.contact-form__status[data-state='error'] {
+  margin-top: 16px;
+  padding: 13px 15px;
+  border: 1px solid var(--line);
+  border-radius: var(--r-inner);
+  background: var(--surface-2);
+}
+
+.contact-form__status-mark {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 22px;
+  height: 22px;
+  border-radius: var(--r-pill);
+  border: 1px solid currentcolor;
+}
+
+.contact-form__status[data-state='sent'] .contact-form__status-mark {
+  color: var(--crimson);
+}
+
+/*
+ * Failure runs warm rather than louder. Ember is the far end of the same
+ * family, so an error looks like this site having a problem instead of like
+ * a browser dialog dropped onto it.
+ */
+.contact-form__status[data-state='error'] {
+  border-color: color-mix(in srgb, var(--ember) 42%, transparent);
+  background: color-mix(in srgb, var(--ember) 8%, var(--surface-2));
+}
+
+.contact-form__status[data-state='error'] .contact-form__status-mark {
+  color: var(--ember);
+}
+
+.contact-form__status-text {
+  display: grid;
+  gap: 4px;
+}
+
+.contact-form__status-link {
+  justify-self: start;
+  color: var(--fg);
+  border-bottom: 1px solid var(--line-2);
+  transition: border-color 0.3s var(--ease-out);
+}
+
+.contact-form__status-link:hover,
+.contact-form__status-link:focus-visible {
+  border-color: var(--crimson);
+}
+
+/* ---- The details card -------------------------------------------------- */
 
 .contact-page__aside {
   display: grid;
-  gap: clamp(22px, 3vw, 34px);
-  padding: clamp(26px, 3.2vw, 40px);
-  border: 1px solid var(--card-line);
-  border-radius: 26px;
-  background: var(--card);
+  gap: clamp(20px, 4vw, 30px);
+  padding: clamp(20px, 5vw, 34px);
+}
+
+.contact-page__aside .field {
+  --fx: 10%;
+  --fy: 104%;
+  --fx2: 96%;
+  --fy2: 6%;
+  --f-strength: 0.5;
 }
 
 .contact-page__detail h2 {
-  margin: 0 0 8px;
+  margin: 0 0 6px;
   font-size: var(--fs-label);
   font-weight: 500;
   color: var(--crimson);
@@ -134,30 +401,120 @@ select.contact-form__input option {
 .contact-page__detail p,
 .contact-page__detail a {
   margin: 0;
-  font-size: 1.05rem;
-  color: var(--white);
+  font-size: var(--fs-body);
+  color: var(--fg);
+}
+
+.contact-page__detail a {
   transition: color 0.3s var(--ease-out);
 }
 
-.contact-page__detail a:hover {
+.contact-page__detail a:hover,
+.contact-page__detail a:focus-visible {
   color: var(--crimson);
 }
 
-@media (max-width: 900px) {
-  .contact-page__body {
-    grid-template-columns: 1fr;
+.contact-page__detail a:active {
+  color: var(--plum);
+}
+
+/* ---- Out ---------------------------------------------------------------- */
+
+.contact-page__back {
+  justify-self: start;
+  margin-top: clamp(28px, 4vw, 44px);
+  font-size: var(--fs-label);
+  color: var(--fg-2);
+  border-bottom: 1px solid transparent;
+  transition:
+    color 0.3s var(--ease-out),
+    border-color 0.3s var(--ease-out);
+}
+
+.contact-page__back:hover,
+.contact-page__back:focus-visible {
+  color: var(--fg);
+  border-color: var(--line-2);
+}
+
+/* ---- 560: two of anything fits ---------------------------------------- */
+
+@media (min-width: 560px) {
+  .contact-form {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .contact-form__field--wide,
+  .contact-form__foot {
+    grid-column: 1 / -1;
   }
 }
 
-@media (max-width: 620px) {
-  .contact-form {
-    grid-template-columns: 1fr;
+/* ---- 680: the details lie across the page ------------------------------ */
+
+@media (min-width: 680px) {
+  .contact-page__aside {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: clamp(20px, 3vw, 34px);
+  }
+}
+
+/* ---- 1100: form and details side by side ------------------------------- */
+
+@media (min-width: 1100px) {
+  .contact-page__body {
+    grid-template-columns: minmax(0, 1.62fr) minmax(0, 1fr);
+  }
+
+  .contact-page__head {
+    max-width: 68%;
+  }
+
+  /* Back to a column, because it is a column again. */
+  .contact-page__aside {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* ---- Touch ------------------------------------------------------------- */
+
+@media (pointer: coarse) {
+  .contact-form__input {
+    min-height: 52px;
+  }
+
+  .contact-form__submit {
+    height: 50px;
+  }
+
+  .contact-form__status-link,
+  .contact-page__detail a,
+  .contact-page__back {
+    display: inline-block;
+    padding-block: 6px;
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
   .contact-form__input,
-  .contact-page__detail a {
+  .contact-form__status-link,
+  .contact-page__detail a,
+  .contact-page__back {
     transition: none;
+  }
+
+  /*
+   * The bar is motion and nothing else, so it goes. The state it belonged to
+   * does not: the button is still visibly disabled, and it still becomes
+   * available on its own.
+   */
+  .contact-form__arm {
+    display: none;
+  }
+
+  /* Held at the open end of the arc, which still reads as a spinner glyph
+     rather than as a circle. */
+  .contact-form__spinner {
+    animation: none;
   }
 }

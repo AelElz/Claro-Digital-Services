@@ -1,186 +1,198 @@
 /*
- * The page is red, not black.
+ * /method
  *
- * Flat black under every section made the page read as an absence rather
- * than a surface. These four grounds are the house maroon (--ink, #42101c)
- * mixed down toward black in even steps, so the page warms as it descends
- * and hands over to the footer, which is --ink itself, without a seam.
+ * The ground is black, like every other surface on this site. What used to
+ * be here was four dark red bands (#0d0307 through #42101c) stepping toward
+ * the footer's maroon: it predates the world, and it put the page's warmth
+ * in the backgrounds, which meant every card on top of them had to be a
+ * lighter red again just to separate. Eight tones of maroon, none of them
+ * saying anything.
  *
- * Ink is the only hue involved; nothing here introduces a colour the design
- * system does not already carry.
+ * The warmth is in the fields now. The bands are spacing and nothing else,
+ * and the four phase cards walk wine -> plum -> crimson -> ember so the page
+ * visibly heats up as the method progresses. That progression is the one
+ * idea this page owns, so it is the only thing here allowed to be loud.
  */
+
 .method {
-  --ground-1: #0d0307;
-  --ground-2: #170510;
-  --ground-3: #210812;
-  --ground-4: #2e0b16;
-
-  /*
-   * Cards are a flat dark red, one clear step up from the ground they sit
-   * on. Hairline warmed to match: white on maroon reads blue-grey.
-   */
-  --method-card: #280a12;
-  --method-panel: #3a1220;
-  --method-line: rgba(255, 214, 224, 0.14);
-  --method-line-strong: rgba(227, 53, 93, 0.42);
-
   position: relative;
   /*
-   * A column, so the closing band absorbs any height left over by
-   * min-height. Without it that leftover shows the page's own darkest
-   * ground directly against the footer's maroon, which is a hard seam
-   * exactly where the two are supposed to meet.
+   * A column, so the closing band can take the leftover height. min-height
+   * on a short viewport would otherwise leave empty ground sitting between
+   * the last card and the footer, and the footer is --ink, so that gap reads
+   * as a seam rather than as space.
    */
   display: flex;
   flex-direction: column;
   min-height: 100svh;
-  background: var(--ground-1);
-  color: var(--white);
+  background: var(--black);
+  color: var(--fg);
   isolation: isolate;
   /*
-   * The bloom is 145% of the width and centred, so it hangs 22% past each
-   * edge and made the whole document wider than the screen: a phone could
-   * scroll the page sideways. Safe to clip here because nothing on this page
-   * is sticky; it would silently kill the home page's chapter stack.
+   * Fields bleed past their cards' rounded corners and the grain layer is
+   * larger than nothing here needs to be; clip keeps all of it off the
+   * document width, which on a phone is the difference between a page and a
+   * page that scrolls sideways.
+   *
+   * Safe ONLY because nothing on this page is sticky. `overflow: clip` on an
+   * ancestor makes `position: sticky` a silent no-op (AGENTS.md), so if
+   * anything here ever pins, this line goes first.
    */
   overflow: clip;
 }
 
-/* ---- Bands ----------------------------------------------------------- */
-
 /*
- * Each band paints its own ground and fades into the next, so the steps
- * between them are never a visible line across the page.
+ * Film grain over the whole page, the same tile the panels use, at the same
+ * strength they use over text.
+ *
+ * Static, unlike `.panel__grain`. That one re-seeds seven times a second
+ * across one viewport-tall panel; this element is as tall as the whole
+ * document, and repainting that layer on a timer is a cost the phone pays
+ * for a flicker nobody is looking at. The texture is the point.
  */
+.method__grain {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background-image: var(--grain-tile);
+  background-size: 180px 180px;
+  opacity: 0.05;
+}
+
+/* ---- Bands -----------------------------------------------------------
+ *
+ * No backgrounds. They are rhythm: how much black sits between one idea and
+ * the next.
+ */
+
 .method__band {
   position: relative;
   z-index: 1;
 }
 
 .method__band--intro {
-  background: linear-gradient(to bottom, var(--ground-1) 0%, var(--ground-2) 100%);
+  /* Clears the fixed nav, then gives the title room to be the first thing. */
+  padding-block: clamp(112px, 17vh, 184px) clamp(56px, 8vh, 96px);
 }
 
 .method__band--principles {
-  padding-block: clamp(64px, 9vh, 110px);
-  background: linear-gradient(to bottom, var(--ground-2) 0%, var(--ground-3) 100%);
+  padding-block: clamp(52px, 8vh, 92px);
 }
 
 .method__band--stats {
-  padding-block: clamp(8px, 2vh, 24px);
-  background: linear-gradient(to bottom, var(--ground-3) 0%, var(--ground-3) 60%, var(--ground-4) 100%);
+  padding-block: clamp(48px, 7vh, 84px);
 }
 
 .method__band--cta {
+  /* Takes the leftover height. See the note on `.method` above. */
   flex: 1;
-  padding-block: clamp(56px, 8vh, 96px) clamp(90px, 13vh, 150px);
-  background: linear-gradient(to bottom, var(--ground-4) 0%, var(--ink) 100%);
-}
-
-/*
- * The bloom behind the opening, the same crimson the hero uses. Fixed to the
- * top of the page rather than the viewport, so it belongs to the heading and
- * scrolls away with it.
- */
-.method__aura {
-  position: absolute;
-  top: 0;
-  left: 50%;
-  z-index: 0;
-  width: min(1500px, 145%);
-  aspect-ratio: 2 / 1;
-  translate: -50% -42%;
-  background: radial-gradient(
-    closest-side,
-    rgba(227, 53, 93, 0.44) 0%,
-    rgba(168, 41, 71, 0.2) 46%,
-    rgba(125, 29, 51, 0) 80%
-  );
-  pointer-events: none;
-}
-
-/* Same film grain the dark chapters carry, so the ground has a texture
-   rather than being a clean field of colour. */
-.method__grain {
-  position: absolute;
-  inset: 0;
-  z-index: 0;
-  background-image: var(--grain-tile);
-  opacity: 0.34;
-  pointer-events: none;
-}
-
-.method__inner {
-  padding-block: clamp(120px, 16vh, 200px) clamp(72px, 10vh, 120px);
+  padding-block: clamp(52px, 8vh, 92px) clamp(80px, 12vh, 136px);
 }
 
 .method__head {
-  max-width: 52ch;
-  margin-bottom: clamp(56px, 8vw, 96px);
+  max-width: 34ch;
 }
 
-/* ---- Phases ---------------------------------------------------------- */
+/* ---- The four phases -------------------------------------------------- */
 
 .method__phases {
   display: grid;
-  gap: clamp(20px, 2.4vw, 30px);
-  margin: 0;
+  gap: clamp(14px, 2vw, 22px);
+  margin: clamp(40px, 7vw, 72px) 0 0;
   padding: 0;
   list-style: none;
 }
 
-/*
- * One flat colour. A gradient wash across a card this size never resolves
- * into anything: it just makes the surface look uncertain about what colour
- * it is. The separation from the ground comes from the step in tone and the
- * hairline, which is all it needs.
- */
 .method__phase {
   display: grid;
-  grid-template-columns: auto minmax(0, 1.5fr) minmax(0, 1fr);
-  gap: clamp(20px, 3vw, 48px);
-  align-items: start;
-  padding: clamp(24px, 3vw, 38px);
-  border: 1px solid var(--method-line);
-  border-radius: 24px;
-  background: var(--method-card);
+  gap: clamp(14px, 2.4vw, 20px);
+  padding: clamp(22px, 4vw, 40px);
+}
+
+/*
+ * The hover ring is a pseudo-element, NOT a transition on the card.
+ *
+ * `.method__phase { transition: border-color ... }` used to sit here, and
+ * the card also carries `.reveal`. The reveal's own transition is declared
+ * in index.css and this file loads after it at equal weight, so the
+ * shorthand replaced it outright: no opacity fade, no 14px settle, and no
+ * `--i` stagger, on all four phases at once. Nothing about the page looked
+ * broken, the entrance simply was not there (BUILD-SPEC, AGENTS.md).
+ *
+ * A child can carry whatever transition it likes.
+ */
+.method__phase::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+  border: 1px solid transparent;
+  border-radius: inherit;
   transition: border-color 0.4s var(--ease-out);
 }
 
-.method__phase:hover {
-  border-color: var(--method-line-strong);
+@media (pointer: fine) {
+  .method__phase:hover::after {
+    border-color: var(--line-2);
+  }
 }
 
+/*
+ * The number. A real sequence, set in the display serif at the stat scale,
+ * because 01 through 04 is the argument this page is making and the four of
+ * them descending the screen are what carry it.
+ */
 .method__n {
-  font-size: var(--fs-label);
-  font-weight: 500;
-  color: var(--crimson);
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: var(--fs-stat);
+  font-weight: 400;
+  line-height: 0.82;
+  letter-spacing: -0.02em;
+  /* Optical indent: glyph side bearing scales with size, so display type
+     hangs in from a left edge the copy below it sits flush to. */
+  margin-inline-start: -0.055em;
+  color: var(--fg);
 }
 
 .method__phase-title {
-  margin: 0 0 12px;
-  font-size: clamp(1.3rem, 2.2vw, 1.8rem);
+  margin: 0;
+  font-size: var(--fs-sub);
   font-weight: 500;
-  line-height: 1.14;
+  line-height: 1.12;
   letter-spacing: -0.02em;
+  text-wrap: balance;
 }
 
 .method__phase-text {
-  margin: 0;
   max-width: 52ch;
-  color: var(--white-dim);
+  margin: clamp(8px, 1.2vw, 12px) 0 0;
+  font-size: var(--fs-body);
+  line-height: 1.6;
+  color: var(--fg-2);
+}
+
+/*
+ * Deliverables. A hairline, not a nested card: a box inside a box is the
+ * one container move this system does not make.
+ */
+.method__deliverables {
+  padding-top: clamp(16px, 2.4vw, 22px);
+  border-top: 1px solid var(--line);
 }
 
 .method__deliverables h3 {
-  margin: 0 0 14px;
+  margin: 0 0 12px;
   font-size: var(--fs-label);
   font-weight: 500;
-  color: rgba(255, 205, 218, 0.5);
+  color: var(--fg-2);
 }
 
 .method__deliverables ul {
   display: grid;
-  gap: 10px;
+  gap: 9px;
   margin: 0;
   padding: 0;
   list-style: none;
@@ -191,144 +203,269 @@
   grid-template-columns: auto minmax(0, 1fr);
   gap: 10px;
   align-items: start;
-  font-size: 0.98rem;
-  color: var(--white-dim);
+  font-size: var(--fs-body);
+  line-height: 1.45;
+  color: var(--fg-2);
 }
 
 .method__deliverables svg {
-  margin-top: 0.3em;
+  margin-top: 0.32em;
   color: var(--crimson);
 }
 
-/* ---- Principles ------------------------------------------------------ */
-
-.method__section-title {
-  margin: 0 0 clamp(28px, 4vw, 48px);
-  font-size: clamp(1.6rem, 3.2vw, 2.6rem);
-  font-weight: 500;
-  letter-spacing: -0.02em;
+/* ---- The walk ---------------------------------------------------------
+ *
+ * Every phase is lit from just above its own top left corner, where the
+ * number is, so the light is always behind the thing that counts and the
+ * copy underneath keeps its contrast on near-black. Only the hue and the
+ * strength change down the sequence: same light, four temperatures, which is
+ * what makes the four of them read as one ramp rather than four cards.
+ *
+ * The mask is why the field does not end in a line. Without it the gradient
+ * is simply cut off by the card box partway down, and a hard horizontal edge
+ * between lit and unlit is the first thing the eye finds. -webkit- first,
+ * standard second: the minifier keeps the last of a duplicate pair.
+ *
+ * `wine` and `plum` are set from the family tokens because index.css carries
+ * five hues and neither of these two is one of them at the value this ramp
+ * needs. `crimson` and `ember` are the shared ones untouched.
+ */
+.method__phase .field {
+  --fx: 8%;
+  --fy: -14%;
+  --fx2: 54%;
+  --fy2: -20%;
+  -webkit-mask-image: linear-gradient(to bottom, #000 0%, #000 26%, transparent 86%);
+  mask-image: linear-gradient(to bottom, #000 0%, #000 26%, transparent 86%);
 }
 
-.method__principle-grid {
+.method__phase .field[data-hue='wine'] {
+  --f-1: var(--wine);
+  --f-2: var(--ink);
+  --f-strength: 0.7;
+}
+
+.method__phase .field[data-hue='plum'] {
+  --f-1: var(--plum);
+  --f-2: var(--wine);
+  --f-strength: 0.82;
+}
+
+.method__phase .field[data-hue='crimson'] {
+  --f-strength: 0.92;
+}
+
+.method__phase .field[data-hue='ember'] {
+  --f-strength: 1;
+}
+
+/*
+ * The field blooms with the card that holds it.
+ *
+ * `.field` is hidden until it carries `.is-in`, and `useReveal` only ever
+ * adds that class to `.reveal` elements. Putting `.reveal` on the field
+ * itself would hand it the reveal's transition shorthand and kill the bloom,
+ * which is the same bug as the one above wearing a different hat, so the
+ * card is the observed element and the field follows it. One source of
+ * `is-in`, and a field that can never be left permanently invisible by a
+ * class that did not arrive.
+ */
+html.js .method .reveal.is-in .field {
+  scale: 1;
+  opacity: 1;
+}
+
+/* ---- Principles -------------------------------------------------------- */
+
+.method__principles {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: clamp(20px, 2.6vw, 34px);
+  gap: clamp(14px, 2vw, 22px);
+  margin: clamp(28px, 4vw, 44px) 0 0;
+}
+
+.method__principle {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: clamp(22px, 3.4vw, 32px);
 }
 
 .method__principle h3 {
-  margin: 0 0 10px;
-  padding-top: clamp(18px, 2vw, 24px);
-  /* The rule fades out to the right so a row of them reads as four marks
-     rather than one ruled table. */
-  border-top: 1px solid transparent;
-  border-image: linear-gradient(to right, var(--method-line-strong), rgba(255, 214, 224, 0.06)) 1;
-  font-size: clamp(1.1rem, 1.7vw, 1.35rem);
+  margin: 0;
+  font-size: var(--fs-lede);
   font-weight: 500;
+  line-height: 1.2;
   letter-spacing: -0.01em;
+  text-wrap: balance;
 }
 
 .method__principle p {
-  margin: 0;
   max-width: 44ch;
-  color: var(--white-dim);
+  margin: 0;
+  font-size: var(--fs-body);
+  line-height: 1.55;
+  color: var(--fg-2);
 }
-
-/* ---- Stats ----------------------------------------------------------- */
 
 /*
- * The one panel on the page, so the numbers land as a statement rather than
- * another paragraph. A lighter dark red than the cards, flat like them.
+ * Half strength and lit from the other side, so a row of four reads as a
+ * reprise of the phases above rather than a second, louder spectrum arguing
+ * with them.
  */
+.method__principle .field {
+  --fx: 82%;
+  --fy: -12%;
+  --fx2: 12%;
+  --fy2: -18%;
+  --f-strength: 0.5;
+  -webkit-mask-image: linear-gradient(to bottom, #000 0%, #000 22%, transparent 84%);
+  mask-image: linear-gradient(to bottom, #000 0%, #000 22%, transparent 84%);
+}
+
+/* ---- Stats -------------------------------------------------------------
+ *
+ * On bare ground under one hairline. The old panel put them in a lighter red
+ * box, which made three numbers look like a widget; they are the record, and
+ * black space around them is what says so.
+ */
+
 .method__stats {
-  display: flex;
-  flex-wrap: wrap;
-  gap: clamp(28px, 5vw, 80px);
+  display: grid;
+  gap: clamp(26px, 5vw, 44px);
   margin: 0;
-  padding: clamp(30px, 4vw, 48px) clamp(26px, 4vw, 52px);
-  border: 1px solid var(--method-line);
-  border-radius: 26px;
-  background: var(--method-panel);
+  padding-top: clamp(28px, 4vw, 44px);
+  border-top: 1px solid var(--line);
 }
 
-.method__stats dt {
-  font-size: clamp(1.8rem, 3.4vw, 2.8rem);
+.method__stat dt {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: var(--fs-stat);
+  font-weight: 400;
+  line-height: 0.92;
+  letter-spacing: -0.015em;
+  margin-inline-start: -0.055em;
+  color: var(--fg);
+}
+
+/*
+ * The suffix drops OUT of the serif.
+ *
+ * Bodoni draws `%` and `+` as near-hairlines. At this size, in crimson on
+ * black, they disappear: "100%" reads as "100" and the claim changes. Set in
+ * the sans at 0.44em and raised, they read as the annotation they are and
+ * they always render. Same pattern as `.hero__stat dt span`.
+ */
+.method__stat dt span {
+  font-family: var(--font-sans);
+  font-size: 0.44em;
   font-weight: 500;
-  line-height: 1;
-  letter-spacing: -0.03em;
-}
-
-.method__stats dt span {
+  letter-spacing: 0;
+  vertical-align: 0.72em;
+  margin-inline-start: 0.06em;
   color: var(--crimson);
 }
 
-.method__stats dd {
-  margin: 8px 0 0;
+.method__stat dd {
+  margin: 10px 0 0;
   font-size: var(--fs-label);
-  color: rgba(255, 205, 218, 0.56);
+  line-height: 1.35;
+  color: var(--fg-2);
 }
 
-/* ---- Closing --------------------------------------------------------- */
+/* ---- The close --------------------------------------------------------- */
 
-.method__cta h2 {
-  margin: 0;
-  font-size: clamp(1.9rem, 4vw, 3.2rem);
-  font-weight: 500;
-  letter-spacing: -0.03em;
-  margin-inline-start: -0.045em;
+.method__cta {
+  padding: clamp(26px, 5vw, 60px);
 }
 
-.method__cta p {
-  margin: 16px 0 0;
+.method__cta > p {
   max-width: 46ch;
+  margin: clamp(14px, 2vw, 20px) 0 0;
   font-size: var(--fs-lede);
-  color: var(--white-dim);
+  line-height: 1.5;
+  color: var(--fg-2);
 }
 
 .method__cta-actions {
   display: flex;
   flex-wrap: wrap;
   gap: 12px;
-  margin-top: clamp(26px, 3.4vw, 40px);
+  margin-top: clamp(24px, 3.4vw, 36px);
 }
 
-/* The ghost button reads against the panel, not a light surface. */
-.method .btn--ghost {
-  border-color: rgba(255, 214, 224, 0.3);
-  color: var(--white);
+/*
+ * Ember, the last step of the walk, entering from the right where the copy
+ * is not. The heading and the buttons sit in the left of the card on black,
+ * so nothing has to hold contrast against the brightest hue on the page.
+ */
+.method__cta .field {
+  --fx: 86%;
+  --fy: -8%;
+  --fx2: 106%;
+  --fy2: 58%;
+  --f-strength: 0.85;
+  -webkit-mask-image: linear-gradient(to bottom, #000 0%, #000 34%, transparent 92%);
+  mask-image: linear-gradient(to bottom, #000 0%, #000 34%, transparent 92%);
 }
 
-.method .btn--ghost:hover {
-  border-color: var(--method-line-strong);
+/* ---- 560: the first thing wide enough to hold two of anything ---------- */
+
+@media (min-width: 560px) {
+  .method__principles {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .method__stats {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
 }
 
-@media (max-width: 900px) {
+/* ---- 680: the number steps out of the column --------------------------- */
+
+@media (min-width: 680px) {
   .method__phase {
     grid-template-columns: auto minmax(0, 1fr);
+    column-gap: clamp(24px, 4vw, 56px);
+    align-items: start;
   }
 
-  .method__deliverables {
-    grid-column: 2;
-  }
-
-  .method__principle-grid {
-    grid-template-columns: 1fr;
+  /* Body and deliverables stack in the second column beside it. */
+  .method__n {
+    grid-row: 1 / span 2;
   }
 }
 
-@media (max-width: 560px) {
+/* ---- 1100: three columns ----------------------------------------------- */
+
+@media (min-width: 1100px) {
   .method__phase {
-    grid-template-columns: 1fr;
-    gap: 16px;
+    grid-template-columns: auto minmax(0, 1.5fr) minmax(0, 1fr);
   }
 
+  .method__n {
+    grid-row: auto;
+  }
+
+  /* The hairline turns with the layout: above the list when it sits under
+     the copy, beside it when it sits next to it. */
   .method__deliverables {
-    grid-column: 1;
+    align-self: stretch;
+    padding-top: 0;
+    padding-inline-start: clamp(24px, 3vw, 44px);
+    border-top: 0;
+    border-inline-start: 1px solid var(--line);
+  }
+
+  .method__principles {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .method__phase,
-  .method .btn--ghost {
+  /* The fields are already covered: index.css drops their transition and
+     shows them regardless of `is-in` under this same query. */
+  .method__phase::after {
     transition: none;
   }
 }

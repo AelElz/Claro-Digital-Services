@@ -1,114 +1,163 @@
+/*
+ * /about
+ *
+ * One headline in the serif over one field, then the window, the story, the
+ * four principles, the record and the close. Black throughout; the fields
+ * are the only thing that changes the temperature of a section.
+ *
+ * Written phone first. Every layout here starts as one column at 390px and
+ * the wider viewports are the enhancement, so the lower bound of each clamp
+ * is the real design rather than a floor the desktop happens to stop at.
+ */
+
 .about {
   position: relative;
   min-height: 100svh;
   background: var(--black);
-  color: var(--white);
+  color: var(--fg);
 }
 
 /* =====================================================================
- * Hero: the mark, large, on the left
+ * Hero
+ *
+ * One column, one headline, one field behind the whole header at page scale.
+ *
+ * The page used to open on the full lockup at 620px, treated as the title.
+ * In this world it is not the title: the Bodoni is, and the wordmark is
+ * already sitting in the bar sixty pixels above it. Removing it also removes
+ * the two-column grid it needed, so the headline now runs at its own measure
+ * instead of being squeezed into half the page beside a mark.
  * ===================================================================== */
 
 .about__hero {
-  display: grid;
-  grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr);
-  align-items: center;
-  gap: clamp(32px, 5vw, 80px);
-  padding-block: clamp(140px, 20vh, 240px) clamp(80px, 10vh, 130px);
+  position: relative;
+  /* Keeps the field's grain blend from reaching the page behind it. */
+  isolation: isolate;
+  padding-block: clamp(124px, 20vh, 220px) clamp(64px, 10vh, 120px);
 }
 
-.about__logo {
-  /* Deliberately allowed to run wider than its column at large sizes: the
-     mark is the headline on this page, not a badge next to one. */
-  --logo-w: min(100%, 620px);
+.about__hero-field {
+  /*
+   * Upper right on a phone: the copy runs the full height of a portrait
+   * viewport, so a light anchored low sits behind the lede and greys it out.
+   * Above the headline it reads as sky. The desktop aim is set at 680.
+   */
+  --fx: 84%;
+  --fy: 16%;
+  --fx2: 106%;
+  --fy2: 2%;
+  --f-strength: 0.72;
+}
+
+/*
+ * Fades out before the section ends. Without it the gradient is simply
+ * clipped by the header box and leaves a hard horizontal edge between lit
+ * and unlit black. -webkit- first, standard second: the minifier treats the
+ * pair as duplicate declarations and keeps the last one.
+ */
+.about__hero-field::before {
+  -webkit-mask-image: linear-gradient(to bottom, #000 0%, #000 58%, transparent 96%);
+  mask-image: linear-gradient(to bottom, #000 0%, #000 58%, transparent 96%);
+}
+
+.about__hero-inner {
+  position: relative;
+  z-index: 1;
 }
 
 .about__title {
-  margin: clamp(18px, 2vw, 26px) 0 0;
+  max-width: 17ch;
+  margin: 0;
+  font-family: var(--font-display);
   font-size: var(--fs-title);
-  font-weight: 500;
-  line-height: 1.06;
-  letter-spacing: -0.02em;
+  font-weight: 400;
+  line-height: 1.02;
+  /* Large type looks indented beside small type even when the boxes match,
+     because side bearing scales with size. Corrected in em so it holds
+     across the clamp, and logical so RTL would correct the far edge. */
+  margin-inline-start: -0.055em;
+  letter-spacing: -0.012em;
+  text-wrap: balance;
+  color: var(--fg);
 }
 
 .about__lede {
-  margin: clamp(18px, 2vw, 26px) 0 0;
   max-width: 46ch;
+  margin: clamp(16px, 2vw, 24px) 0 0;
   font-size: var(--fs-lede);
-  color: var(--white-dim);
-}
-
-@media (max-width: 900px) {
-  .about__hero {
-    grid-template-columns: minmax(0, 1fr);
-    gap: clamp(28px, 6vw, 44px);
-    padding-block: clamp(120px, 16vh, 160px) clamp(56px, 8vh, 90px);
-  }
-
-  .about__logo {
-    --logo-w: min(100%, 440px);
-  }
+  line-height: 1.5;
+  color: var(--fg-2);
 }
 
 /* =====================================================================
  * The window
+ *
+ * A rebuild of design/Design 6.svg: a domed glow with the mark standing in
+ * front of it and a prompt bar typing itself.
+ *
+ * The dome used to be four hand-blurred radial ellipses traced off the
+ * artwork, which predated the field primitive and was therefore a second
+ * material doing the field's job. It is three fields now, at three depths,
+ * hues walking ember over crimson over wine: the same two gradient stops and
+ * the same grain rule as every card on the site, only arranged into a dome
+ * and pushed apart in Z.
  * ===================================================================== */
 
 .about__stage-section {
-  padding-block: clamp(40px, 6vh, 80px) clamp(80px, 12vh, 140px);
+  padding-block: clamp(40px, 6vh, 80px) clamp(72px, 12vh, 140px);
 }
 
 .about__stage-head {
   max-width: 54ch;
-  margin-bottom: clamp(28px, 4vh, 52px);
+  margin-bottom: clamp(26px, 4vh, 52px);
 }
 
 /*
  * The frame. Everything inside is clipped by it, which is what makes it read
  * as a window rather than a picture: the scene runs past the edges.
  *
- * `overflow: clip` here is safe because nothing on this page is sticky. It
- * would silently kill the home page's chapter stack if this frame were ever
- * wrapped around one.
+ * Portrait on a phone, because a 16/9 letterbox at 350px wide is 197px tall
+ * and the mark plus the bar do not fit in it. `overflow: clip` is safe here
+ * because nothing on this page is sticky; it would silently kill the home
+ * page's chapter stack if this frame were ever wrapped around one.
  */
 .stage {
   position: relative;
-  aspect-ratio: 16 / 9;
-  border: 1px solid rgba(255, 255, 255, 0.14);
-  border-radius: clamp(20px, 2.4vw, 34px);
-  background: linear-gradient(to bottom, #16130f 0%, #2a0f18 62%, #48111f 100%);
+  aspect-ratio: 4 / 5;
   overflow: clip;
   isolation: isolate;
-}
-
-@media (max-width: 720px) {
-  .stage {
-    aspect-ratio: 4 / 5;
-  }
+  border: 1px solid var(--line);
+  border-radius: var(--r-card);
+  /* Barely off the ground. The fields supply every colour in here; a tinted
+     box behind them would be a second, competing light source. */
+  background: var(--surface-2);
 }
 
 /*
- * Film grain, outside the zoom so the texture holds still while the scene
- * moves behind it. Sized in percentages rather than pixels for the same
- * reason the panels are: a fixed size leaves a hard edge on a frame that
- * changes shape with the viewport.
+ * Film grain over the whole window, outside the zoom so the texture holds
+ * still while the scene moves behind it. Sized in percentages rather than
+ * pixels for the same reason the panels are: a fixed size leaves a hard edge
+ * on a frame that changes shape with the viewport.
  */
 .stage__grain {
   position: absolute;
-  inset: -4%;
+  inset: -6%;
   z-index: 3;
-  background-image: var(--grain-tile);
-  opacity: 0.42;
   pointer-events: none;
+  background-image: var(--grain-tile);
+  background-size: 220px 220px;
+  opacity: 0.34;
 }
 
 .stage__zoom {
   position: absolute;
   inset: 0;
-  /* Written from the frame loop; the fallbacks are the settled state, so the
-     scene is correct before the first frame and in a background tab. */
+  /* Written from the shared frame loop. The fallbacks are the settled state,
+     so the scene is correct before the first frame and in a background tab,
+     where rAF never runs at all. */
   scale: var(--zoom, 1);
   perspective: 1100px;
+  perspective-origin: 50% 68%;
 }
 
 .stage__tilt {
@@ -120,43 +169,70 @@
 }
 
 /*
- * The glow from design/Design 6.svg: four blurred ellipses stacked into a
- * dome below the frame, painted here as radial gradients. Order is reversed
- * against the artwork because the first layer in a CSS background is the
- * topmost, where the last shape in an SVG is.
- */
-/*
- * Radii and centres are the artwork's own ellipses as percentages of the
- * frame: rx 845/1920, ry 807.5/1080, cy 1055.5/1080, and so on down the
- * stack. Each one holds its colour almost to its edge and only softens in
- * the last fifth, because in the artwork these are solid fills with a
- * Gaussian blur, not gradients. Fading them from the centre instead washes
- * the whole dome out to nothing, which is exactly what it did.
+ * The three dome layers.
  *
- * The layer is scaled well past the frame so the parallax drift can never
- * pull an edge into view.
+ * No `transition` is declared on these: `.field` already owns one, for the
+ * bloom, and a shorthand here would replace it and turn the authored
+ * entrance into nothing. The depth is `transform`, the parallax is
+ * `translate`, and both are independent of the `scale` the bloom animates.
+ *
+ * --z is the distance back, --zc undoes the shrink perspective applies at
+ * that distance so each layer keeps its intended size, and --lead is how
+ * much of the scroll drift it takes: the far layer leads, the near one
+ * trails, which is what reads as depth rather than as one moving picture.
  */
-.stage__glow {
-  position: absolute;
-  inset: 0;
-  background:
-    radial-gradient(37% 66% at 50% 132%, #390e18 0%, #390e18 84%, rgba(57, 14, 24, 0) 100%),
-    radial-gradient(41% 75% at 50% 126%, #7d1d33 0%, #7d1d33 82%, rgba(125, 29, 51, 0) 100%),
-    radial-gradient(42% 75% at 50% 112%, #e3355d 0%, #e3355d 80%, rgba(227, 53, 93, 0) 100%),
-    radial-gradient(
-      44% 75% at 50% 98%,
-      rgba(233, 155, 155, 0.9) 0%,
-      rgba(233, 155, 155, 0.9) 78%,
-      rgba(233, 155, 155, 0) 100%
-    );
-  translate: 0 var(--drift, 0);
-  transform: translateZ(-120px) scale(1.34);
+.field.stage__field {
+  --fx: 50%;
+  --fx2: 50%;
+  border-radius: 0;
+  translate: 0 calc(var(--drift, 0px) * var(--lead, 1));
+  transform: translateZ(var(--z, 0px)) scale(var(--zc, 1));
 }
 
 /*
- * The mark and the bar sit forward of the glow. The translateZ is the depth;
- * the scale compensates for the shrink that perspective applies at that
- * distance, so the layer keeps its intended size.
+ * The vertical aims look wrong until you know the box they are measured in:
+ * `.field::before` is inset -25%, so it is 150% of the field's own height
+ * and a stop at 89% of it lands at 109% of the frame. Each centre is placed
+ * one gradient radius BELOW the apex it should draw, so the dome crests
+ * inside the window and its centre never does.
+ *
+ * Narrowing the near layer with `inset` narrows its light with it, since the
+ * gradient radii are percentages of the box. That is what gives the dome a
+ * tight pale core over a wide dark base instead of three concentric ovals.
+ */
+.field.stage__field--far {
+  --fy: 105%;
+  --fy2: 120%;
+  --f-strength: 0.7;
+  --z: -260px;
+  --zc: 1.24;
+  --lead: 1.35;
+}
+
+.field.stage__field--mid {
+  inset: 0 6%;
+  --fy: 97%;
+  --fy2: 112%;
+  --f-strength: 0.85;
+  --z: -140px;
+  --zc: 1.13;
+  --lead: 1;
+}
+
+.field.stage__field--near {
+  inset: 0 18%;
+  --fy: 89%;
+  --fy2: 104%;
+  --f-strength: 0.95;
+  --z: -40px;
+  --zc: 1.04;
+  --lead: 0.65;
+}
+
+/*
+ * The mark and the bar stand forward of the dome. The translateZ is the
+ * depth; the scale compensates for the growth perspective applies at that
+ * distance, so the layer keeps the size it was laid out at.
  */
 .stage__front {
   position: absolute;
@@ -166,28 +242,27 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: clamp(18px, 3.4vh, 44px);
-  padding: 0 clamp(20px, 5%, 80px);
+  gap: clamp(20px, 4vh, 44px);
+  padding: 0 clamp(16px, 5%, 80px);
   transform: translateZ(70px) scale(0.94);
 }
 
-/* The bar is 64% of the frame in the artwork; it should not run the full
-   width of the window or it stops reading as an object sitting in a scene. */
-.stage .prompt {
-  width: min(72%, 900px);
-}
-
 .stage__logo {
-  --logo-w: min(44%, 460px);
-  /* Lighten, as in the artwork: the mark sits in the glow rather than on it. */
-  mix-blend-mode: lighten;
+  --logo-w: min(76%, 340px);
+  /* Lifts the mark off the dome without a second light source. */
   filter: drop-shadow(0 10px 40px rgba(0, 0, 0, 0.45));
 }
 
-@media (max-width: 720px) {
-  .stage__logo {
-    --logo-w: min(78%, 340px);
-  }
+/*
+ * The bar is an object sitting in a scene, not a field spanning the window,
+ * so it never runs the frame's full width. Its height is scoped here rather
+ * than left at the component's default because the artwork's pill is roughly
+ * eight times as wide as it is tall, and a bar that keeps a viewport-derived
+ * height inside a width-constrained frame drifts to twelve.
+ */
+.stage .prompt {
+  --prompt-h: clamp(46px, 8.2vw, 106px);
+  width: min(88%, 900px);
 }
 
 /* =====================================================================
@@ -197,131 +272,325 @@
 .about__story,
 .about__principles {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1.35fr);
-  gap: clamp(28px, 5vw, 72px);
-  padding-block: clamp(56px, 9vh, 110px);
-  border-top: 1px solid var(--card-line);
+  gap: clamp(24px, 4vw, 40px);
+  padding-block: clamp(52px, 9vh, 110px);
+  border-top: 1px solid var(--line);
+}
+
+/*
+ * The opening paragraph is the argument of the whole page, so it is set in
+ * the display serif and the rest run as body beneath it. One emphasis, at
+ * the top, not three.
+ */
+.about__story-lead {
+  margin: 0 0 clamp(18px, 2.4vh, 28px);
+  max-width: 28ch;
+  font-family: var(--font-display);
+  font-size: var(--fs-sub);
+  font-weight: 400;
+  line-height: 1.16;
+  letter-spacing: -0.01em;
+  margin-inline-start: -0.055em;
+  color: var(--fg);
 }
 
 .about__story-body p {
-  margin: 0 0 clamp(16px, 2vh, 24px);
+  margin: 0 0 clamp(14px, 2vh, 22px);
   max-width: 60ch;
   font-size: var(--fs-body);
-  color: var(--white-dim);
+  line-height: 1.6;
+  color: var(--fg-2);
 }
 
 .about__story-body p:last-child {
   margin-bottom: 0;
-  color: var(--white);
 }
 
 /* =====================================================================
  * Principles
+ *
+ * Four cards, hues walking the family in order, so the column reads as one
+ * spectrum rather than four unrelated boxes.
  * ===================================================================== */
 
 .about__list {
   display: grid;
-  gap: clamp(14px, 1.8vw, 22px);
+  gap: clamp(12px, 1.8vw, 20px);
   margin: 0;
   padding: 0;
   list-style: none;
 }
 
+/*
+ * The hues walk the family in order from the JSX; the aim walks with them,
+ * the light dropping from the top corner on the first card to the bottom on
+ * the last, so four cards read as one sweep rather than as the same corner
+ * glow printed four times.
+ *
+ * Held at half strength and pushed past the trailing edge, because this is
+ * the one place on the page where body copy sits directly over a field and
+ * the number and title on the leading edge have to stay on near-black.
+ */
+.about__item .field {
+  --fx: 92%;
+  --fy: 14%;
+  --fx2: 106%;
+  --fy2: 58%;
+  --f-strength: 0.5;
+}
+
+.about__item:nth-child(2) .field {
+  --fy: 34%;
+  --fy2: 78%;
+}
+
+.about__item:nth-child(3) .field {
+  --fy: 54%;
+  --fy2: 98%;
+}
+
+.about__item:nth-child(4) .field {
+  --fy: 74%;
+  --fy2: 116%;
+}
+
+/*
+ * Layout only. `.card` already supplies the fill, the hairline and the
+ * radius, and NOTHING here may declare a `transition` shorthand: this
+ * element also carries `.reveal`, whose transition is declared at the same
+ * specificity earlier in the bundle, so a shorthand would delete the
+ * entrance and its stagger outright. That shipped once; see the hover rule
+ * below for how the border still moves.
+ */
 .about__item {
   display: grid;
   grid-template-columns: auto minmax(0, 1fr);
-  gap: 6px clamp(16px, 2vw, 26px);
+  gap: 6px clamp(14px, 2vw, 26px);
   padding: clamp(20px, 2.6vw, 32px);
-  border: 1px solid var(--card-line);
-  border-radius: 22px;
-  background: var(--card);
-  transition: border-color 0.4s var(--ease-out);
 }
 
-.about__item:hover {
-  border-color: rgba(255, 255, 255, 0.28);
+/*
+ * The hover rim, drawn as an overlay rather than by transitioning the card's
+ * own `border-color`.
+ *
+ * A separate element has its own transition, so the reveal's survives
+ * untouched, and it is a real element rather than a pseudo so the repository
+ * check that reads selectors for this exact trap can tell the two apart. It
+ * has to beat `.card > *:not(.field)`, which would otherwise put it in flow,
+ * and it is scoped from the LIST rather than from the item because the check
+ * reads the first token of any selector that declares a `transition`: written
+ * as `.about__item .about__item-ring` it looks exactly like the bug it is
+ * there to prevent.
+ */
+.about__list .about__item-ring {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+  border: 1px solid var(--line-2);
+  /* The card's own radius less its border, because this ring is drawn on the
+     padding box and a full --r-card here would run its corners into the clip
+     and come back flattened. */
+  border-radius: calc(var(--r-card) - 1px);
+  opacity: 0;
+  transition: opacity 0.4s var(--ease-out);
+}
+
+.about__item:hover .about__item-ring,
+.about__item:focus-within .about__item-ring {
+  opacity: 1;
 }
 
 .about__n {
   grid-row: 1 / 3;
   font-size: var(--fs-label);
+  line-height: 1.5;
   color: var(--crimson);
+  font-variant-numeric: tabular-nums;
 }
 
 .about__item-title {
   margin: 0;
-  font-size: 1.15rem;
+  font-size: var(--fs-lede);
   font-weight: 500;
+  line-height: 1.25;
+  color: var(--fg);
 }
 
 .about__item-body {
-  margin: 0;
-  color: var(--white-dim);
+  margin: 6px 0 0;
+  font-size: var(--fs-body);
+  line-height: 1.55;
+  color: var(--fg-2);
 }
 
 /* =====================================================================
- * Stats and close
+ * The record
  * ===================================================================== */
 
 .about__stats {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: clamp(20px, 3vw, 40px);
-  padding-block: clamp(56px, 9vh, 110px);
-  border-top: 1px solid var(--card-line);
-}
-
-.about__stat-value {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: clamp(26px, 4vw, 48px);
   margin: 0;
-  font-size: clamp(2.2rem, 4.2vw, 3.4rem);
-  font-weight: 500;
-  line-height: 1;
-  letter-spacing: -0.02em;
+  padding-block: clamp(52px, 9vh, 110px);
+  border-top: 1px solid var(--line);
 }
 
-.about__stat-value span {
+.about__stat dt {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: clamp(2.4rem, 6vw, 3.4rem);
+  font-weight: 400;
+  line-height: 1;
+  letter-spacing: -0.015em;
+  color: var(--fg);
+}
+
+/*
+ * The suffix drops OUT of the serif.
+ *
+ * Bodoni draws "+" and "/" as near-hairlines. At this size in crimson on
+ * black they vanish outright, so "70+" reads as "70" and "4.8/5" reads as
+ * "4.8  5". Set in the sans at under half the size and raised, they read as
+ * the annotation they are and they always render.
+ */
+.about__stat dt span {
+  font-family: var(--font-sans);
+  font-size: 0.44em;
+  font-weight: 500;
+  letter-spacing: 0;
+  vertical-align: 0.72em;
+  margin-inline-start: 0.06em;
   color: var(--crimson);
 }
 
-.about__stat-label {
-  margin: 10px 0 0;
-  font-size: 0.95rem;
-  color: var(--white-dim);
+.about__stat dd {
+  margin: 8px 0 0;
+  font-size: var(--fs-label);
+  line-height: 1.35;
+  color: var(--fg-2);
 }
 
+/* =====================================================================
+ * Close
+ * ===================================================================== */
+
 .about__cta {
-  padding-block: clamp(64px, 10vh, 130px) clamp(90px, 14vh, 170px);
-  border-top: 1px solid var(--card-line);
+  padding-block: clamp(56px, 10vh, 130px) clamp(80px, 14vh, 170px);
+}
+
+.about__cta-card {
+  padding: clamp(30px, 6vw, 72px) clamp(22px, 5vw, 60px);
   text-align: center;
 }
 
-.about__cta .section-lede {
-  max-width: 52ch;
+/*
+ * The page closes on the shape it opened the window with: one dome rising
+ * from the bottom edge, centred, behind the buttons. Both stops are aimed a
+ * gradient radius below the crest they draw, so the light rises into the
+ * card and its centre stays outside it.
+ */
+.about__cta-card .field {
+  --fx: 50%;
+  --fy: 83%;
+  --fx2: 50%;
+  --fy2: 96%;
+  --f-strength: 0.55;
+}
+
+.about__cta-card .section-title {
+  max-width: 18ch;
   margin-inline: auto;
+}
+
+.about__cta-card .section-lede {
+  max-width: 48ch;
+  margin-inline: auto;
+  color: var(--fg-2);
 }
 
 .about__cta-actions {
   display: flex;
   flex-wrap: wrap;
-  gap: 14px;
+  gap: 12px;
   justify-content: center;
-  margin-top: clamp(28px, 4vh, 44px);
+  margin-top: clamp(26px, 4vh, 44px);
 }
 
-@media (max-width: 900px) {
-  .about__story,
-  .about__principles {
-    grid-template-columns: minmax(0, 1fr);
+/* ---- 560: the frame can hold a wider scene ---------------------------- */
+
+@media (min-width: 560px) {
+  .stage {
+    aspect-ratio: 5 / 4;
+  }
+
+  .stage__logo {
+    --logo-w: min(56%, 420px);
+  }
+
+  .stage .prompt {
+    width: min(78%, 900px);
+  }
+}
+
+/* ---- 680: the tablet and up ------------------------------------------ */
+
+@media (min-width: 680px) {
+  .about__hero-field {
+    /* Low and right on a landscape viewport: the light comes up behind the
+       headline the way a horizon does, instead of sitting on top of it. */
+    --fx: 82%;
+    --fy: 62%;
+    --fx2: 104%;
+    --fy2: 28%;
+  }
+
+  .stage {
+    aspect-ratio: 16 / 9;
+  }
+
+  .stage__logo {
+    --logo-w: min(44%, 460px);
+  }
+
+  .stage .prompt {
+    width: min(72%, 900px);
+  }
+
+  .about__list {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .about__stats {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+/* ---- 1100: the two-column chapters ----------------------------------- */
+
+@media (min-width: 1100px) {
+  .about__story,
+  .about__principles {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.45fr);
+    gap: clamp(40px, 5vw, 72px);
+  }
+
+  .about__story-head,
+  .about__principles-head {
+    align-self: start;
+  }
+
+  /* One column again in the narrower right-hand track: two cards side by
+     side there would be 260px wide and the body copy would set six words to
+     the line. */
+  .about__list {
+    grid-template-columns: minmax(0, 1fr);
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .stage__tilt,
-  .about__item {
+  .stage__tilt {
     transition: none;
   }
 
@@ -330,7 +599,11 @@
     scale: 1;
   }
 
-  .stage__glow {
+  .field.stage__field {
     translate: none;
+  }
+
+  .about__list .about__item-ring {
+    transition: none;
   }
 }

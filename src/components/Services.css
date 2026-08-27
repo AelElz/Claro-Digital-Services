@@ -1,118 +1,164 @@
+/*
+ * The four families.
+ *
+ * One card each, in the reference's language: a field bleeding from the top
+ * of the card, the family name in the sans as a small label, the promise in
+ * the display serif, the explanation in --fg-2, and the way in as a text link
+ * rather than a fifth button.
+ *
+ * One column on a phone. Two from the tablet up, which keeps the serif titles
+ * on one or two lines and the body inside a readable measure; four across
+ * would set 2.3rem Bodoni in a 280px column.
+ */
 .services__list {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: clamp(8px, 1vw, 16px);
+  grid-template-columns: minmax(0, 1fr);
+  gap: clamp(12px, 1.6vw, 20px);
   margin: 0;
   padding: 0;
   list-style: none;
 }
 
-/*
- * A quiet card, not a fill row. Hover lifts it, brightens the edge and warms
- * the surface, the same restrained language as the primary button, so the
- * card reads as something you open rather than something that reacts.
- */
-.services__row {
-  display: block;
+/* The .reveal node. Nothing declares `transition` on it: the shorthand would
+   replace the reveal's own and its stagger, and the entrance would die. */
+.services__item {
+  display: flex;
+}
+
+.services__card {
+  display: flex;
+  flex-direction: column;
   width: 100%;
-  height: 100%;
-  padding: clamp(18px, 2.2vw, 30px) clamp(20px, 2.4vw, 34px);
-  border: 1px solid var(--card-line);
-  border-radius: 20px;
-  background: var(--card);
+  padding: clamp(24px, 4.4vw, 40px);
   transition:
-    transform 0.45s var(--ease-out),
     border-color 0.45s var(--ease-out),
-    background-color 0.45s var(--ease-out),
+    translate 0.45s var(--ease-out),
     box-shadow 0.45s var(--ease-out);
 }
 
-@media (pointer: fine) {
-  .services__row:hover {
-    transform: translateY(-4px);
-    border-color: rgba(227, 53, 93, 0.55);
-    background: rgba(255, 255, 255, 0.075);
-    box-shadow:
-      0 0 0 1px rgba(227, 53, 93, 0.16),
-      0 18px 44px rgba(0, 0, 0, 0.45),
-      0 0 46px rgba(227, 53, 93, 0.16);
-  }
+/*
+ * The light spills in over the top edge, and it has to actually reach the
+ * card.
+ *
+ * Both stops used to be centred ABOVE the box (-8% and -14%) and then masked
+ * away below a quarter of the height, which left a bright line along the top
+ * edge and nothing under it: measured, chroma fell from 19 to 1 within
+ * fifteen percent of the card. The reference fills the top half, so the first
+ * stop sits just inside the card and only the second is pulled above it.
+ *
+ * The mask runs down the card so the field never ends on a hard horizontal
+ * line, and it is on the element rather than the gradient, so the grain fades
+ * with the light in one composite instead of two.
+ */
+.services__card .field {
+  --fx: 64%;
+  --fy: 4%;
+  --fx2: 4%;
+  --fy2: -6%;
+  --f-strength: 1;
+  -webkit-mask-image: linear-gradient(to bottom, #000 0%, #000 44%, transparent 92%);
+  mask-image: linear-gradient(to bottom, #000 0%, #000 44%, transparent 92%);
 }
 
-.services__row:focus-visible {
-  outline: 2px solid var(--crimson);
-  outline-offset: 3px;
+/*
+ * The field blooms with its card. useReveal only writes .is-in onto .reveal
+ * nodes, and giving the field .reveal would hand it the reveal's transition
+ * shorthand in place of the bloom, so the card's state drives it instead.
+ */
+html.js .services__item.reveal.is-in .field {
+  scale: 1;
+  opacity: 1;
 }
 
-.services__text {
-  display: flex;
-  flex-direction: column;
-  height: 100%;
-}
-
-.services__kicker {
+/* The family name. Sans, sentence case: uppercase with wide tracking reads
+   as a different typeface and is banned site-wide. */
+.services__label {
   font-size: var(--fs-label);
   font-weight: 500;
-  color: var(--crimson);
+  line-height: 1.3;
+  color: var(--fg-2);
 }
 
 .services__title {
-  margin-top: clamp(24px, 3.2vw, 44px);
-  font-size: clamp(1.35rem, 2.3vw, 1.95rem);
-  font-weight: 500;
-  line-height: 1.14;
-  letter-spacing: -0.02em;
-  color: var(--white);
+  margin-top: clamp(18px, 3vw, 32px);
+  font-family: var(--font-display);
+  font-size: var(--fs-sub);
+  font-weight: 400;
+  line-height: 1.06;
+  letter-spacing: -0.012em;
+  /* Bodoni's side bearing scales with the type, so the serif line looks
+     indented beside the label above it unless it is pulled back. */
+  margin-inline-start: -0.055em;
+  text-wrap: balance;
+  color: var(--fg);
 }
 
 .services__body {
-  margin-top: 14px;
-  max-width: 42ch;
-  color: var(--white-dim);
+  margin-top: clamp(12px, 1.6vw, 18px);
+  max-width: 46ch;
+  font-size: var(--fs-body);
+  line-height: 1.6;
+  color: var(--fg-2);
 }
 
+/*
+ * --fg-2, not --fg-3. The faint tint measures 3.7:1 and is cleared for large
+ * text only; this line is 0.95rem, and it sat below the floor for years.
+ */
 .services__cta {
   display: inline-flex;
   align-items: center;
   gap: 9px;
   margin-top: auto;
-  padding-top: clamp(22px, 2.6vw, 34px);
-  font-size: 0.95rem;
-  color: var(--white-faint);
+  padding-top: clamp(22px, 3vw, 36px);
+  font-size: var(--fs-label);
+  color: var(--fg-2);
+  transition: color 0.4s var(--ease-out);
 }
 
 .services__cta svg {
-  transition: transform 0.4s var(--ease-out);
+  flex: none;
+  transition: translate 0.4s var(--ease-out);
 }
+
+/* ---- Hover, fine pointers only --------------------------------------- */
 
 @media (pointer: fine) {
-  .services__row:hover .services__cta {
-    color: var(--white);
+  .services__card:hover {
+    translate: 0 -4px;
+    border-color: var(--line-2);
+    box-shadow:
+      0 18px 44px rgba(0, 0, 0, 0.45),
+      0 0 46px rgba(227, 53, 93, 0.16);
   }
 
-  .services__row:hover .services__cta svg {
-    transform: translateX(4px);
+  .services__card:hover .services__cta {
+    color: var(--fg);
+  }
+
+  .services__card:hover .services__cta svg {
+    translate: 4px 0;
   }
 }
 
-@media (max-width: 860px) {
-  .services__list {
-    grid-template-columns: 1fr;
-  }
+/* ---- Tablet and up: two across --------------------------------------- */
 
-  .services__title {
-    margin-top: 18px;
+@media (min-width: 680px) {
+  .services__list {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .services__row,
+  .services__card,
   .services__cta,
   .services__cta svg {
     transition: none;
   }
 
-  .services__row:hover {
-    transform: none;
+  /* The field's own reduced-motion fallback is in index.css, which already
+     resolves `.field:not(.is-in)` to its settled state. */
+  .services__card:hover {
+    translate: none;
   }
 }

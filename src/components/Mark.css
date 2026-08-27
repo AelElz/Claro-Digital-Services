@@ -1,6 +1,17 @@
+/*
+ * The symbol has an aspect ratio but used to have no width of its own, which
+ * meant its size came entirely from whoever placed it. That is a landmine: the
+ * moment a consumer's sizing rule goes away, the mark stretches to fill its
+ * container, and a 16px bullet becomes a spiral the height of the section.
+ * That is exactly what happened when the eyebrow was deleted.
+ *
+ * It sizes to the text it sits in by default now, and anything that wants it
+ * larger sets --mark-w rather than relying on a rule somewhere else.
+ */
 .mark {
   display: block;
   flex: none;
+  width: var(--mark-w, 1em);
   /* Native proportions of the symbol, 116 x 116. */
   aspect-ratio: 1;
 }

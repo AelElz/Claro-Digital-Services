@@ -12,13 +12,21 @@ import { usePanelStack } from '../hooks/usePanelStack'
 import { initHistoryNav } from '../lib/motion'
 
 /*
- * Chapters alternate dark -> light all the way down, so the black and the
- * off-white end up roughly balanced across the page. The alternation is what
- * carries the rhythm, individual elements are never tinted to fake it.
+ * The seven chapters, in order, as one flow.
  *
- * The panel stack is set up here rather than in App, so mounting and
- * unmounting this page tears the sticky offsets and the ticker subscription
- * down with it.
+ * Every chapter is black. The rhythm is carried by the fields and the space
+ * between them, not by alternating ground; nothing here is tinted to fake it.
+ *
+ * On a wide screen usePanelStack turns this list into the layered stack, each
+ * chapter pinning while the next slides over it. Below 1100px it does not
+ * engage at all and these stay what the markup says they are: ordinary
+ * stacked full-bleed sections.
+ *
+ * The stack is set up here rather than in App, so mounting and unmounting this
+ * page tears the sticky offsets and the ticker subscription down with it.
+ *
+ * Home is the one route App does not split. It is where nearly every visit
+ * starts, so it ships in the entry chunk and paints without a second request.
  */
 function Home() {
   const stackRef = useRef(null)

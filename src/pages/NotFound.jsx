@@ -1,6 +1,5 @@
 import Footer from '../components/Footer'
 import Link from '../components/Link'
-import Mark from '../components/Mark'
 import Navbar from '../components/Navbar'
 import { useContent } from '../content'
 import { useReveal } from '../hooks/useReveal'
@@ -8,9 +7,11 @@ import { useRouter } from '../lib/router-context'
 import './NotFound.css'
 
 /*
- * Every route that has no page yet lands here, rather than being quietly
- * redirected to the contact section. Showing the path they asked for makes
- * it obvious the link was understood and simply is not built yet.
+ * Twenty-three real links land here: six case studies, fifteen service pages
+ * and two legal pages that have paths but no page yet. That is too many for
+ * an error dump, so this is built as a chapter of the site rather than as a
+ * dead end. One field, the display serif, the path they asked for set as code
+ * so it is obvious the link was understood, and two ways onward.
  */
 function NotFound() {
   const { notFound } = useContent()
@@ -22,12 +23,10 @@ function NotFound() {
       <Navbar />
 
       <main className="notfound" ref={revealRef}>
-        <div className="container notfound__inner">
-          <p className="eyebrow reveal">
-            <Mark className="eyebrow__mark" />
-            {notFound.eyebrow}
-          </p>
+        <span className="field reveal notfound__field" data-hue="crimson" aria-hidden="true" />
+        <span className="panel__grain" aria-hidden="true" />
 
+        <div className="container notfound__inner">
           <h1 className="notfound__title reveal" style={{ '--i': 1 }}>
             {notFound.title}
           </h1>
@@ -37,8 +36,8 @@ function NotFound() {
           </p>
 
           <p className="notfound__path reveal" style={{ '--i': 3 }}>
-            <span>{notFound.pathLabel}</span>
-            <code>{path}</code>
+            <span className="notfound__path-label">{notFound.pathLabel}</span>
+            <code className="notfound__code">{path}</code>
           </p>
 
           <div className="notfound__actions reveal" style={{ '--i': 4 }}>

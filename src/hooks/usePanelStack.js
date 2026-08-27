@@ -1,15 +1,34 @@
 import { useEffect } from 'react'
 import { clamp, onFrame, write } from '../lib/motion'
 
-const MOBILE = '(max-width: 680px)'
+/*
+ * Below this width there is no stack at all. Same 1100 the nav gives up its
+ * bar at, so the page changes shape once rather than twice.
+ */
+const FLAT = '(max-width: 1100px)'
+
 const MAX_SHADE = 0.45
+
+/*
+ * How long a pinned chapter holds, as a share of the viewport. This is the
+ * value --dwell used to fall back to, and it is now written explicitly.
+ */
+const DWELL = 0.55
 
 /*
  * Turns the plain section list into the layered stack: each panel sticks and
  * the next one slides over it, dimming the panel underneath.
  *
- * Runs on the shared ticker so the shade tracks the smoothed Lenis position
- * rather than lagging a frame behind it.
+ * Desktop only. On a phone the chapters are ordinary stacked sections: no
+ * pinning, no z-index ladder, no dwell, and no per-frame work at all. The
+ * stack is a depth effect for a large screen with a pointer; on a 390px
+ * screen it buys nothing and costs a shade write per panel per frame plus a
+ * page more than twice its own height of empty scroll, on the device least
+ * able to afford either. The hook simply does not engage there, and
+ * re-engages if the window crosses the breakpoint.
+ *
+ * When it does run, it runs on the shared ticker so the shade tracks the
+ * smoothed Lenis position rather than lagging a frame behind it.
  */
 export function usePanelStack(rootRef) {
   useEffect(() => {
@@ -19,41 +38,90 @@ export function usePanelStack(rootRef) {
     const panels = [...root.querySelectorAll('.panel')]
     if (!panels.length) return
 
-    const mobile = window.matchMedia(MOBILE)
+    const flat = window.matchMedia(FLAT)
 
+    let engaged = false
+    let stopFrame = null
+    let cancelled = false
+
+    /*
+     * Hand the panels back exactly as they were found. Everything the stack
+     * sets is inline, so leaving any of it behind at a narrow width is a real
+     * bug rather than dead weight: a stale `top` offsets a relative element
+     * and tears holes between the sections, and a stale z-index outlives the
+     * ladder that made sense of it.
+     *
+     * --dwell is the exception, and it is set rather than cleared. The
+     * stylesheet defaults it to 55svh, which is the reading pause a pinned
+     * chapter needs; nothing pins here, so that same 55svh would be empty
+     * black scrolled past between every pair of sections.
+     */
+    const flatten = () => {
+      panels.forEach((panel) => {
+        panel.style.position = ''
+        panel.style.top = ''
+        panel.style.zIndex = ''
+        panel.style.removeProperty('--shade')
+        panel.style.setProperty('--dwell', '0px')
+      })
+    }
+
+    /*
+     * Every read, then every write.
+     *
+     * This used to write zIndex and position, read offsetHeight, then write
+     * top, once per panel. Each read after a write forces the browser to
+     * recalculate the whole page, so a seven-chapter stack cost seven
+     * synchronous layouts, and this is bound to resize. Reading all seven
+     * heights up front costs one.
+     */
     const layout = () => {
       const viewport = window.innerHeight
-      const isMobile = mobile.matches
+
+      /*
+       * A panel taller than the viewport has to pin at its BOTTOM, so its
+       * lower content is reachable before it locks. Measure the content box:
+       * measuring the panel rests it on its own dwell.
+       */
+      const heights = panels.map((panel) => {
+        const content = panel.querySelector('.panel__inner')
+        return content ? content.offsetHeight : panel.offsetHeight
+      })
+
+      const last = panels.length - 1
 
       panels.forEach((panel, index) => {
+        const height = heights[index]
+        const overflow = Math.max(0, height - viewport)
+
         panel.style.zIndex = String(index + 1)
-
-        if (isMobile) {
-          panel.style.position = 'relative'
-          /*
-           * Must be cleared, not left behind. A `top` value on a relative
-           * element offsets it and tears holes between the sections.
-           */
-          panel.style.top = ''
-          panel.style.setProperty('--shade', '0')
-          return
-        }
-
         panel.style.position = 'sticky'
+        panel.style.top = overflow > 0 ? `${viewport - height}px` : '0px'
 
         /*
-         * A panel taller than the viewport has to pin at its BOTTOM, so its
-         * lower content is reachable before it locks. Measure the content
-         * box, measuring the panel rests it on its own empty padding.
+         * The knob the stylesheet documents, actually set.
+         *
+         * A panel reserves 100svh + dwell of flow and pins for whatever of
+         * that the viewport does not cover, so for a chapter that fits, the
+         * pinned reading pause IS the dwell. A chapter taller than the
+         * viewport spends `overflow` of its own scroll just revealing itself,
+         * and pins for dwell - overflow; adding the overflow back gives every
+         * chapter the same pause on screen regardless of how much copy it
+         * carries. Chapters that fit resolve to exactly the 55svh the
+         * stylesheet's fallback assumed, so nothing that already looked right
+         * moves.
+         *
+         * The last panel gets none. It is main's final child, so its sticky
+         * range is zero and it cannot pin; its dwell would ride up the bottom
+         * of the screen as a growing black band before the footer.
          */
-        const content = panel.querySelector('.panel__inner')
-        const height = content ? content.offsetHeight : panel.offsetHeight
-        panel.style.top = height > viewport ? `${viewport - height}px` : '0px'
+        const dwell = index === last ? 0 : Math.round(overflow + DWELL * viewport)
+        panel.style.setProperty('--dwell', `${dwell}px`)
       })
     }
 
     const render = (time, scrollY, moved) => {
-      if (!moved || mobile.matches) return
+      if (!moved) return
       const viewport = window.innerHeight
 
       // Read every rect first, then queue the writes: setting a custom
@@ -73,24 +141,56 @@ export function usePanelStack(rootRef) {
       })
     }
 
-    layout()
-    const stopFrame = onFrame(render)
+    /*
+     * The one entry point. Called on mount, on resize, when the breakpoint is
+     * crossed, and once the webfont lands and changes every content height.
+     * Engaging and disengaging happen here so the frame subscription exists
+     * only while there is a stack to drive.
+     */
+    const apply = () => {
+      if (cancelled) return
+
+      if (flat.matches) {
+        if (!engaged) return
+        engaged = false
+        stopFrame?.()
+        stopFrame = null
+        flatten()
+        return
+      }
+
+      if (!engaged) {
+        engaged = true
+        stopFrame = onFrame(render)
+      }
+      layout()
+    }
+
+    /*
+     * Below the breakpoint on first paint there is nothing to engage, but the
+     * dwell still has to be zeroed or every section carries 55svh of empty
+     * black it will never pin over.
+     */
+    if (flat.matches) flatten()
+    else apply()
 
     // Fonts land after first paint and change every content height.
-    document.fonts?.ready.then(layout)
+    document.fonts?.ready.then(apply)
 
-    window.addEventListener('resize', layout)
-    mobile.addEventListener('change', layout)
+    window.addEventListener('resize', apply)
+    flat.addEventListener('change', apply)
 
     return () => {
-      stopFrame()
-      window.removeEventListener('resize', layout)
-      mobile.removeEventListener('change', layout)
+      cancelled = true
+      stopFrame?.()
+      window.removeEventListener('resize', apply)
+      flat.removeEventListener('change', apply)
       panels.forEach((panel) => {
         panel.style.position = ''
         panel.style.top = ''
         panel.style.zIndex = ''
         panel.style.removeProperty('--shade')
+        panel.style.removeProperty('--dwell')
       })
     }
   }, [rootRef])

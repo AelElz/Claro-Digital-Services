@@ -4,27 +4,60 @@ import Logo from './Logo'
 import { reducedMotion } from '../lib/motion'
 import './Preloader.css'
 
-const TAGLINE = 'Clarodigi · Morocco'
-const RINGS = [0.34, 0.52, 0.7, 0.86, 1]
-
 /*
- * A preloader on every visit annoys repeat visitors, so it runs once per
- * browsing session. Flip to false to show it on every load.
+ * The intro.
+ *
+ * What was here was a fixed 3.5-second curtain tied to no loading signal at
+ * all: it covered the site for three and a half seconds on a fast connection
+ * and on a slow one alike, and its exit animated a backdrop-filter blur from
+ * 0 to 34px across the whole viewport, which a compositor cannot cache and so
+ * re-rasterises every frame, on top of a four-stage filter chain over three
+ * stacked copies of the lockup.
+ *
+ * This one is a floor, not a curtain. It shows the mark while the page is
+ * genuinely not ready, and leaves the moment it is:
+ *
+ *   FLOOR     the shortest it is ever allowed to be, so it cannot flash
+ *   MAX_HOLD  the longest it is ever allowed to hold, ready or not
+ *   EXIT      the fade out
+ *   BAIL      wall clock, for the tab that is never painting at all
+ *
+ * Worst case on screen is MAX_HOLD + EXIT, a little over 1.3s. Best case is
+ * FLOOR + EXIT, under a second. Nothing animates a blur radius; the exit is
+ * an opacity fade of an opaque sheet, which is one composited layer.
  */
+
 const ONCE_PER_SESSION = true
 const SESSION_KEY = 'claro:intro-played'
 
+const FLOOR = 620
+const MAX_HOLD = 1000
+const EXIT = 0.34
 /*
- * Intro sequence.
- *
- *   0.00s  oversized translucent rings scale in behind, staggered
- *   0.60s  wordmark rises and fades in, the glow ramps on the SAME curve,
- *          so it arrives already lit rather than lighting up afterwards
- *   1.00s  two quick left-to-right wipes through three logo states:
- *          solid white -> solid crimson -> the real mark
- *   1.50s  the label pops in letter by letter
- *   2.40s  glass rack-focus exit
+ * GSAP runs on rAF, which browsers pause outright in a background tab, and
+ * the readiness probe below waits on a painted frame, which never arrives
+ * there either. Without a wall-clock net a visitor who opens the site in a
+ * background tab comes back to a permanently covered, permanently
+ * unscrollable page. Reduced to sit just past the designed worst case, so it
+ * only ever fires when the frame loop is genuinely not running.
  */
+const BAIL = 1600
+
+/*
+ * The two things worth waiting for, and nothing else.
+ *
+ * `document.fonts.ready` because the site is set in a serif that the fallback
+ * does not match, and two painted frames because that is the point at which
+ * the first render is actually on the glass rather than merely committed.
+ */
+const whenReady = () =>
+  Promise.all([
+    document.fonts?.ready ?? Promise.resolve(),
+    new Promise((resolve) => {
+      requestAnimationFrame(() => requestAnimationFrame(resolve))
+    }),
+  ])
+
 function Preloader({ onDone }) {
   const alreadyPlayed =
     ONCE_PER_SESSION &&
@@ -34,158 +67,130 @@ function Preloader({ onDone }) {
   const [hidden, setHidden] = useState(alreadyPlayed || reducedMotion())
 
   const rootRef = useRef(null)
-  const glassRef = useRef(null)
-  const ringsRef = useRef(null)
+  const fieldRef = useRef(null)
   const markRef = useRef(null)
-  const whiteRef = useRef(null)
-  const crimsonRef = useRef(null)
-  const taglineRef = useRef(null)
+  const barRef = useRef(null)
 
   useEffect(() => {
+    /*
+     * `is-loading` puts overflow: hidden on html and body and is removed
+     * here and nowhere else, so every path out of this component has to go
+     * through a call that clears it. It is idempotent, so clearing it in
+     * both the finish path and this one costs nothing.
+     */
     if (hidden) {
       document.documentElement.classList.remove('is-loading')
       onDone?.()
       return
     }
 
+    let settled = false
+    let cancelled = false
+    let leaving = null
+    let exit = () => {}
+
+    const start = performance.now()
+    const timers = []
+
     const finish = () => {
+      if (settled) return
+      settled = true
       document.documentElement.classList.remove('is-loading')
       try {
         sessionStorage.setItem(SESSION_KEY, '1')
       } catch {
-        /* private mode, the intro simply replays next visit */
+        /* private mode: the intro simply plays again next visit */
       }
+      /* onDone fires from the `hidden` branch above, once, on the re-render. */
       setHidden(true)
-      onDone?.()
     }
 
     const ctx = gsap.context(() => {
-      const tl = gsap.timeline({ onComplete: finish })
-      const rings = ringsRef.current.children
-      const letters = taglineRef.current.querySelectorAll('span')
+      const field = fieldRef.current
+      const mark = markRef.current
+      const bar = barRef.current
 
       /*
        * Every .set() carries an explicit position of 0. Without one it lands
-       * at the timeline's CURRENT end, which puts these initial states
-       * after the wipes and snaps the mark back to solid white.
+       * at the timeline's CURRENT end, so the initial states are applied
+       * after the animations they were meant to precede.
        */
-      tl.set([whiteRef.current, crimsonRef.current], { '--wipe': 0 }, 0)
-      tl.set(markRef.current, { '--g1': 0, '--g2': 0, '--gb': 1, y: 52, opacity: 0 }, 0)
-      tl.set(rings, { scale: 0.72, opacity: 0 }, 0)
-      tl.set(letters, { y: 16, opacity: 0 }, 0)
-      tl.set(glassRef.current, { '--bg-a': 1, '--blur': 0, '--sat': 1 }, 0)
+      const enter = gsap.timeline()
+      enter.set(field, { opacity: 0, scale: 1.06 }, 0)
+      enter.set(mark, { opacity: 0, y: 20 }, 0)
+      enter.set(bar, { scaleX: 0 }, 0)
 
-      // 1. rings settle in behind, staggered.
-      tl.to(
-        rings,
-        { scale: 1, opacity: 0.5, duration: 1.1, ease: 'power3.out', stagger: 0.13 },
-        0,
-      )
-
-      // 2. wordmark rises, glow ramps on the same curve.
-      tl.to(
-        markRef.current,
-        { y: 0, opacity: 1, duration: 0.8, ease: 'power4.out' },
-        0.6,
-      )
-      tl.to(
-        markRef.current,
-        { '--g1': 9, '--g2': 30, '--gb': 1.14, duration: 0.8, ease: 'power4.out' },
-        0.6,
-      )
-
-      // 3. the two wipes, each flaring the glow as it passes.
-      tl.to(whiteRef.current, { '--wipe': 100, duration: 0.34, ease: 'power2.inOut' }, 1.0)
-      tl.to(markRef.current, { '--g1': 14, '--g2': 46, '--gb': 1.24, duration: 0.34 }, 1.0)
-      tl.to(crimsonRef.current, { '--wipe': 100, duration: 0.34, ease: 'power2.inOut' }, 1.28)
-      tl.to(markRef.current, { '--g1': 18, '--g2': 58, '--gb': 1.3, duration: 0.34 }, 1.28)
-
-      // 4. label, letter by letter.
-      tl.to(
-        letters,
-        { y: 0, opacity: 1, duration: 0.5, ease: 'back.out(2)', stagger: 0.034 },
-        1.5,
-      )
-
-      // Glow returns to rest before the glass takes over.
-      tl.to(markRef.current, { '--g1': 0, '--g2': 0, '--gb': 1, duration: 0.35 }, 2.2)
-
+      /* The field blooms, the same entrance every field on the site makes. */
+      enter.to(field, { opacity: 1, scale: 1, duration: 0.75, ease: 'power2.out' }, 0)
+      enter.to(mark, { opacity: 1, y: 0, duration: 0.6, ease: 'power3.out' }, 0.05)
       /*
-       * 5. glass rack-focus exit.
-       *
-       * The tint thins and the backdrop blur ramps up, so the page is now
-       * visible THROUGH the panel but out of focus; the mark drifts forward
-       * and blurs away; then the blur runs back to zero and the whole sheet
-       * dissolves, the page racks into focus.
+       * The bar runs the length of the longest hold, so it is a real bound on
+       * the wait rather than a decorative loop: it is snapped to full by the
+       * exit below, whenever that comes.
        */
-      tl.to(
-        glassRef.current,
-        { '--bg-a': 0.52, '--blur': 34, '--sat': 1.35, duration: 0.5, ease: 'power2.out' },
-        2.4,
-      )
-      tl.to(
-        markRef.current,
-        { scale: 1.5, '--mark-blur': 16, opacity: 0, duration: 0.7, ease: 'power2.in' },
-        2.45,
-      )
-      tl.to(
-        [ringsRef.current, taglineRef.current],
-        { opacity: 0, scale: 1.2, duration: 0.6, ease: 'power2.in' },
-        2.45,
-      )
-      tl.to(
-        glassRef.current,
-        { '--blur': 0, '--bg-a': 0, duration: 0.6, ease: 'power2.inOut' },
-        2.95,
-      )
-      tl.to(rootRef.current, { opacity: 0, duration: 0.5, ease: 'power2.inOut' }, 3.0)
+      enter.to(bar, { scaleX: 1, duration: MAX_HOLD / 1000, ease: 'none' }, 0.1)
 
-      /*
-       * GSAP runs on rAF, which browsers pause in background tabs, without
-       * a wall-clock net the site would sit behind the glass forever.
-       */
-      const bail = setTimeout(() => {
-        if (tl.progress() < 1) tl.progress(1)
-      }, 9000)
+      exit = () => {
+        if (leaving || settled || cancelled) return
 
-      return () => clearTimeout(bail)
+        leaving = gsap
+          .timeline({ onComplete: finish })
+          .to(bar, { scaleX: 1, duration: 0.18, ease: 'power2.out', overwrite: true }, 0)
+          .to(mark, { y: -10, duration: EXIT, ease: 'power2.in' }, 0)
+          /*
+           * The sheet is opaque black and fades as one layer. The old exit
+           * ramped a backdrop-filter blur radius across the full viewport,
+           * which cannot be cached and repaints everything behind it on
+           * every frame of the transition.
+           */
+          .to(rootRef.current, { opacity: 0, duration: EXIT, ease: 'power2.inOut' }, 0.04)
+      }
     }, rootRef)
 
-    return () => ctx.revert()
+    /* Ready, plus whatever is left of the floor. */
+    whenReady().then(() => {
+      if (cancelled) return
+      timers.push(setTimeout(exit, Math.max(0, FLOOR - (performance.now() - start))))
+    })
+
+    /* Not ready, but out of patience. */
+    timers.push(setTimeout(() => exit(), MAX_HOLD))
+
+    /* Not painting at all: skip the animation and hand the page over. */
+    timers.push(setTimeout(finish, BAIL))
+
+    return () => {
+      cancelled = true
+      timers.forEach(clearTimeout)
+      /*
+       * The exit timeline is built after the context callback returned, so
+       * revert() does not know about it and it has to be killed by hand.
+       * Killing it also kills its onComplete, and that call is the only thing
+       * that clears `is-loading`, so tearing down mid-exit has to clear it
+       * here or the page is handed over unscrollable.
+       */
+      if (leaving) {
+        leaving.kill()
+        document.documentElement.classList.remove('is-loading')
+      }
+      ctx.revert()
+    }
   }, [hidden, onDone])
 
   if (hidden) return null
 
   return (
     <div id="preloader" ref={rootRef} role="presentation">
-      <div className="preloader__glass" ref={glassRef} />
+      <span className="preloader__field" ref={fieldRef} aria-hidden="true" />
 
       <div className="preloader__stage">
-        <div className="preloader__rings" ref={ringsRef} aria-hidden="true">
-          {RINGS.map((scale) => (
-            <span key={scale} style={{ '--r': scale }} />
-          ))}
+        <div className="preloader__mark" ref={markRef} aria-hidden="true">
+          <Logo as="div" full />
         </div>
 
-        {/* Three stacked states; the top two wipe away to reveal the real mark. */}
-        <div className="preloader__mark" ref={markRef}>
-          <div className="preloader__state preloader__state--real">
-            <Logo as="div" full />
-          </div>
-          <div className="preloader__state preloader__state--crimson" ref={crimsonRef}>
-            <Logo as="div" full />
-          </div>
-          <div className="preloader__state preloader__state--white" ref={whiteRef}>
-            <Logo as="div" full />
-          </div>
-        </div>
-
-        <p className="preloader__tagline" ref={taglineRef}>
-          {[...TAGLINE].map((char, index) => (
-            // eslint-disable-next-line react/no-array-index-key -- fixed string
-            <span key={index}>{char === ' ' ? ' ' : char}</span>
-          ))}
-        </p>
+        <span className="preloader__bar" aria-hidden="true">
+          <span ref={barRef} />
+        </span>
       </div>
     </div>
   )

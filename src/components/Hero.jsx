@@ -1,29 +1,34 @@
 import { useEffect, useRef } from 'react'
-import HeroBackground from './HeroBackground'
-import Mark from './Mark'
 import { useContent } from '../content'
-import { clamp, onFrame, scrollTo, write } from '../lib/motion'
+import { clamp, onFrame, reducedMotion, scrollTo, trackRect, write } from '../lib/motion'
 import { useRouter } from '../lib/router-context'
 import './Hero.css'
 
 /*
- * Chapter one. The name sits dead centre over the moving curtain, and the
- * whole scene is a scrub: scroll progress across the first viewport drives
- * the parallax, the push-back and the fade, so leaving the hero reads as
- * moving through it rather than past it.
+ * Chapter one.
+ *
+ * The name sits over one crimson field, and the whole scene is a scrub:
+ * scroll progress across the first viewport drives the parallax, the
+ * push-back and the fade, so leaving the hero reads as moving through it
+ * rather than past it.
+ *
+ * The field is CSS. What used to be here was a 30fps canvas painting drifting
+ * blooms; it looked good and was carefully cost-managed, but it was a second
+ * material doing the same job as the fields on every card below, and a
+ * full-viewport canvas is the largest frame cost a phone pays on this page.
  */
 function Hero() {
   const { hero } = useContent()
   const { navigate } = useRouter()
   const rootRef = useRef(null)
   const contentRef = useRef(null)
-  const bgRef = useRef(null)
+  const fieldRef = useRef(null)
 
   useEffect(() => {
     const root = rootRef.current
     const content = contentRef.current
-    const bg = bgRef.current
-    if (!root || !content || !bg) return
+    const field = fieldRef.current
+    if (!root || !content || !field) return
 
     let last = -1
 
@@ -41,31 +46,46 @@ function Hero() {
 
       write(() => {
         content.style.setProperty('--p', String(progress))
-        bg.style.setProperty('--bg-scale', String(1 + progress * 0.16))
-        bg.style.setProperty('--bg-y', `${progress * -40}px`)
+        /* The light stays a beat behind the copy, which is what sells it as
+           being behind the page rather than printed on it. */
+        field.style.setProperty('--scrub', String(progress * 0.5))
       })
     })
   }, [])
 
+  /*
+   * Pointer light, fine pointers only. Two numbers written to custom
+   * properties that CSS transitions; no rAF loop, and nothing to fall behind
+   * under throttling. trackRect caches the box so this does not force a
+   * layout on every pointermove (see AGENTS.md).
+   */
+  useEffect(() => {
+    const field = fieldRef.current
+    if (!field || reducedMotion()) return
+    if (!window.matchMedia('(pointer: fine)').matches) return
+
+    const rectOf = trackRect(field)
+
+    const onMove = (event) => {
+      const rect = rectOf()
+      field.style.setProperty('--px', ((event.clientX - rect.left) / rect.width - 0.5).toFixed(3))
+      field.style.setProperty('--py', ((event.clientY - rect.top) / rect.height - 0.5).toFixed(3))
+    }
+
+    window.addEventListener('pointermove', onMove, { passive: true })
+    return () => {
+      rectOf.stop()
+      window.removeEventListener('pointermove', onMove)
+    }
+  }, [])
+
   return (
-    <section
-      className="panel panel--dark hero"
-      id="home"
-      data-theme-section="dark"
-      ref={rootRef}
-    >
-      <div className="hero__bg" ref={bgRef}>
-        <HeroBackground />
-      </div>
+    <section className="panel panel--dark hero" id="home" data-theme-section="dark" ref={rootRef}>
+      <span className="hero__field" ref={fieldRef} aria-hidden="true" />
       <span className="panel__grain" aria-hidden="true" />
 
       <div className="panel__inner hero__inner" ref={contentRef}>
         <div className="container hero__content">
-          <p className="eyebrow hero__eyebrow">
-            <Mark className="eyebrow__mark" />
-            {hero.eyebrow}
-          </p>
-
           <h1 className="hero__name">
             {hero.name.split(' ').map((word) => (
               <span className="hero__word" key={word}>

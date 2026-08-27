@@ -1,102 +1,216 @@
-.testimonial__body {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1.05fr);
-  gap: clamp(32px, 5vw, 72px);
+/*
+ * The client's own words.
+ *
+ * One centred column: the quote in the display serif at pull-quote scale
+ * over a single magenta field, the attribution small in the sans below it,
+ * then the client's live page as a card. The chapter used to be two columns
+ * of roughly equal weight, which read as a layout rather than as a person
+ * talking; the quote is now unambiguously the largest thing in the chapter
+ * and everything else is annotation.
+ *
+ * Every colour here used to come from --card-light / --card-light-line /
+ * --grad-contact / --ink-dim / --ink-faint, four of which no longer exist and
+ * one of which is dark ink. Undefined custom properties do not fall back,
+ * they invalidate the declaration: the card had no border and no background,
+ * the pointer label had no fill at all, and the role and metric captions were
+ * near-black text on black. All of it now comes from the live tokens.
+ */
+
+.testimonial__inner {
+  display: flex;
+  flex-direction: column;
   align-items: center;
+  text-align: center;
 }
 
-.testimonial__quote-col {
-  min-width: 0;
+/*
+ * Set in the serif but below display scale, in secondary tint, so it names
+ * the chapter without competing with the quote. This is a heading, not a
+ * reinstated eyebrow: a full sentence at 26px in the display face, with no
+ * mark, no colour and no tracking.
+ */
+.testimonial__title {
+  color: var(--fg-2);
 }
 
+/* =====================================================================
+ * The pull quote
+ * ===================================================================== */
+
+/*
+ * The figure is the .reveal node and the field is its child, so the field
+ * blooms when the quote arrives (see the .is-in rule below). It is also the
+ * field's containing block, which is why the glow is sized in percentages of
+ * the quote rather than of the panel.
+ */
 .testimonial__figure {
   position: relative;
-  margin: 0;
+  isolation: isolate;
+  width: 100%;
+  margin: clamp(26px, 4vw, 44px) 0 0;
+}
+
+/* Everything in the figure sits above its field, the same way .card does. */
+.testimonial__figure > *:not(.field) {
+  position: relative;
+  z-index: 1;
+}
+
+/*
+ * The glow. Much larger than the box it is anchored to and aimed at the
+ * middle of the quote, so the light is behind the words rather than beside
+ * them.
+ *
+ * Masked on the field ITSELF, not on its ::before. The grain layer is
+ * inset: 0 with a flat opacity, and below 680px index.css drops it out of
+ * `overlay` blend to a plain composite for cost; over black that turns a
+ * layer which was invisible into a visible grey rectangle with four hard
+ * edges. Masking the element fades the gradient and the grain together in
+ * one composite, so there is no edge at any width.
+ */
+.testimonial__figure .testimonial__glow {
+  inset: -58% -24%;
+  --fx: 50%;
+  --fy: 42%;
+  --fx2: 78%;
+  --fy2: 86%;
+  --f-strength: 0.6;
+  -webkit-mask-image: radial-gradient(58% 56% at 50% 46%, #000 0%, #000 22%, transparent 74%);
+  mask-image: radial-gradient(58% 56% at 50% 46%, #000 0%, #000 22%, transparent 74%);
 }
 
 .testimonial__quote {
-  position: relative;
-  margin: 0;
-  max-width: 24ch;
-  font-size: clamp(1.4rem, 2.9vw, 2.4rem);
+  margin: 0 auto;
+  max-width: 34ch;
+  font-family: var(--font-display);
+  font-size: clamp(1.35rem, 4.6vw, 2.6rem);
   font-weight: 400;
-  line-height: 1.24;
-  letter-spacing: -0.02em;
-  text-wrap: balance;
+  line-height: 1.28;
+  letter-spacing: -0.012em;
+  color: var(--fg);
+  /*
+   * `pretty`, not `balance`. Balancing is capped at a handful of lines and
+   * this quote is eight of them, so it would do nothing here; pretty is the
+   * one that keeps a single word off the last line.
+   */
+  text-wrap: pretty;
 }
+
+/*
+ * No optical indent correction on this one. -0.055em exists to line a serif
+ * up with the small type above it on a shared left edge; centred text has no
+ * such edge, and the correction would just push the block off centre.
+ */
 
 .testimonial__caption {
   display: flex;
   flex-wrap: wrap;
+  justify-content: center;
   align-items: baseline;
-  gap: 8px 18px;
-  margin-top: clamp(22px, 2.8vw, 34px);
+  gap: 4px 14px;
+  margin-top: clamp(20px, 2.8vw, 30px);
 }
 
 .testimonial__author {
-  font-size: 1.15rem;
+  font-size: var(--fs-body);
   font-weight: 500;
-  letter-spacing: -0.01em;
+  letter-spacing: -0.005em;
+  color: var(--fg);
 }
 
 .testimonial__role {
   font-size: var(--fs-label);
-  font-weight: 500;
-  color: var(--ink-faint);
+  color: var(--fg-2);
 }
 
-/* ---- The delivery metric --------------------------------------------- */
+/* =====================================================================
+ * The delivery metric
+ *
+ * The one number in the chapter, so it is set in the serif like every other
+ * number on the site. White, not crimson: at this size crimson on black
+ * measures 3.9:1, which clears nothing under 24px, and the clamp bottoms out
+ * below that on a phone.
+ * ===================================================================== */
 
 .testimonial__metric {
   display: flex;
-  flex-wrap: wrap;
+  flex-direction: column;
   align-items: center;
-  gap: 14px clamp(18px, 2.6vw, 30px);
-  margin-top: clamp(32px, 4vw, 52px);
-  padding-top: clamp(22px, 2.6vw, 32px);
-  border-top: 1px solid var(--card-light-line);
+  gap: 6px;
+  margin: clamp(34px, 4.6vw, 56px) 0 0;
+}
+
+/* A short rule instead of a full-width border: the chapter is one centred
+   column, and a rule running the whole measure would box it in. */
+.testimonial__metric::before {
+  content: '';
+  width: 46px;
+  height: 1px;
+  margin-bottom: clamp(20px, 2.6vw, 30px);
+  background: var(--line-2);
 }
 
 .testimonial__metric-value {
-  font-size: clamp(1.7rem, 3.2vw, 2.5rem);
-  font-weight: 500;
+  font-family: var(--font-display);
+  font-size: var(--fs-sub);
+  font-weight: 400;
   line-height: 1;
-  letter-spacing: -0.03em;
-  color: var(--crimson);
+  letter-spacing: -0.012em;
+  color: var(--fg);
 }
 
 .testimonial__metric-label {
-  max-width: 30ch;
-  color: var(--ink-dim);
+  max-width: 32ch;
+  font-size: var(--fs-label);
+  line-height: 1.45;
+  color: var(--fg-2);
 }
 
 /* =====================================================================
  * The client's page, with a label that rides the pointer
  * ===================================================================== */
 
+/*
+ * The .reveal node is this wrapper, and the hover lives on the card inside
+ * it. `.shot` used to carry both: a `transition` shorthand on a .reveal
+ * element replaces the reveal's own opacity/translate transition and its
+ * --i stagger outright, and because both selectors are 0-1-0 the later one
+ * simply won. The card was visible, the hover worked, and the entrance
+ * silently never ran. Splitting the two means neither can overwrite the
+ * other whatever order the bundle ends up in.
+ */
+.testimonial__shot {
+  width: 100%;
+  max-width: 960px;
+  margin-top: clamp(44px, 6vw, 76px);
+}
+
 .shot {
   position: relative;
   display: block;
-  overflow: hidden;
-  border: 1px solid var(--card-light-line);
-  border-radius: 20px;
-  background: var(--card-light);
-  /* Matches the asset, so the row reserves its space before the image
-     decodes and nothing jumps when it arrives. */
-  aspect-ratio: 1600 / 835;
-  box-shadow: 0 24px 60px rgba(66, 16, 28, 0.14);
   transition:
-    transform 0.6s var(--ease-out),
-    box-shadow 0.6s var(--ease-out);
+    translate 0.5s var(--ease-out),
+    border-color 0.5s var(--ease-out),
+    box-shadow 0.5s var(--ease-out);
+}
+
+/*
+ * The skeleton's box. The ratio matches the asset and the img keeps its
+ * width/height attributes, so the space is reserved before a byte arrives
+ * and nothing moves when the picture lands.
+ */
+.shot__media {
+  display: block;
+  aspect-ratio: 1600 / 835;
 }
 
 .shot__img {
-  display: block;
-  width: 100%;
   height: 100%;
   object-fit: cover;
   object-position: top center;
-  transition: transform 0.9s var(--ease-out);
+  transition:
+    opacity 0.5s var(--ease-out),
+    scale 0.9s var(--ease-out);
 }
 
 /* ---- The cursor label ------------------------------------------------ */
@@ -110,9 +224,9 @@
   align-items: center;
   gap: 8px;
   padding: 11px 18px;
-  border-radius: 999px;
-  background: var(--grad-contact);
-  font-size: 0.92rem;
+  border-radius: var(--r-pill);
+  background: var(--crimson);
+  font-size: var(--fs-label);
   font-weight: 500;
   white-space: nowrap;
   color: var(--white);
@@ -133,19 +247,22 @@
 }
 
 /*
- * Only this element swaps the cursor. The rest of the site keeps the normal
- * pointer, so the swap reads as a property of the screenshot rather than a
- * site-wide affectation.
+ * Only this element swaps the cursor, and only where there is a cursor to
+ * swap. The rest of the site keeps the normal pointer, so it reads as a
+ * property of the screenshot rather than a site-wide affectation.
  */
 @media (pointer: fine) {
   .shot:hover {
     cursor: none;
-    transform: translateY(-3px);
-    box-shadow: 0 32px 72px rgba(66, 16, 28, 0.22);
+    translate: 0 -4px;
+    border-color: var(--line-2);
+    box-shadow:
+      0 22px 54px rgba(0, 0, 0, 0.5),
+      0 0 52px rgba(227, 53, 93, 0.18);
   }
 
   .shot:hover .shot__img {
-    transform: scale(1.03);
+    scale: 1.03;
   }
 
   .shot.is-live .shot__cursor {
@@ -155,24 +272,30 @@
 }
 
 /* Keyboard users get the label parked in the corner instead. */
-.shot:focus-visible {
-  outline: 2px solid var(--crimson);
-  outline-offset: 4px;
-}
-
 .shot:focus-visible .shot__cursor {
   opacity: 1;
   scale: 1;
   transform: translate3d(50%, 50%, 0) translate(-50%, -50%);
 }
 
-@media (max-width: 900px) {
-  .testimonial__body {
-    grid-template-columns: 1fr;
-  }
+/* =====================================================================
+ * The field blooms with the quote
+ *
+ * useReveal only writes .is-in onto .reveal nodes, and giving the field
+ * .reveal would hand it the reveal's transition shorthand in place of its
+ * own bloom, so the figure's state drives it instead.
+ * ===================================================================== */
 
-  .testimonial__quote {
-    max-width: 32ch;
+html.js .testimonial__figure.reveal.is-in .field {
+  scale: 1;
+  opacity: 1;
+}
+
+/* ---- Tablet and up --------------------------------------------------- */
+
+@media (min-width: 680px) {
+  .testimonial__caption {
+    gap: 6px 18px;
   }
 }
 
@@ -184,10 +307,10 @@
   }
 
   .shot:hover {
-    transform: none;
+    translate: none;
   }
 
   .shot:hover .shot__img {
-    transform: none;
+    scale: 1;
   }
 }

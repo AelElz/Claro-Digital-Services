@@ -1,28 +1,37 @@
 /*
- * Section header block shared by every chapter, eyebrow, title, lede.
+ * The section header block shared by every chapter: title and lede.
+ *
+ * It used to carry an eyebrow above the title as well. That is gone site-wide;
+ * the heading carries its own weight.
  */
 .panel__head {
   max-width: 62ch;
   margin-bottom: clamp(48px, 6vw, 84px);
 }
 
-/* Two-column head: title left, lede right, for the wider chapters. */
+/*
+ * Title and lede. One column is the design; two is the enhancement.
+ *
+ * The split arrives at 1100, not at the 860 it used to, so a chapter's head
+ * and its body change shape at the same moment. At 860 the head reflowed a
+ * whole breakpoint before the content under it, which read as the section
+ * coming apart in two stages as the window narrowed.
+ */
 .panel__head--split {
   display: grid;
-  grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
   gap: clamp(24px, 4vw, 64px);
-  align-items: end;
+  align-items: start;
   max-width: none;
 }
 
-.panel__head--split .section-lede {
-  margin-top: 0;
-  padding-bottom: 0.35em;
-}
-
-@media (max-width: 860px) {
+@media (min-width: 1100px) {
   .panel__head--split {
-    grid-template-columns: 1fr;
-    align-items: start;
+    grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
+    align-items: end;
+  }
+
+  .panel__head--split .section-lede {
+    margin-top: 0;
+    padding-bottom: 0.35em;
   }
 }

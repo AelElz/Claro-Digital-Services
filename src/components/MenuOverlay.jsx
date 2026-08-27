@@ -5,6 +5,10 @@ import { freezeBackground, scrollTo } from '../lib/motion'
 import { useRouter } from '../lib/router-context'
 import './MenuOverlay.css'
 
+/* Anything that can take focus inside the sheet. Written as one selector so
+   the trap below and the browser agree on what "focusable" means. */
+const FOCUSABLE = 'a[href], button:not([disabled]), [tabindex]:not([tabindex="-1"])'
+
 /*
  * The full-screen menu.
  *
@@ -23,12 +27,48 @@ function MenuOverlay({ open, onClose, buttonRef }) {
   const panelRef = useRef(null)
   const firstLinkRef = useRef(null)
 
-  /* Escape closes, wherever focus happens to be. */
+  /*
+   * Escape closes, and Tab cannot leave.
+   *
+   * The trap is not decoration. This element declares aria-modal, which tells
+   * assistive technology to ignore everything outside its own subtree, and
+   * the burger that opens it lives in the bar, OUTSIDE that subtree and
+   * deliberately painted above it. Without a close control inside the sheet
+   * and a trap around it, a screen reader user could open this and have no
+   * announced way back out; with both, the sheet is genuinely self-contained
+   * and the burger is a second, sighted way to do the same thing.
+   */
   useEffect(() => {
     if (!open) return
+    const panel = panelRef.current
+    if (!panel) return
+
     const onKeyDown = (event) => {
-      if (event.key === 'Escape') onClose()
+      if (event.key === 'Escape') {
+        onClose()
+        return
+      }
+      if (event.key !== 'Tab') return
+
+      /* Read on every Tab rather than cached: the foot's controls change
+         with the locale, and a cached list would hand focus to a node React
+         has already replaced. */
+      const nodes = [...panel.querySelectorAll(FOCUSABLE)].filter(
+        (node) => node.getClientRects().length > 0,
+      )
+      if (!nodes.length) return
+
+      const first = nodes[0]
+      const last = nodes[nodes.length - 1]
+      const here = document.activeElement
+      const outside = !panel.contains(here)
+
+      if (event.shiftKey ? here === first || outside : here === last || outside) {
+        event.preventDefault()
+        ;(event.shiftKey ? last : first).focus()
+      }
     }
+
     window.addEventListener('keydown', onKeyDown)
     return () => window.removeEventListener('keydown', onKeyDown)
   }, [open, onClose])
@@ -120,7 +160,6 @@ function MenuOverlay({ open, onClose, buttonRef }) {
           <LangToggle />
         </div>
 
-        <p className="menu__copyright">{menu.copyright}</p>
         <ul className="menu__legal">
           {menu.legal.map(({ label, to }) => (
             <li key={label}>
@@ -130,6 +169,30 @@ function MenuOverlay({ open, onClose, buttonRef }) {
             </li>
           ))}
         </ul>
+
+        <p className="menu__copyright">{menu.copyright}</p>
+
+        {/*
+         * The close control the dialog needs, and it belongs at the foot
+         * rather than at the top corner: the burger already occupies that
+         * corner, painted above this sheet and mid-way through folding into
+         * an X, and a second close mark forty pixels under it would read as
+         * two different controls for one job. Down here it is also where a
+         * thumb already is on a phone.
+         */}
+        <button type="button" className="menu__close" onClick={onClose}>
+          <span className="menu__close-mark" aria-hidden="true">
+            <svg viewBox="0 0 24 24" width="12" height="12" fill="none">
+              <path
+                d="M6 6 18 18M18 6 6 18"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+              />
+            </svg>
+          </span>
+          {menu.close}
+        </button>
       </div>
     </div>
   )

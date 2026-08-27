@@ -1,32 +1,104 @@
+/*
+ * The floor.
+ *
+ * Black like everything above it, with one quiet field lying along the
+ * bottom edge. It used to be a flat --ink slab, which was the last surviving
+ * piece of the old two-ground world: a wine rectangle under a black page
+ * reads as a different site pasted on the end.
+ */
 .footer {
   position: relative;
   /* Above every panel, since the last one sticks until the very end. */
   z-index: 50;
-  padding-block: clamp(64px, 8vw, 108px) clamp(28px, 3vw, 40px);
-  background: var(--ink);
+  /* Clips the field, and keeps its grain blend from reaching the page. */
+  overflow: hidden;
+  isolation: isolate;
+  padding-block: clamp(72px, 9vw, 128px) clamp(28px, 3vw, 40px);
+  background: var(--black);
   color: var(--white);
 }
 
-.footer__top {
+.footer > .container {
+  position: relative;
+  z-index: 1;
+}
+
+/*
+ * One field, wine, low. It lies along the bottom edge rather than behind the
+ * copy: a light under the small print reads as the page ending, where the
+ * same light behind the columns would turn an index into a picture.
+ *
+ * Masked at the top so it dissolves into the panel above instead of starting
+ * at a hard horizontal line where the footer begins.
+ */
+.footer__field {
+  --f-strength: 0.34;
+  --fx: 14%;
+  --fy: 98%;
+  --fx2: 86%;
+  --fy2: 112%;
+  -webkit-mask-image: linear-gradient(to bottom, transparent 0%, #000 46%);
+  mask-image: linear-gradient(to bottom, transparent 0%, #000 46%);
+}
+
+/*
+ * The field's authored entrance belongs to the sections that have one. This
+ * one is decoration on the last thing on the page and nothing here adds
+ * `is-in` to it, so without this it would sit at opacity 0 forever on any
+ * page whose JS confirmed itself. Default state is visible, always.
+ */
+html.js .footer__field:not(.is-in) {
+  scale: 1;
+  opacity: 1;
+}
+
+/* ---- The sendoff ------------------------------------------------------ */
+
+.footer__sendoff {
+  padding-bottom: clamp(48px, 6vw, 84px);
+}
+
+/*
+ * The closing line, in the display serif at the same size the chapter
+ * headings are set. It carries the serif's optical indent correction, so its
+ * left edge lines up with the columns underneath it rather than sitting a
+ * few pixels in.
+ */
+.footer__line {
+  max-width: 20ch;
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: var(--fs-title);
+  font-weight: 400;
+  line-height: 1.04;
+  letter-spacing: -0.012em;
+  margin-inline-start: -0.055em;
+  text-wrap: balance;
+  color: var(--white);
+}
+
+.footer__cta {
+  margin-top: clamp(26px, 3.2vw, 38px);
+}
+
+/* ---- Columns ---------------------------------------------------------- */
+
+/*
+ * Phone first: one column, in reading order, services then AI then contact.
+ * Two at the tablet width, three once there is room for all of them, which
+ * is the same 1100 the nav uses to give up its drawer.
+ */
+.footer__grid {
   display: grid;
-  grid-template-columns: minmax(0, 1.4fr) repeat(3, minmax(0, 1fr));
-  gap: clamp(32px, 4vw, 56px);
-  padding-bottom: clamp(44px, 5vw, 72px);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
-}
-
-.footer__brand .logo {
-  --logo-w: 150px;
-}
-
-.footer__blurb {
-  margin: clamp(20px, 2.4vw, 30px) 0 0;
-  max-width: 34ch;
-  color: var(--white-dim);
+  grid-template-columns: 1fr;
+  gap: clamp(34px, 4vw, 56px);
+  padding-bottom: clamp(40px, 5vw, 68px);
+  border-bottom: 1px solid var(--line);
 }
 
 .footer__col-title {
-  margin: 0 0 clamp(16px, 2vw, 24px);
+  margin: 0 0 clamp(16px, 2vw, 22px);
+  font-family: var(--font-sans);
   font-size: var(--fs-label);
   font-weight: 500;
   color: var(--crimson);
@@ -41,55 +113,46 @@
 }
 
 .footer__col a {
-  font-size: 0.95rem;
-  color: var(--white-dim);
+  font-size: var(--fs-body);
+  color: var(--fg-2);
   transition: color 0.3s var(--ease-out);
 }
 
-.footer__col a:hover {
+.footer__col a:hover,
+.footer__col a:focus-visible {
   color: var(--white);
 }
 
 .footer__address {
   display: block;
-  max-width: 22ch;
-  font-size: 0.95rem;
-  color: var(--white-faint);
+  max-width: 24ch;
+  font-size: var(--fs-body);
+  color: var(--fg-3);
 }
 
-.footer__contact-cta {
-  display: inline-flex;
-  margin-top: clamp(18px, 2.2vw, 26px);
-  padding: 0 20px;
-  line-height: 44px;
-  border-radius: 999px;
-  background: var(--grad-contact);
-  font-size: 0.92rem;
-  color: var(--white);
-  transition:
-    box-shadow 0.35s var(--ease-out),
-    transform 0.35s var(--ease-pop);
-}
+/* ---- Small print ------------------------------------------------------ */
 
-.footer__contact-cta:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 0 24px rgba(227, 53, 93, 0.45);
-}
-
-/* ---- Legal ----------------------------------------------------------- */
-
+/*
+ * The mark, the line of registration copy and the two legal links. Stacked
+ * on a phone, one row once the width is there.
+ */
 .footer__legal {
   display: flex;
   flex-wrap: wrap;
-  justify-content: space-between;
-  gap: 12px 24px;
-  padding-top: clamp(20px, 2.4vw, 28px);
+  align-items: center;
+  gap: 14px clamp(20px, 3vw, 36px);
+  padding-top: clamp(24px, 3vw, 34px);
+}
+
+.footer__legal .logo {
+  --logo-w: 92px;
+  color: var(--white);
 }
 
 .footer__legal p {
   margin: 0;
   font-size: var(--fs-label);
-  color: var(--white-faint);
+  color: var(--fg-3);
 }
 
 .footer__legal ul {
@@ -99,38 +162,66 @@
   margin: 0;
   padding: 0;
   list-style: none;
+  /* Pushed to the far end where the row fits on one line, and simply next in
+     the stack where it does not. */
+  margin-inline-start: auto;
 }
 
 .footer__legal a {
   font-size: var(--fs-label);
-  color: var(--white-faint);
+  color: var(--fg-3);
   transition: color 0.3s var(--ease-out);
 }
 
-.footer__legal a:hover {
+.footer__legal a:hover,
+.footer__legal a:focus-visible {
   color: var(--white);
 }
 
-@media (max-width: 980px) {
-  .footer__top {
+/*
+ * Text this small is a 15px target. Padded out on touch only, and with
+ * line-height rather than padding on the column links so the 11px gaps
+ * between them do not become 40px ones.
+ */
+@media (pointer: coarse) {
+  .footer__col a,
+  .footer__legal a,
+  .footer__address {
+    display: inline-block;
+    padding-block: 9px;
+  }
+
+  /* The padding above IS the gap now. Leaving both would put 33px between
+     two links that used to sit 11px apart and stretch the column by half its
+     own height again. */
+  .footer__col ul {
+    gap: 0;
+  }
+}
+
+/*
+ * The two widenings, written as the negation of the site's own breakpoints
+ * rather than as 561 and 1101. The phone layout above is the base and these
+ * are the enhancement, but a min-width query would have to name a number one
+ * pixel off the ones the rest of the site uses, and a stack of breakpoints
+ * that nearly match is how two files end up disagreeing about where a
+ * layout changes.
+ */
+@media not all and (max-width: 560px) {
+  .footer__grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 
-@media (max-width: 620px) {
-  .footer__top {
-    grid-template-columns: 1fr;
+@media not all and (max-width: 1100px) {
+  .footer__grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
   .footer__col a,
-  .footer__legal a,
-  .footer__contact-cta {
+  .footer__legal a {
     transition: none;
-  }
-
-  .footer__contact-cta:hover {
-    transform: none;
   }
 }

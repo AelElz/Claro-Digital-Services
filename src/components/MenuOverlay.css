@@ -5,6 +5,10 @@
  * (100), so the logo and the burger stay on top of it and the mark never
  * disappears. It is a curtain: the sheet drops from the top, the entries
  * follow it in, staggered.
+ *
+ * This is the most Framer-like surface on the site and it is set that way:
+ * the pages in the display serif at title scale, left aligned on a hairline
+ * list, over black with one field behind them.
  */
 .menu {
   position: fixed;
@@ -37,8 +41,8 @@
     visibility 0s;
 }
 
-/* The same crimson wash and film grain the dark chapters carry, so the
-   menu reads as part of the site rather than a plain black modal. */
+/* The same lit field and film grain the chapters carry, so the menu reads as
+   part of the site rather than as a plain black modal. */
 .menu::before,
 .menu::after {
   content: '';
@@ -47,13 +51,17 @@
   pointer-events: none;
 }
 
+/*
+ * Aimed low and right, behind the end of the list rather than over the top
+ * of it. Colour comes from the tokens and the strength from opacity, so
+ * there is no second spelling of crimson in this file to drift out of step
+ * with the palette.
+ */
 .menu::before {
-  background: radial-gradient(
-    120% 78% at 50% -12%,
-    rgba(227, 53, 93, 0.26) 0%,
-    rgba(125, 29, 51, 0.12) 38%,
-    transparent 72%
-  );
+  opacity: 0.42;
+  background:
+    radial-gradient(58% 46% at 92% 88%, var(--crimson) 0%, transparent 66%),
+    radial-gradient(64% 52% at 8% 4%, var(--wine) 0%, transparent 68%);
 }
 
 /* No mix-blend-mode. Blending a viewport-sized layer forces the whole sheet
@@ -65,20 +73,35 @@
 
 /* ---- Entries --------------------------------------------------------- */
 
+/*
+ * Scrollable as a last resort. Five entries in the display serif fit a phone
+ * and fit a desktop; they do not fit a short laptop window at every zoom
+ * level, and the thing that falls off the bottom of a sheet with no scroll
+ * is the foot, which is where the close control lives.
+ *
+ * `margin: auto` on the list rather than `align-items: center`, because a
+ * centred flex item that overflows overflows in BOTH directions and the top
+ * of the list becomes unreachable. Auto margins centre and then give up.
+ */
 .menu__nav {
   position: relative;
   z-index: 1;
   display: flex;
   flex: 1;
-  align-items: center;
-  justify-content: center;
+  overflow-y: auto;
+  overscroll-behavior: contain;
 }
 
+/*
+ * The list holds the site's own column so the sheet's left edge lines up
+ * with every heading behind it, and the hairlines stop where the content
+ * does rather than running the full width of a desktop screen.
+ */
 .menu__list {
-  margin: 0;
+  width: min(var(--container), 100%);
+  margin: auto;
   padding: 0;
   list-style: none;
-  text-align: center;
 }
 
 .menu__item {
@@ -87,6 +110,12 @@
   transition:
     opacity 0.3s var(--ease-out),
     translate 0.3s var(--ease-out);
+}
+
+/* A rule between the pages, not a box around each: the list reads as an
+   index, and the hairline is the same one every card on the site uses. */
+.menu__item + .menu__item {
+  border-top: 1px solid var(--line);
 }
 
 /*
@@ -103,20 +132,37 @@
   transition-delay: calc(var(--i, 0) * 34ms + 60ms);
 }
 
+/*
+ * Display serif at title scale, one weight, with the optical indent
+ * correction the face needs. The size comes off the scale rather than a
+ * clamp written for this one list, so the pages are set at exactly the size
+ * the chapter headings behind them are.
+ */
 .menu__link {
   display: block;
-  padding: clamp(2px, 0.4vh, 8px) 0;
-  font-size: clamp(2.6rem, 7vw, 5.2rem);
-  font-weight: 500;
-  line-height: 1.08;
-  letter-spacing: -0.02em;
+  padding: clamp(10px, 1.4vh, 18px) 0;
+  font-family: var(--font-display);
+  /* The scale, capped against the viewport's own height: at the top of the
+     clamp five of these are 570px of type, which is more than a short laptop
+     window has to give once the foot is accounted for. */
+  font-size: min(var(--fs-title), 9.5vh);
+  font-weight: 400;
+  line-height: 1.06;
+  letter-spacing: -0.012em;
+  margin-inline-start: -0.055em;
   color: var(--white);
-  transition: color 0.3s var(--ease-out);
+  /* Longhand translate, so the hover travel cannot replace anything else,
+     and the item's own stagger translate is a separate element's. */
+  translate: 0 0;
+  transition:
+    color 0.3s var(--ease-out),
+    translate 0.4s var(--ease-out);
 }
 
 .menu__link:hover,
 .menu__link:focus-visible {
   color: var(--crimson);
+  translate: 0.12em 0;
 }
 
 .menu__link[aria-current='page'] {
@@ -125,13 +171,23 @@
 
 /* ---- Foot ------------------------------------------------------------ */
 
+/*
+ * Phone first: one wrapping row of small things. The language pair, the two
+ * legal links, the line of copyright and the close control all sit on the
+ * same baseline where there is room, and stack in that order where there is
+ * not.
+ */
 .menu__foot {
   position: relative;
   z-index: 1;
+  width: min(var(--container), 100%);
+  margin-inline: auto;
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
-  justify-content: space-between;
-  gap: 18px;
+  gap: 14px clamp(18px, 3vw, 38px);
+  padding-top: clamp(20px, 3vh, 32px);
+  border-top: 1px solid var(--line);
   opacity: 0;
   translate: 0 10px;
   transition:
@@ -147,12 +203,13 @@
 
 .menu__copyright {
   margin: 0;
-  font-size: 0.88rem;
-  color: var(--white-faint);
+  font-size: var(--fs-label);
+  color: var(--fg-3);
 }
 
 .menu__legal {
   display: flex;
+  flex-wrap: wrap;
   gap: clamp(18px, 3vw, 38px);
   margin: 0;
   padding: 0;
@@ -160,11 +217,11 @@
 }
 
 .menu__legal-link {
-  font-size: 0.88rem;
-  color: var(--white-dim);
+  font-size: var(--fs-label);
+  color: var(--fg-2);
   text-decoration: underline;
   text-underline-offset: 4px;
-  text-decoration-color: rgba(255, 255, 255, 0.28);
+  text-decoration-color: var(--line-2);
   transition:
     color 0.3s var(--ease-out),
     text-decoration-color 0.3s var(--ease-out);
@@ -176,11 +233,59 @@
   text-decoration-color: currentcolor;
 }
 
-@media (max-width: 620px) {
+/*
+ * The dialog's own close.
+ *
+ * A real control, in the sheet, in the tab order: the burger is outside the
+ * dialog subtree that aria-modal tells a screen reader to be the whole
+ * world, so it cannot be the only way out. Pushed to the far end of the row
+ * on a wide screen, and last in the stack on a phone, where the bottom of
+ * the screen is the easiest place to reach.
+ */
+.menu__close {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  margin-inline-start: auto;
+  height: 44px;
+  padding: 0 18px;
+  border: 1px solid var(--line-2);
+  border-radius: var(--r-pill);
+  background: none;
+  font-size: var(--fs-label);
+  color: var(--fg-2);
+  transition:
+    color 0.3s var(--ease-out),
+    border-color 0.3s var(--ease-out);
+}
+
+.menu__close:hover,
+.menu__close:focus-visible {
+  border-color: var(--white);
+  color: var(--white);
+}
+
+.menu__close-mark {
+  display: grid;
+  place-items: center;
+  color: var(--crimson);
+}
+
+@media (max-width: 560px) {
+  /*
+   * Every foot item takes the full width and stacks, so the close is a
+   * full-bleed target at the bottom of the sheet rather than a small pill
+   * squeezed against the copyright.
+   */
   .menu__foot {
-    flex-direction: column-reverse;
-    align-items: flex-start;
-    gap: 12px;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 16px;
+  }
+
+  .menu__close {
+    justify-content: center;
+    margin-inline-start: 0;
   }
 }
 
@@ -200,14 +305,19 @@
   .menu__item,
   .menu__foot,
   .menu__link,
-  .menu__legal-link {
+  .menu__legal-link,
+  .menu__close {
     transition: none;
   }
 
-  /* No curtain and no stagger; it is simply there or it is not. */
+  /* No curtain, no stagger and no travel on hover; it is simply there or it
+     is not. */
   .menu,
   .menu[data-state='open'] .menu__item,
-  .menu[data-state='open'] .menu__foot {
+  .menu[data-state='open'] .menu__foot,
+  .menu__link,
+  .menu__link:hover,
+  .menu__link:focus-visible {
     translate: none;
   }
 

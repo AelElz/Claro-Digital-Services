@@ -1,0 +1,26 @@
+[
+  {
+    "route": "/",
+    "width": 390,
+    "file": "home-390.png",
+    "scrollW": 390,
+    "clientW": 390,
+    "docH": 11008,
+    "overflowX": false,
+    "textNodes": 4270,
+    "invisible": 0,
+    "errors": []
+  },
+  {
+    "route": "/",
+    "width": 1440,
+    "file": "home-1440.png",
+    "scrollW": 1440,
+    "clientW": 1440,
+    "docH": 12635,
+    "overflowX": false,
+    "textNodes": 4334,
+    "invisible": 0,
+    "errors": []
+  }
+]

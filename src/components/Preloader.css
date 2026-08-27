@@ -1,3 +1,14 @@
+/*
+ * The intro sheet.
+ *
+ * Opaque black with one field behind the mark, and it leaves by fading as a
+ * single layer. There is no backdrop-filter anywhere in this file, by
+ * decision: the previous exit ramped a full-viewport blur radius from 0 to
+ * 34px, and a CHANGING blur radius cannot be cached, so the compositor
+ * re-rasterised the whole viewport on every frame of the transition. An
+ * opaque sheet fading out is one composited layer and reads the same.
+ */
+
 #preloader {
   position: fixed;
   inset: 0;
@@ -5,121 +16,133 @@
   display: grid;
   place-items: center;
   overflow: hidden;
+  /* Opaque, so the fade is the reveal and nothing shows through early. */
+  background: var(--black);
+  isolation: isolate;
 }
 
 /*
- * Owns the tint and the backdrop blur, and is never transformed. A
- * transformed element resamples its own backdrop every frame, which makes
- * the blur crawl and shimmer. All the scaling happens on .preloader__mark.
+ * The same page-scale field the hero opens on, so the first thing on screen
+ * and the first thing behind it are made of one material.
  */
-.preloader__glass {
+/*
+ * The three entrance start states live here rather than only in the GSAP
+ * .set() calls. An effect runs after the first paint, so setting them from JS
+ * alone shows one frame of the finished scene before it snaps back to the
+ * start. Written as `transform`, not the `scale`/`translate` longhands, so
+ * GSAP's own inline transform replaces them outright instead of compounding
+ * with them.
+ */
+.preloader__field {
   position: absolute;
   inset: 0;
-  background: rgba(0, 0, 0, var(--bg-a, 1));
-  -webkit-backdrop-filter: blur(calc(var(--blur, 0) * 1px)) saturate(var(--sat, 1));
-  backdrop-filter: blur(calc(var(--blur, 0) * 1px)) saturate(var(--sat, 1));
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+  isolation: isolate;
+  opacity: 0;
+  transform: scale(1.06);
+}
+
+.preloader__field::before,
+.preloader__field::after {
+  content: '';
+  position: absolute;
+}
+
+.preloader__field::before {
+  inset: -20%;
+  background:
+    radial-gradient(46% 38% at 84% 20%, var(--crimson) 0%, rgba(227, 53, 93, 0.36) 40%, transparent 70%),
+    radial-gradient(56% 46% at 106% 76%, var(--wine) 0%, transparent 66%),
+    radial-gradient(32% 30% at 2% 92%, var(--violet) 0%, transparent 68%);
+  opacity: 0.88;
+}
+
+/*
+ * The grain, not decoration on the gradient but the material itself. Static:
+ * nothing on this sheet is on screen long enough to need the film shimmer,
+ * and a re-seeding layer under a fading sheet is a repaint for nothing.
+ */
+.preloader__field::after {
+  inset: 0;
+  background-image: var(--grain-tile);
+  background-size: 340px 340px;
+  mix-blend-mode: overlay;
+  opacity: 0.5;
 }
 
 .preloader__stage {
   position: relative;
+  z-index: 1;
   display: grid;
-  place-items: center;
+  justify-items: center;
+  gap: clamp(26px, 6vw, 38px);
   width: 100%;
-  padding: 0 24px;
-}
-
-/* ---- Oversized rings behind the mark -------------------------------- */
-
-.preloader__rings {
-  position: absolute;
-  display: grid;
-  place-items: center;
-  width: min(78vw, 62vh);
-  aspect-ratio: 1;
-  pointer-events: none;
-}
-
-.preloader__rings span {
-  grid-area: 1 / 1;
-  width: calc(var(--r) * 100%);
-  aspect-ratio: 1;
-  border: 1px solid rgba(227, 53, 93, 0.55);
-  border-radius: 50%;
-}
-
-.preloader__rings span:last-child {
-  border-color: rgba(255, 255, 255, 0.14);
-}
-
-/* ---- The three logo states ------------------------------------------ */
-
-.preloader__mark {
-  position: relative;
-  display: grid;
-  /* Wider than the old box because this is the full lockup: the second line
-     needs the size to stay readable. */
-  --logo-w: min(62vw, 420px);
-  width: var(--logo-w);
-  aspect-ratio: 757.43 / 206.68;
-  /*
-   * A single drop-shadow reads as a flat blur. The tight bright core, the
-   * wide soft halo and the brightness lift stacked together are what make
-   * it read as LIT. drop-shadow follows the artwork's alpha, so the glow
-   * haloes the letterforms rather than a bounding box.
-   */
-  filter:
-    drop-shadow(0 0 calc(var(--g1, 0) * 1px) rgba(255, 198, 212, 0.95))
-    drop-shadow(0 0 calc(var(--g2, 0) * 1px) rgba(227, 53, 93, 0.55))
-    brightness(var(--gb, 1))
-    blur(calc(var(--mark-blur, 0) * 1px));
-  will-change: transform, opacity, filter;
-}
-
-.preloader__state {
-  grid-area: 1 / 1;
-  /* Wiped left-to-right: 0% fully visible, 100% fully gone. */
-  clip-path: inset(0 0 0 calc(var(--wipe, 0) * 1%));
-}
-
-.preloader__state .logo {
-  --logo-w: inherit;
-  width: 100%;
-  transition: none;
+  padding-inline: var(--pad-x);
 }
 
 /*
- * Three flat stamps of the same artwork. They used to differ in the carve
- * colour as well as the fill; the counter is a real hole now, so the colour
- * is the only thing that changes between them.
+ * One stamp of the lockup, in white, with no filter on it.
+ *
+ * It used to be three stacked copies under a four-stage filter chain of two
+ * drop-shadows, a brightness lift and a blur, all animated. The light in this
+ * scene comes from the field behind it now, which rasterises once.
  */
-.preloader__state--white .logo {
+.preloader__mark {
+  --logo-w: min(72vw, 400px);
+  width: var(--logo-w);
   color: var(--white);
+  opacity: 0;
+  transform: translateY(20px);
 }
 
-.preloader__state--crimson .logo {
-  color: var(--crimson);
+.preloader__mark .logo {
+  width: 100%;
 }
 
-.preloader__state--real .logo {
-  color: var(--white);
+/*
+ * A real bound on the wait rather than a decorative loop: it runs the length
+ * of the longest hold the intro is allowed, and is snapped to full the moment
+ * the page reports itself ready. It never suggests progress it does not have.
+ */
+.preloader__bar {
+  display: block;
+  overflow: hidden;
+  width: min(180px, 46vw);
+  height: 2px;
+  border-radius: var(--r-pill);
+  background: var(--line);
 }
 
-/* ---- Label ----------------------------------------------------------- */
-
-.preloader__tagline {
-  position: absolute;
-  top: calc(50% + min(14vw, 96px));
-  margin: 0;
-  font-size: clamp(0.8rem, 1.5vw, 1rem);
-  font-weight: 400;
-  letter-spacing: 0.06em;
-  white-space: nowrap;
-  color: var(--white-dim);
+.preloader__bar > span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--crimson);
+  transform-origin: left center;
+  transform: scaleX(0);
 }
 
-.preloader__tagline span {
-  display: inline-block;
-  white-space: pre;
+/* ---- Phone ----------------------------------------------------------- */
+
+@media (max-width: 680px) {
+  /*
+   * The blend pass costs the same as the layer it blends over, and here that
+   * is the whole viewport on the frame that decides how fast the site feels.
+   * The particles still read as a plain composite.
+   */
+  .preloader__field::after {
+    mix-blend-mode: normal;
+    opacity: 0.28;
+  }
+
+  .preloader__field::before {
+    /* Portrait: the light sits above the mark and reads as sky. */
+    background:
+      radial-gradient(58% 30% at 78% 16%, var(--crimson) 0%, rgba(227, 53, 93, 0.36) 42%, transparent 72%),
+      radial-gradient(66% 34% at 108% 62%, var(--wine) 0%, transparent 68%);
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {

@@ -1,7 +1,13 @@
 /*
- * Fixed liquid-glass pill, full width minus 12px a side. It reads the panel
- * behind it each frame and swaps palette, so it stays legible crossing from
- * a dark chapter to a light one.
+ * Fixed glass pill, full width minus 12px a side. It reads the panel behind
+ * it each frame and swaps palette, so it stays legible crossing from one
+ * chapter to another.
+ *
+ * There is no light chapter on the site any more, so the swap has nothing to
+ * swap TO today. The mechanism stays: usePanelStack and the nav's own probe
+ * both read the panel class, and a future light section should be one class
+ * away rather than a rewrite of this file. Only the dark palette below is
+ * tuned; the light one is left intact and unused.
  */
 .navbar {
   position: fixed;
@@ -18,10 +24,20 @@
      the way the logo does. */
   padding: 0 clamp(18px, 2.2vw, 32px) 0 clamp(14px, 1.6vw, 22px);
   border: 1px solid var(--nav-line);
-  border-radius: 999px;
+  border-radius: var(--r-pill);
   background: var(--nav-fill);
-  -webkit-backdrop-filter: blur(20px) saturate(1.5);
-  backdrop-filter: blur(20px) saturate(1.5);
+  /*
+   * The filter is part of the palette, not a constant.
+   *
+   * A single blur+saturate served both palettes when one of them was sitting
+   * on an off-white chapter. On black with a lit field passing behind, the
+   * two want opposite things: the light palette needs saturation to keep the
+   * page's colour alive under a pale wash, and the dark one needs the
+   * opposite or the field smears through the bar. -webkit- first, standard
+   * second: the minifier keeps the last of a duplicate pair.
+   */
+  -webkit-backdrop-filter: var(--nav-glass);
+  backdrop-filter: var(--nav-glass);
   color: var(--nav-ink);
   transition:
     background-color 0.5s var(--ease-out),
@@ -30,29 +46,51 @@
 }
 
 /*
- * The menu panel gets its own fill rather than reusing --nav-fill. The nav
- * sits on a blurred slab of the page and reads fine at 7% white; a panel
- * hanging over live copy at that value leaves the section text legible
- * through its own links.
+ * Dark: smoked glass, not a white wash.
+ *
+ * The bar used to be 7% white over blur(20px) saturate(1.5). Over flat black
+ * that reads as glass; the moment the hero's crimson field passes behind it
+ * the saturation pumps the crimson, the white wash lifts it into a dusty
+ * pink, and the bar goes muddy exactly where the page is at its brightest.
+ *
+ * Tinting DOWN fixes it at the source. brightness() takes whatever is behind
+ * the bar and puts it a stop under the white type on top, whatever colour it
+ * happens to be, and the black tint finishes the job; the saturate below 1
+ * stops a bright field from smearing across the blur. Over black the result
+ * is black with a hairline edge, which is the shape the bar should read as
+ * anyway, and over the field a trace of the light still comes through, which
+ * is the part that makes it glass rather than a slab.
  */
 .navbar--dark {
-  --nav-fill: rgba(255, 255, 255, 0.07);
-  --nav-line: rgba(255, 255, 255, 0.14);
+  --nav-glass: blur(22px) saturate(0.92) brightness(0.5);
+  --nav-fill: color-mix(in srgb, var(--black) 42%, transparent);
+  --nav-line: var(--line-2);
   --nav-ink: var(--white);
-  --nav-ink-dim: var(--white-dim);
-  --nav-pill: rgba(255, 255, 255, 0.92);
+  --nav-ink-dim: var(--fg-2);
+  --nav-pill: color-mix(in srgb, var(--white) 92%, transparent);
   --nav-pill-ink: var(--ink);
-  --nav-menu-fill: rgba(20, 5, 11, 0.88);
-  --nav-menu-hover: rgba(255, 255, 255, 0.09);
-  --nav-drawer-fill: #150409;
+  /*
+   * The dropdown gets its own fill rather than reusing --nav-fill. The bar
+   * sits on a blurred slab of the page and reads fine at 42% black; a panel
+   * hanging over live copy at that value leaves the section text legible
+   * through its own links.
+   */
+  --nav-menu-fill: color-mix(in srgb, var(--surface-2) 92%, transparent);
+  --nav-menu-hover: color-mix(in srgb, var(--white) 9%, transparent);
+  --nav-drawer-fill: var(--surface-2);
+  /* The drawer's active row. Its own value, because --nav-fill is now a
+     darkening tint and darkening a row on an already dark drawer marks
+     nothing. */
+  --nav-active: color-mix(in srgb, var(--white) 8%, transparent);
   /* The language pill's highlight. Its own pair rather than --nav-pill,
      which is a near-solid slab: this one is a wash the label reads through,
      and it has an edge, which the chapter pill does not. */
-  --lang-fill: rgba(156, 156, 156, 0.2);
-  --lang-edge: rgba(255, 255, 255, 0.9);
+  --lang-fill: color-mix(in srgb, var(--white) 14%, transparent);
+  --lang-edge: color-mix(in srgb, var(--white) 78%, transparent);
 }
 
 .navbar--light {
+  --nav-glass: blur(20px) saturate(1.5);
   --nav-fill: rgba(253, 253, 253, 0.6);
   --nav-line: rgba(66, 16, 28, 0.12);
   --nav-ink: var(--ink);
@@ -62,6 +100,7 @@
   --nav-menu-fill: rgba(253, 253, 253, 0.94);
   --nav-menu-hover: rgba(66, 16, 28, 0.06);
   --nav-drawer-fill: var(--off-white);
+  --nav-active: rgba(66, 16, 28, 0.07);
   /* White would disappear here, so the wash and the edge both take the ink. */
   --lang-fill: rgba(66, 16, 28, 0.07);
   --lang-edge: rgba(66, 16, 28, 0.3);
@@ -72,6 +111,25 @@
 .navbar .logo {
   --logo-w: 104px;
   color: var(--nav-ink);
+}
+
+/* ---- Focus ------------------------------------------------------------
+ *
+ * One ring for the whole site, and it is the global :focus-visible rule in
+ * index.css. Nothing in this file redeclares its colour, its width or its
+ * offset; three different hand-picked offsets is how a bar ends up with
+ * three different focus states.
+ *
+ * What the controls here do need is a SHAPE. An outline traces the
+ * element's own border-radius, so a pill-shaped link with no radius set gets
+ * a rectangular ring around it. These are the pills.
+ */
+.navbar__link,
+.navbar__toggle,
+.navbar__signin,
+.navbar__menu-link,
+.navbar__burger {
+  border-radius: var(--r-pill);
 }
 
 /* ---- Links ----------------------------------------------------------- */
@@ -96,7 +154,7 @@
   left: 0;
   width: 0;
   height: 38px;
-  border-radius: 999px;
+  border-radius: var(--r-pill);
   background: var(--nav-pill);
   transform: translateY(-50%);
   opacity: 0;
@@ -115,7 +173,10 @@
   transition: color 0.3s var(--ease-out);
 }
 
-.navbar__link:hover {
+/* A keyboard gets the same state a pointer does. Every :hover in this file
+   carries its :focus-visible twin for that reason. */
+.navbar__link:hover,
+.navbar__link:focus-visible {
   color: var(--nav-ink);
 }
 
@@ -190,9 +251,9 @@
   border: 1px solid var(--nav-line);
   border-radius: 22px;
   background: var(--nav-menu-fill);
-  -webkit-backdrop-filter: blur(20px) saturate(1.5);
-  backdrop-filter: blur(20px) saturate(1.5);
-  box-shadow: 0 18px 44px rgba(0, 0, 0, 0.28);
+  -webkit-backdrop-filter: var(--nav-glass);
+  backdrop-filter: var(--nav-glass);
+  box-shadow: 0 18px 44px rgba(0, 0, 0, 0.42);
   translate: 0 -6px;
   transition:
     translate 0.3s var(--ease-out),
@@ -208,7 +269,6 @@
 .navbar__menu-link {
   display: block;
   padding: 10px 14px;
-  border-radius: 999px;
   font-size: 0.9rem;
   white-space: nowrap;
   color: var(--nav-ink-dim);
@@ -258,7 +318,6 @@
   height: 44px;
   padding: 0;
   border: 0;
-  border-radius: 10px;
   background: none;
 }
 
@@ -355,17 +414,16 @@
   transition: scale 0.3s var(--ease-pop);
 }
 
-.navbar__burger:hover .navbar__burger-bars {
+.navbar__burger:hover .navbar__burger-bars,
+.navbar__burger:focus-visible .navbar__burger-bars {
   scale: 1.06;
 }
 
-.navbar__burger:hover .navbar__burger-bars span {
-  background: #ff6f92;
-}
-
-.navbar__burger:focus-visible {
-  outline: 2px solid var(--crimson);
-  outline-offset: 6px;
+/* Crimson lifted towards white rather than a second pink hex nobody can
+   trace back to the palette. */
+.navbar__burger:hover .navbar__burger-bars span,
+.navbar__burger:focus-visible .navbar__burger-bars span {
+  background: color-mix(in srgb, var(--crimson) 62%, var(--white));
 }
 
 /* ---- With the menu open ---------------------------------------------- */
@@ -378,7 +436,7 @@
  */
 .navbar[data-menu='open'] {
   --nav-ink: var(--white);
-  --nav-ink-dim: var(--white-dim);
+  --nav-ink-dim: var(--fg-2);
   border-color: transparent;
   background: transparent;
   -webkit-backdrop-filter: none;
@@ -417,10 +475,18 @@
   padding: 0 14px;
   line-height: 40px;
   border: 1px solid var(--nav-line);
-  border-radius: 999px;
   background: none;
   font-size: 0.88rem;
   color: var(--nav-ink);
+  transition:
+    border-color 0.3s var(--ease-out),
+    opacity 0.3s var(--ease-out),
+    visibility 0.3s;
+}
+
+.navbar__toggle:hover,
+.navbar__toggle:focus-visible {
+  border-color: var(--nav-ink);
 }
 
 @media (max-width: 1100px) {
@@ -444,8 +510,8 @@
     border: 1px solid var(--nav-line);
     border-radius: 24px;
     /*
-     * Solid, not glass. The bar is a small pill and reads fine at 7% white,
-     * but the drawer covers a third of a phone screen: the page runs
+     * Solid, not glass. The bar is a small pill and reads fine as smoked
+     * glass, but the drawer covers a third of a phone screen: the page runs
      * straight through it and the links land on whatever happens to be
      * behind them. An opaque panel also drops a full-screen backdrop-filter
      * pass on the device least able to afford one.
@@ -488,8 +554,7 @@
   }
 
   .navbar__link--active {
-    background: var(--nav-fill);
-    border-radius: 999px;
+    background: var(--nav-active);
   }
 
   /*
@@ -632,7 +697,8 @@
   }
 
   /* The icon still becomes an X, it just gets there without the journey. */
-  .navbar__burger:hover .navbar__burger-bars {
+  .navbar__burger:hover .navbar__burger-bars,
+  .navbar__burger:focus-visible .navbar__burger-bars {
     scale: 1;
   }
 
@@ -652,7 +718,6 @@
   padding: 0 18px;
   line-height: 38px;
   border: 1px solid var(--nav-line);
-  border-radius: 999px;
   font-size: 0.92rem;
   white-space: nowrap;
   color: var(--nav-ink);

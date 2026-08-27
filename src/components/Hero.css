@@ -1,239 +1,305 @@
 /*
- * No justify-content override here. The panel is taller than the viewport so
- * it can dwell; centring the scene in the panel box would drop it to 77svh
- * and push the name below the fold. .panel__inner is one viewport tall and
- * sits at the top, so it centres on screen while the panel is pinned.
+ * Chapter one, and the thesis.
+ *
+ * The name at display scale over one crimson field rising from the lower
+ * right. That field is the same primitive every card on the site uses, at
+ * page scale: the light source enters here and the rest of the page is it,
+ * seen again smaller.
+ *
+ * It replaced a bespoke canvas that painted drifting crimson blooms at 30fps.
+ * The canvas was carefully built and genuinely beautiful, but it was a second
+ * material doing the field's job, and a full-viewport canvas is the largest
+ * per-frame cost a mid-range phone pays on this page. Two gradients and a
+ * grain tile rasterise once and then cost nothing to composite.
  */
+
+/*
+ * Registered so they can be transitioned. An unregistered custom property is
+ * not an animatable type, so the smoothing below would simply not happen and
+ * the light would snap to the pointer.
+ */
+@property --px {
+  syntax: "<number>";
+  inherits: true;
+  initial-value: 0;
+}
+
+@property --py {
+  syntax: "<number>";
+  inherits: true;
+  initial-value: 0;
+}
+
 .hero {
-  text-align: center;
-  /* Full-strength grain here: it sits over the lit canvas, not over text. */
-  --grain-opacity: 0.19;
+  position: relative;
+  isolation: isolate;
+  --grain-opacity: 0.05;
 }
 
 /*
- * One viewport tall, not the full panel. The panel carries ~55svh of dwell
- * below the fold that is never on screen, and stretching the canvas over it
- * meant painting half again as many pixels every frame for nothing.
+ * Page-scale field. Anchored low and right so the name reads against black
+ * and the light comes up behind it, the way a horizon does, rather than
+ * sitting behind the text and greying it out.
  */
-.hero__bg {
+.hero__field {
   position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 100svh;
+  inset: 0;
   z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+  isolation: isolate;
+  /* Aims the two stops. --px/--py are the pointer's, written from JS on a
+     fine pointer only and smoothed by the transition below. */
+  --fx: calc(84% + var(--px, 0) * 6%);
+  --fy: calc(72% + var(--py, 0) * 6%);
+  --fx2: calc(104% + var(--px, 0) * 4%);
+  --fy2: 34%;
+  /* Transition, not a frame loop. The pointer writes two numbers and CSS does
+     the smoothing, so there is nothing to fall behind under throttling. */
+  transition:
+    --px 0.9s var(--ease-out),
+    --py 0.9s var(--ease-out);
 }
 
-/*
- * --p is the hero's scroll progress, written once a frame by the scrub. The
- * content lifts and dissolves while the curtain behind it pushes back, so
- * the two planes come apart in depth.
- */
+.hero__field::before,
+.hero__field::after {
+  content: '';
+  position: absolute;
+}
+
+.hero__field::before {
+  inset: -20%;
+  /*
+   * Fades out before the panel ends. Without this the gradient is simply
+   * clipped by the panel box and leaves a hard horizontal edge between lit
+   * and unlit black, which slides as the panel settles into its sticky
+   * offset. -webkit- first, standard second: the minifier treats the pair as
+   * duplicate declarations and keeps the last one (see AGENTS.md).
+   */
+  -webkit-mask-image: linear-gradient(to bottom, #000 0%, #000 62%, transparent 97%);
+  mask-image: linear-gradient(to bottom, #000 0%, #000 62%, transparent 97%);
+  background:
+    radial-gradient(44% 34% at var(--fx) var(--fy), var(--crimson) 0%, rgba(227, 53, 93, 0.42) 38%, transparent 68%),
+    radial-gradient(52% 42% at var(--fx2) var(--fy2), var(--wine) 0%, transparent 64%),
+    radial-gradient(34% 30% at 4% 90%, var(--violet) 0%, transparent 66%);
+  opacity: 0.95;
+}
+
+.hero__field::after {
+  inset: 0;
+  background-image: var(--grain-tile);
+  background-size: 340px 340px;
+  mix-blend-mode: overlay;
+  opacity: 0.55;
+}
+
 .hero__inner {
-  opacity: calc(1 - var(--p, 0) * 1.15);
-  transform: translate3d(0, calc(var(--p, 0) * -70px), 0);
-  will-change: transform, opacity;
+  position: relative;
+  z-index: 2;
 }
 
 .hero__content {
   display: flex;
   flex-direction: column;
-  align-items: center;
+  align-items: flex-start;
 }
 
-.hero__eyebrow {
-  color: rgba(255, 255, 255, 0.72);
-  animation: hero-in 0.9s var(--ease-out) 0.05s backwards;
-}
-
-/* ---- The name -------------------------------------------------------- */
-
+/*
+ * The name. Bodoni at the largest size on the site, set tight, with the
+ * optical indent correction the serif needs more of than the sans did.
+ */
 .hero__name {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 0 0.24em;
   margin: 0;
-  font-size: var(--fs-hero);
-  font-weight: 500;
-  line-height: 0.98;
-  letter-spacing: -0.03em;
+  font-family: var(--font-display);
+  font-size: var(--fs-display);
+  font-weight: 400;
+  line-height: 0.92;
+  letter-spacing: -0.018em;
+  margin-inline-start: -0.055em;
   color: var(--white);
 }
 
 /*
- * Each word rises out of its own clipped box, so the letters appear from
- * behind the line above rather than fading in place.
+ * The clip box for the rise animation. It has to be taller than the line box
+ * or it cuts the descenders off: Bodoni hangs far below the baseline and the
+ * g in "Digital" lost its tail. Padded down and pulled back up by the same
+ * amount, so the extra height costs no layout.
  */
 .hero__word {
   display: block;
   overflow: hidden;
-  padding-block: 0.06em;
-  margin-block: -0.06em;
+  padding-bottom: 0.16em;
+  margin-bottom: -0.16em;
 }
 
 .hero__word > span {
   display: block;
-  animation: hero-rise 1.05s var(--ease-out) backwards;
+  /* Default visible. The animation only runs where JS confirmed itself. */
+  translate: 0 0;
 }
 
-.hero__word:nth-child(1) > span {
-  animation-delay: 0.15s;
+html.js .hero__word > span {
+  animation: hero-rise 1.05s var(--ease-out) both;
 }
 
-.hero__word:nth-child(2) > span {
-  animation-delay: 0.26s;
+html.js .hero__word:nth-child(2) > span {
+  animation-delay: 0.09s;
 }
 
 .hero__tagline {
-  margin: clamp(14px, 1.6vw, 22px) 0 0;
-  font-size: clamp(1.15rem, 2.4vw, 1.9rem);
+  max-width: 22ch;
+  margin: clamp(20px, 3.2vw, 34px) 0 0;
+  font-size: var(--fs-lede);
   font-weight: 400;
-  line-height: 1.2;
-  letter-spacing: -0.02em;
-  color: var(--crimson);
-  animation: hero-in 0.9s var(--ease-out) 0.4s backwards;
+  line-height: 1.28;
+  color: var(--white);
 }
 
 .hero__subtitle {
   max-width: 46ch;
-  margin: clamp(16px, 1.8vw, 24px) 0 0;
-  font-size: var(--fs-lede);
-  line-height: 1.55;
-  color: var(--white-dim);
-  animation: hero-in 0.9s var(--ease-out) 0.5s backwards;
+  margin: clamp(12px, 1.6vw, 18px) 0 0;
+  font-size: var(--fs-body);
+  line-height: 1.6;
+  color: var(--fg-2);
 }
 
 .hero__actions {
   display: flex;
   flex-wrap: wrap;
-  justify-content: center;
   gap: 12px;
-  margin-top: clamp(28px, 3.4vw, 44px);
-  animation: hero-in 0.9s var(--ease-out) 0.6s backwards;
+  margin-top: clamp(28px, 4vw, 42px);
 }
 
-/* ---- Stats ----------------------------------------------------------- */
-
+/*
+ * The record. Set in the serif because these numbers are the argument, and
+ * tabular so the column edges line up whichever locale formats them.
+ */
 .hero__stats {
   display: flex;
   flex-wrap: wrap;
-  justify-content: center;
-  gap: clamp(28px, 5vw, 72px);
-  margin: clamp(44px, 6vw, 80px) 0 0;
-  animation: hero-in 0.9s var(--ease-out) 0.72s backwards;
+  gap: clamp(26px, 5vw, 64px);
+  margin: clamp(40px, 6vw, 72px) 0 0;
 }
 
 .hero__stat dt {
-  font-size: clamp(1.7rem, 3.2vw, 2.6rem);
-  font-weight: 500;
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: clamp(2.4rem, 6vw, 3.4rem);
+  font-weight: 400;
   line-height: 1;
-  letter-spacing: -0.03em;
+  letter-spacing: -0.015em;
   color: var(--white);
 }
 
+/*
+ * The suffix drops OUT of the serif.
+ *
+ * Bodoni draws "+" and "/" as near-hairlines. At 38px in crimson on black
+ * they vanish outright, so "70+" read as "70" and "4.8/5" read as "4.8  5".
+ * Set in the sans at half the size and raised, they read as the annotation
+ * they are and they always render.
+ */
 .hero__stat dt span {
+  font-family: var(--font-sans);
+  font-size: 0.44em;
+  font-weight: 500;
+  letter-spacing: 0;
+  vertical-align: 0.72em;
+  margin-inline-start: 0.06em;
   color: var(--crimson);
 }
 
 .hero__stat dd {
   margin: 8px 0 0;
   font-size: var(--fs-label);
-  font-weight: 400;
-  color: var(--white-faint);
+  line-height: 1.35;
+  color: var(--fg-2);
 }
 
-/* ---- Scroll cue ------------------------------------------------------ */
-
-/*
- * Anchored to the first viewport of the panel, not its bottom. The panel is
- * taller than the screen now, so `bottom` would park the cue off-screen.
- */
+/* The scroll cue. Hidden on touch, where nobody needs to be told. */
 .hero__cue {
   position: absolute;
   left: 50%;
-  top: calc(100svh - 82px);
+  bottom: clamp(20px, 4vh, 40px);
   z-index: 2;
-  display: block;
-  width: 1px;
-  height: 54px;
-  overflow: hidden;
-  background: rgba(255, 255, 255, 0.14);
-  transform: translateX(-50%);
+  translate: -50% 0;
+  width: 22px;
+  height: 34px;
+  border: 1px solid var(--line-2);
+  border-radius: var(--r-pill);
 }
 
 .hero__cue span {
-  display: block;
-  width: 100%;
-  height: 40%;
+  position: absolute;
+  top: 7px;
+  left: 50%;
+  width: 2px;
+  height: 6px;
+  translate: -50% 0;
+  border-radius: var(--r-pill);
   background: var(--crimson);
-  animation: hero-cue 2.1s var(--ease-out) infinite;
+  animation: hero-cue 1.9s var(--ease-out) infinite;
 }
 
 @keyframes hero-cue {
-  0% {
-    transform: translateY(-100%);
-  }
-  60%,
+  0%,
   100% {
-    transform: translateY(250%);
+    opacity: 0;
+    translate: -50% 0;
+  }
+  35% {
+    opacity: 1;
+  }
+  70% {
+    opacity: 0;
+    translate: -50% 12px;
   }
 }
 
 @keyframes hero-rise {
   from {
-    transform: translateY(105%);
+    translate: 0 105%;
   }
   to {
-    transform: translateY(0);
+    translate: 0 0;
   }
 }
 
-@keyframes hero-in {
-  from {
-    opacity: 0;
-    transform: translateY(14px);
-  }
-  to {
-    opacity: 1;
-    transform: none;
-  }
-}
+/* ---- Phone ----------------------------------------------------------- */
 
 @media (max-width: 680px) {
-  .hero {
-    min-height: 100svh;
-  }
-
-  .hero__inner {
-    /* No sticky stack on mobile, so nothing scrubs, keep it legible. */
-    opacity: 1;
-    transform: none;
+  /*
+   * The field moves to the top on a phone. In a portrait viewport the copy
+   * runs the full height, so a light anchored at the bottom sits behind the
+   * stats and washes them out; above the name it reads as sky.
+   */
+  .hero__field {
+    --fx: 88%;
+    --fy: 26%;
+    --fx2: 104%;
+    --fy2: 6%;
   }
 
   .hero__stats {
-    gap: 24px 36px;
+    gap: 22px 34px;
   }
 
-  /* The panel is content-height here, so there is no fixed spot for it. */
   .hero__cue {
     display: none;
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .hero__eyebrow,
-  .hero__word > span,
-  .hero__tagline,
-  .hero__subtitle,
-  .hero__actions,
-  .hero__stats,
-  .hero__cue span {
+  html.js .hero__word > span {
     animation: none;
   }
 
-  .hero__inner {
-    opacity: 1;
-    transform: none;
+  .hero__cue span {
+    animation: none;
+    opacity: 0.7;
+  }
+
+  .hero__field {
+    transition: none;
   }
 }

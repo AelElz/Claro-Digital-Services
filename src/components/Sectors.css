@@ -1,128 +1,215 @@
+/*
+ * Six sectors.
+ *
+ * Written phone first. At 390px there is no room for a list beside a panel,
+ * so the tablist is a strip of pills that scrolls sideways under the thumb
+ * and the detail card sits under it, in reach. The two-column reading is the
+ * enhancement, and it only arrives at 1100 where both halves are wide enough
+ * to be worth having.
+ */
+
+/* ---- The record ------------------------------------------------------ */
+
 .sectors__stats {
   display: flex;
   flex-wrap: wrap;
-  gap: clamp(28px, 5vw, 80px);
-  margin: 0 0 clamp(40px, 5vw, 68px);
-  padding-bottom: clamp(36px, 4.4vw, 60px);
-  border-bottom: 1px solid var(--card-light-line);
+  gap: 22px 34px;
+  margin: 0 0 clamp(34px, 5vw, 60px);
+  padding-bottom: clamp(30px, 4.4vw, 52px);
+  border-bottom: 1px solid var(--line);
 }
 
 .sectors__stats dt {
-  font-size: clamp(1.7rem, 3.2vw, 2.6rem);
-  font-weight: 500;
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: clamp(2.1rem, 5.6vw, 2.9rem);
+  font-weight: 400;
   line-height: 1;
-  letter-spacing: -0.03em;
+  letter-spacing: -0.015em;
+  color: var(--fg);
 }
 
+/*
+ * The suffix drops OUT of the serif, the same way the hero's does. Bodoni
+ * draws "+" and "/" as near-hairlines; at this size in crimson on black they
+ * disappear and "30+" reads as "30". Set in the sans at 0.44em and raised,
+ * they read as the annotation they are and they always render.
+ */
 .sectors__stats dt span {
+  font-family: var(--font-sans);
+  font-size: 0.44em;
+  font-weight: 500;
+  letter-spacing: 0;
+  vertical-align: 0.72em;
+  margin-inline-start: 0.06em;
   color: var(--crimson);
 }
 
 .sectors__stats dd {
   margin: 8px 0 0;
   font-size: var(--fs-label);
-  font-weight: 500;
-  color: var(--ink-faint);
+  color: var(--fg-2);
 }
 
-.sectors__body {
-  display: grid;
-  grid-template-columns: minmax(0, 0.78fr) minmax(0, 1.22fr);
-  gap: clamp(24px, 3.6vw, 56px);
-  align-items: start;
+@media (min-width: 560px) {
+  .sectors__stats {
+    gap: clamp(28px, 5vw, 80px);
+  }
 }
 
-/* ---- Sector list ----------------------------------------------------- */
+/* ---- The tablist ----------------------------------------------------- */
 
+/*
+ * A strip, not a wrap. Six pills wrapping to three rows push the detail card
+ * off a 390px screen before it has said anything; a single line that scrolls
+ * keeps the answer above the fold and puts the whole control in one thumb
+ * arc.
+ *
+ * Bled to the screen edges so the last pill is visibly cut rather than
+ * ending in the container's own margin, which reads as the end of the list.
+ */
 .sectors__nav {
   display: flex;
-  flex-direction: column;
-  gap: 2px;
-  margin: 0;
-  padding: 0;
-  list-style: none;
+  gap: 8px;
+  margin: 0 calc(var(--pad-x) * -1) clamp(18px, 2.6vw, 26px);
+  /*
+   * Vertical padding is not decoration: overflow-x: auto computes overflow-y
+   * to auto as well, so a focus ring drawn 5px outside a pill would be
+   * clipped by the strip's own box. The trailing inline padding clears the
+   * fade below, so the last pill can be scrolled fully out from under it.
+   */
+  padding: 6px calc(var(--pad-x) + 44px) 14px var(--pad-x);
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scroll-snap-type: x proximity;
+  scroll-padding-inline: var(--pad-x);
+  scrollbar-width: none;
+  /* Fades the trailing edge, so "there is more" is stated rather than
+     implied by a pill that happens to be cut. */
+  -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 44px), transparent 100%);
+  mask-image: linear-gradient(to right, #000 calc(100% - 44px), transparent 100%);
 }
 
-.sectors__tab {
-  /*
-   * Inherits width: fit-content from .reveal-row, so the fill stops where
-   * the sector name stops rather than running to the column edge.
-   */
-  padding: 12px 20px;
-  border: 0;
-  border-radius: 999px;
-  background: none;
-  font-size: clamp(1rem, 1.5vw, 1.15rem);
+.sectors__nav::-webkit-scrollbar {
+  display: none;
+}
+
+/*
+ * Doubled selector against .reveal-row, which sets padding, radius and a
+ * transition at the same weight; nothing here may depend on which stylesheet
+ * the bundler emits first.
+ */
+.reveal-row.sectors__tab {
+  flex: none;
+  /* 44px on its own, no out-of-flow target needed. */
+  min-height: 44px;
+  padding: 10px 18px;
+  border: 1px solid var(--line);
+  border-radius: var(--r-pill);
+  background: var(--surface);
+  font-size: 0.95rem;
   font-weight: 400;
+  line-height: 1.3;
+  white-space: nowrap;
   text-align: left;
-  color: var(--ink-dim);
+  color: var(--fg-2);
+  scroll-snap-align: center;
   transition:
     transform 0.62s var(--ease-out),
-    color 0.4s var(--ease-out);
+    color 0.4s var(--ease-out),
+    border-color 0.4s var(--ease-out),
+    background-color 0.4s var(--ease-out);
 }
 
-.sectors__tab--active {
-  color: var(--ink);
-}
-
-.sectors__tab--active::before {
+/*
+ * The marker is on every pill, not only the selected one. A dot that appears
+ * on selection changes the pill's width, which shifts the whole strip out
+ * from under the thumb that just tapped it.
+ */
+.sectors__tab .reveal-row__text::before {
   content: '';
-  position: absolute;
-  left: 0;
-  top: 50%;
-  width: 7px;
-  height: 7px;
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  margin-inline-end: 9px;
+  vertical-align: 0.14em;
   border-radius: 50%;
-  background: var(--crimson);
-  transform: translate(-2px, -50%);
+  background: var(--line-2);
+  transition: background-color 0.4s var(--ease-out);
 }
 
-/* ---- Detail ---------------------------------------------------------- */
+/* Doubled, because .reveal-row.sectors__tab above sets the same three
+   properties at two classes' weight and would otherwise outrank this
+   whatever the source order. */
+.reveal-row.sectors__tab--active {
+  border-color: var(--line-2);
+  background: var(--surface-2);
+  color: var(--fg);
+}
+
+.sectors__tab--active .reveal-row__text::before {
+  background: var(--crimson);
+}
+
+@media (pointer: fine) {
+  /* Over the fill, crimson on crimson is nothing; the marker goes light. */
+  .sectors__tab:hover .reveal-row__text::before {
+    background: var(--off-white);
+  }
+}
+
+/* ---- The detail card ------------------------------------------------- */
 
 .sectors__detail {
-  padding: clamp(26px, 3.2vw, 44px);
-  border: 1px solid var(--card-light-line);
-  border-radius: 26px;
-  background: var(--card-light);
-  animation: sector-in 0.6s var(--ease-out) backwards;
+  padding: clamp(22px, 3.2vw, 44px);
+  /*
+   * Opacity only. The field inside is the authored entrance and it blooms on
+   * its own; moving the box as well would re-rasterise the gradient and the
+   * grain every frame of the switch for no reading anyone gets.
+   */
+  animation: sector-in 0.45s var(--ease-out) backwards;
 }
 
 @keyframes sector-in {
   from {
     opacity: 0;
-    transform: translateY(14px);
   }
   to {
     opacity: 1;
-    transform: none;
   }
 }
 
-.sectors__kicker {
-  margin: 0;
-  font-size: var(--fs-label);
-  font-weight: 500;
-  color: var(--crimson);
+/* Weak enough to read five lines of body copy over. */
+.sectors__detail .sectors__field {
+  --f-strength: 0.72;
+}
+
+/*
+ * The field carries .reveal only so useReveal turns it on. That class's
+ * transition is a shorthand and would replace the field's own, killing the
+ * bloom, so `scale` is appended to the property list rather than the whole
+ * declaration being rewritten (BUILD-SPEC). A field blooms; it does not
+ * slide, so the reveal's 14px settle is cancelled.
+ */
+html.js .sectors__field.reveal {
+  translate: none;
+  transition-property: opacity, translate, scale;
 }
 
 .sectors__title {
-  margin: clamp(16px, 2vw, 24px) 0 0;
-  font-size: clamp(1.5rem, 2.7vw, 2.2rem);
-  font-weight: 500;
-  line-height: 1.12;
-  letter-spacing: -0.02em;
+  margin: 0;
 }
 
 .sectors__lede {
-  margin: 14px 0 0;
   max-width: 52ch;
-  color: var(--ink-dim);
+  margin: 14px 0 0;
+  color: var(--fg-2);
 }
 
 .sectors__points {
   display: grid;
   gap: 12px;
-  margin: clamp(24px, 3vw, 34px) 0 0;
+  margin: clamp(22px, 3vw, 34px) 0 0;
   padding: 0;
   list-style: none;
 }
@@ -132,12 +219,12 @@
   grid-template-columns: auto minmax(0, 1fr);
   gap: 12px;
   align-items: start;
-  font-size: 0.98rem;
-  color: var(--ink-dim);
+  font-size: var(--fs-body);
+  color: var(--fg-2);
 }
 
 .sectors__points svg {
-  margin-top: 0.28em;
+  margin-top: 0.32em;
   color: var(--crimson);
 }
 
@@ -145,29 +232,36 @@
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 12px clamp(14px, 2vw, 24px);
-  margin-top: clamp(26px, 3.2vw, 38px);
-  padding-top: clamp(20px, 2.4vw, 28px);
-  border-top: 1px solid var(--card-light-line);
+  gap: 10px clamp(14px, 2vw, 24px);
+  margin-top: clamp(24px, 3.2vw, 38px);
+  padding-top: clamp(18px, 2.4vw, 28px);
+  border-top: 1px solid var(--line);
 }
 
 .sectors__case-label {
   font-size: var(--fs-label);
-  font-weight: 500;
-  color: var(--ink-faint);
+  color: var(--fg-2);
 }
 
+/* Set in the serif, like the client names in the chapter above: it is the
+   same kind of fact and it should look like one. */
 .sectors__case-name {
-  font-size: 1.15rem;
-  font-weight: 500;
+  font-family: var(--font-display);
+  font-size: 1.35rem;
+  font-weight: 400;
+  line-height: 1;
   letter-spacing: -0.01em;
+  color: var(--fg);
 }
 
 .sectors__case-cta {
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  margin-inline-start: auto;
+  /* Its own row on a phone, so it is never a 15px target wedged beside the
+     case name. */
+  flex-basis: 100%;
+  min-height: 44px;
   font-size: 0.95rem;
   color: var(--crimson);
   transition: gap 0.35s var(--ease-out);
@@ -177,22 +271,52 @@
   gap: 13px;
 }
 
-@media (max-width: 900px) {
+@media (min-width: 560px) {
+  .sectors__case-cta {
+    flex-basis: auto;
+    margin-inline-start: auto;
+  }
+}
+
+/* ---- Two columns ----------------------------------------------------- */
+
+/*
+ * Only at 1100. Below it the tablist beside the card would leave the card
+ * about forty characters wide, which is narrower than the copy in it wants
+ * and narrower than the strip above it costs.
+ */
+@media (min-width: 1100px) {
   .sectors__body {
-    grid-template-columns: 1fr;
+    display: grid;
+    grid-template-columns: minmax(0, 0.72fr) minmax(0, 1.28fr);
+    gap: clamp(24px, 3.6vw, 56px);
+    align-items: start;
   }
 
   .sectors__nav {
-    flex-direction: row;
-    flex-wrap: wrap;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+    margin: 0;
+    padding: 0;
+    overflow: visible;
+    -webkit-mask-image: none;
+    mask-image: none;
   }
 
-  .sectors__tab--active::before {
-    display: none;
+  .reveal-row.sectors__tab {
+    /* fit-content comes from .reveal-row, so the fill still stops where the
+       sector name stops rather than running to the column edge. */
+    padding: 12px 20px;
+    font-size: clamp(1rem, 1.5vw, 1.15rem);
+    white-space: normal;
+    background: none;
+    border-color: transparent;
   }
 
-  .sectors__case-cta {
-    margin-inline-start: 0;
+  .reveal-row.sectors__tab--active {
+    border-color: var(--line);
+    background: var(--surface-2);
   }
 }
 
@@ -201,7 +325,12 @@
     animation: none;
   }
 
-  .sectors__tab,
+  .sectors__nav {
+    scroll-behavior: auto;
+  }
+
+  .reveal-row.sectors__tab,
+  .sectors__tab .reveal-row__text::before,
   .sectors__case-cta {
     transition: none;
   }

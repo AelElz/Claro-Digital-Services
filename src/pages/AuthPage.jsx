@@ -1,6 +1,6 @@
-import { useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import Footer from '../components/Footer'
-import Mark from '../components/Mark'
+import Link from '../components/Link'
 import Navbar from '../components/Navbar'
 import { useContent } from '../content'
 import { useReveal } from '../hooks/useReveal'
@@ -13,7 +13,9 @@ import './AuthPage.css'
  * in component state for exactly as long as the form is open and is never
  * written to localStorage, sessionStorage, a cookie, the URL or a global.
  * A front-end "account system" that stored credentials would be worse than
- * no account system at all, because it would look like it worked.
+ * no account system at all, because it would look like it worked. The notice
+ * above the form says so in the visitor's own language, and it stays until
+ * there is a server behind this page (AGENTS.md section 4).
  */
 
 /*
@@ -29,6 +31,13 @@ const COMMON = [
 ]
 
 const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/
+
+/* Tab order, which is also the order the first error is looked for in. */
+const ORDER = ['name', 'email', 'password', 'confirm']
+
+/* Long enough to read as the form doing something, short enough that nobody
+   waits. There is no request behind it; the result says so outright. */
+const CHECK_MS = 520
 
 function isCommon(password) {
   const lower = password.toLowerCase()
@@ -59,11 +68,15 @@ function AuthPage() {
   const [touched, setTouched] = useState({})
   const [visible, setVisible] = useState(false)
   const [capsLock, setCapsLock] = useState(false)
+  const [busy, setBusy] = useState(false)
   const [done, setDone] = useState(false)
   const resultRef = useRef(null)
+  const check = useRef(0)
 
   const isSignUp = mode === 'signUp'
   const copy = auth[mode]
+
+  useEffect(() => () => window.clearTimeout(check.current), [])
 
   const errors = useMemo(() => {
     const next = {}
@@ -85,10 +98,12 @@ function AuthPage() {
   }, [auth, isSignUp, values])
 
   const strength = strengthOf(values.password)
+  const meterOn = isSignUp && Boolean(values.password)
 
   const set = (name) => (event) => {
+    const { value } = event.target
     setDone(false)
-    setValues((current) => ({ ...current, [name]: event.target.value }))
+    setValues((current) => ({ ...current, [name]: value }))
   }
 
   const blur = (name) => () => setTouched((current) => ({ ...current, [name]: true }))
@@ -100,6 +115,8 @@ function AuthPage() {
     setMode(isSignUp ? 'signIn' : 'signUp')
     setTouched({})
     setDone(false)
+    setCapsLock(false)
+    setVisible(false)
     // Never carry a typed password across a mode switch.
     setValues((current) => ({ ...current, password: '', confirm: '' }))
   }
@@ -107,36 +124,95 @@ function AuthPage() {
   const onSubmit = (event) => {
     event.preventDefault()
     setTouched({ name: true, email: true, password: true, confirm: true })
-    if (Object.keys(errors).length) return
+
+    /*
+     * A rejected submit used to end here with nothing but the error text
+     * appearing somewhere below the fold of a phone screen. Focus moves to
+     * the first field that is actually wrong, so the message is read out and
+     * the caret is already where the fix has to happen.
+     */
+    const first = ORDER.find((name) => errors[name])
+    if (first) {
+      setDone(false)
+      requestAnimationFrame(() => document.getElementById(`auth-${first}`)?.focus())
+      return
+    }
 
     /*
      * The only honest thing to do without a server: confirm the form is
      * valid, then drop the credentials. Nothing is sent and nothing is kept.
+     *
+     * `touched` is cleared along with them, or the password field would be
+     * empty, still marked as touched, and would light up with "use at least
+     * eight characters" as its reward for being correct.
      */
     setValues((current) => ({ ...current, password: '', confirm: '' }))
-    setDone(true)
-    requestAnimationFrame(() => resultRef.current?.focus())
+    setTouched({})
+    setCapsLock(false)
+    setVisible(false)
+    setBusy(true)
+
+    check.current = window.setTimeout(() => {
+      setBusy(false)
+      setDone(true)
+      requestAnimationFrame(() => resultRef.current?.focus())
+    }, CHECK_MS)
   }
 
-  const field = (name) => ({
-    id: `auth-${name}`,
-    invalid: Boolean(touched[name] && errors[name]),
-    describedBy: touched[name] && errors[name] ? `auth-${name}-error` : undefined,
-  })
+  const invalidOf = (name) => Boolean(touched[name] && errors[name])
+
+  /*
+   * The accessible name and the description are two different things, and
+   * this page used to run them together.
+   *
+   * Every <label> wrapped its field's error, its hint, the Show button and
+   * the strength meter, so the password input announced as "Password Show
+   * password Caps Lock is on Use at least 8 characters Password strength
+   * Fair, edit text". The label now wraps the label text alone; everything
+   * else sits outside it and is attached here, where a screen reader reads
+   * it as description after the name, and only when it exists.
+   */
+  const describe = (name, extra = []) => {
+    const list = [invalidOf(name) ? `auth-${name}-error` : null, ...extra].filter(Boolean)
+    return list.length ? list.join(' ') : undefined
+  }
+
+  const eye = visible ? (
+    <svg viewBox="0 0 24 24" width="17" height="17" fill="none" aria-hidden="true">
+      <path
+        d="M3 3l18 18M10.6 10.7a2 2 0 0 0 2.8 2.8M9.4 5.3A9.6 9.6 0 0 1 12 5c5 0 9 4.5 9 7a11 11 0 0 1-2.6 3.5M6.2 7.4C4.2 8.8 3 10.8 3 12c0 2.5 4 7 9 7 1.3 0 2.5-.3 3.6-.8"
+        stroke="currentColor"
+        strokeWidth="1.7"
+        strokeLinecap="round"
+      />
+    </svg>
+  ) : (
+    <svg viewBox="0 0 24 24" width="17" height="17" fill="none" aria-hidden="true">
+      <path
+        d="M3 12c0-2.5 4-7 9-7s9 4.5 9 7-4 7-9 7-9-4.5-9-7Z"
+        stroke="currentColor"
+        strokeWidth="1.7"
+      />
+      <circle cx="12" cy="12" r="2.6" stroke="currentColor" strokeWidth="1.7" />
+    </svg>
+  )
 
   return (
     <>
       <Navbar />
 
       <main className="auth" ref={revealRef}>
-        <div className="container auth__inner">
-          <div className="auth__card reveal">
-            <p className="eyebrow">
-              <Mark className="eyebrow__mark" />
-              {auth.eyebrow}
-            </p>
+        <span className="auth__grain" aria-hidden="true" />
 
-            <h1 className="auth__title">{copy.title}</h1>
+        <div className="container auth__inner">
+          <div className="card auth__card reveal">
+            <span
+              className="field reveal auth__field-light"
+              data-hue="crimson"
+              aria-hidden="true"
+            />
+
+            <h1 className="sub-title auth__title">{copy.title}</h1>
             <p className="auth__lede">{copy.lede}</p>
 
             {/* Stated up front, not buried, so it is read before anything is typed. */}
@@ -147,34 +223,39 @@ function AuthPage() {
 
             <form className="auth__form" onSubmit={onSubmit} noValidate>
               {isSignUp && (
-                <label className="auth__field" htmlFor={field('name').id}>
-                  <span className="auth__label">{auth.labels.name}</span>
+                <div className="auth__field">
+                  <label className="auth__label" htmlFor="auth-name">
+                    {auth.labels.name}
+                  </label>
                   <input
-                    id={field('name').id}
+                    id="auth-name"
                     className="auth__input"
                     type="text"
                     name="name"
                     autoComplete="name"
                     maxLength={80}
                     placeholder={auth.placeholders.name}
+                    disabled={busy}
                     value={values.name}
                     onChange={set('name')}
                     onBlur={blur('name')}
-                    aria-invalid={field('name').invalid}
-                    aria-describedby={field('name').describedBy}
+                    aria-invalid={invalidOf('name')}
+                    aria-describedby={describe('name')}
                   />
-                  {field('name').invalid && (
-                    <span className="auth__error" id="auth-name-error">
+                  {invalidOf('name') && (
+                    <p className="auth__error" id="auth-name-error">
                       {errors.name}
-                    </span>
+                    </p>
                   )}
-                </label>
+                </div>
               )}
 
-              <label className="auth__field" htmlFor={field('email').id}>
-                <span className="auth__label">{auth.labels.email}</span>
+              <div className="auth__field">
+                <label className="auth__label" htmlFor="auth-email">
+                  {auth.labels.email}
+                </label>
                 <input
-                  id={field('email').id}
+                  id="auth-email"
                   className="auth__input"
                   type="email"
                   name="email"
@@ -183,25 +264,28 @@ function AuthPage() {
                   autoCapitalize="none"
                   maxLength={254}
                   placeholder={auth.placeholders.email}
+                  disabled={busy}
                   value={values.email}
                   onChange={set('email')}
                   onBlur={blur('email')}
-                  aria-invalid={field('email').invalid}
-                  aria-describedby={field('email').describedBy}
+                  aria-invalid={invalidOf('email')}
+                  aria-describedby={describe('email')}
                 />
-                {field('email').invalid && (
-                  <span className="auth__error" id="auth-email-error">
+                {invalidOf('email') && (
+                  <p className="auth__error" id="auth-email-error">
                     {errors.email}
-                  </span>
+                  </p>
                 )}
-              </label>
+              </div>
 
-              <label className="auth__field" htmlFor={field('password').id}>
-                <span className="auth__label">{auth.labels.password}</span>
+              <div className="auth__field">
+                <label className="auth__label" htmlFor="auth-password">
+                  {auth.labels.password}
+                </label>
 
                 <span className="auth__password">
                   <input
-                    id={field('password').id}
+                    id="auth-password"
                     className="auth__input"
                     type={visible ? 'text' : 'password'}
                     name="password"
@@ -209,37 +293,49 @@ function AuthPage() {
                     autoComplete={isSignUp ? 'new-password' : 'current-password'}
                     maxLength={128}
                     placeholder={isSignUp ? auth.placeholders.password : undefined}
+                    disabled={busy}
                     value={values.password}
                     onChange={set('password')}
                     onBlur={blur('password')}
                     onKeyUp={onKey}
-                    aria-invalid={field('password').invalid}
-                    aria-describedby={field('password').describedBy}
+                    aria-invalid={invalidOf('password')}
+                    aria-describedby={describe('password', [
+                      capsLock ? 'auth-caps' : null,
+                      meterOn ? 'auth-strength' : null,
+                    ])}
                   />
+                  {/*
+                   * Outside the label, and named from the dictionary rather
+                   * than from visible words: inside it, "Show password" was
+                   * being read as part of the input's own name.
+                   */}
                   <button
                     className="auth__peek"
                     type="button"
                     onClick={() => setVisible((current) => !current)}
+                    disabled={busy}
                     aria-pressed={visible}
+                    aria-label={visible ? auth.labels.hide : auth.labels.show}
+                    aria-controls="auth-password"
                   >
-                    {visible ? auth.labels.hide : auth.labels.show}
+                    {eye}
                   </button>
                 </span>
 
-                {capsLock && (
-                  <span className="auth__hint" role="status">
-                    {auth.labels.capsLock}
-                  </span>
-                )}
-
-                {field('password').invalid && (
-                  <span className="auth__error" id="auth-password-error">
+                {invalidOf('password') && (
+                  <p className="auth__error" id="auth-password-error">
                     {errors.password}
-                  </span>
+                  </p>
                 )}
 
-                {isSignUp && values.password && (
-                  <span className="auth__strength" data-score={strength}>
+                {capsLock && (
+                  <p className="auth__hint" id="auth-caps" role="status">
+                    {auth.labels.capsLock}
+                  </p>
+                )}
+
+                {meterOn && (
+                  <span className="auth__strength" id="auth-strength" data-score={strength}>
                     <span className="auth__meter" aria-hidden="true">
                       {[0, 1, 2, 3].map((step) => (
                         <span key={step} data-on={step < strength} />
@@ -250,64 +346,123 @@ function AuthPage() {
                     </span>
                   </span>
                 )}
-              </label>
+              </div>
 
               {isSignUp && (
-                <label className="auth__field" htmlFor={field('confirm').id}>
-                  <span className="auth__label">{auth.labels.confirm}</span>
+                <div className="auth__field">
+                  <label className="auth__label" htmlFor="auth-confirm">
+                    {auth.labels.confirm}
+                  </label>
                   <input
-                    id={field('confirm').id}
+                    id="auth-confirm"
                     className="auth__input"
                     type={visible ? 'text' : 'password'}
                     name="confirm"
                     autoComplete="new-password"
                     maxLength={128}
+                    disabled={busy}
                     value={values.confirm}
                     onChange={set('confirm')}
                     onBlur={blur('confirm')}
-                    aria-invalid={field('confirm').invalid}
-                    aria-describedby={field('confirm').describedBy}
+                    onKeyUp={onKey}
+                    aria-invalid={invalidOf('confirm')}
+                    aria-describedby={describe('confirm')}
                   />
-                  {field('confirm').invalid && (
-                    <span className="auth__error" id="auth-confirm-error">
+                  {invalidOf('confirm') && (
+                    <p className="auth__error" id="auth-confirm-error">
                       {errors.confirm}
-                    </span>
+                    </p>
                   )}
-                </label>
+                </div>
               )}
 
               {!isSignUp && (
                 <div className="auth__row">
                   <label className="auth__remember">
-                    <input type="checkbox" name="remember" />
+                    <input type="checkbox" name="remember" disabled={busy} />
                     <span>{auth.labels.remember}</span>
                   </label>
-                  <button className="auth__link" type="button">
+                  {/*
+                   * A real destination rather than a button that does
+                   * nothing. There is no server to reset anything, so the
+                   * recovery that exists is the one on /contact.
+                   */}
+                  <Link className="auth__link" to="/contact">
                     {auth.labels.forgot}
-                  </button>
+                  </Link>
                 </div>
               )}
 
-              <button className="btn btn--primary auth__submit" type="submit">
-                {copy.submit}
-                <span className="btn__icon" aria-hidden="true">
-                  <svg viewBox="0 0 24 24" width="18" height="18" fill="none">
-                    <path
-                      d="M4 12h15m0 0-6-6m6 6-6 6"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    />
-                  </svg>
-                </span>
-              </button>
+              <div className="auth__foot">
+                <button
+                  className="btn btn--primary auth__submit"
+                  type="submit"
+                  data-state={busy ? 'checking' : 'idle'}
+                  disabled={busy}
+                  aria-busy={busy}
+                >
+                  {copy.submit}
+                  <span className="btn__icon" aria-hidden="true">
+                    {busy ? (
+                      <svg
+                        className="auth__spinner"
+                        viewBox="0 0 24 24"
+                        width="18"
+                        height="18"
+                        fill="none"
+                      >
+                        <circle
+                          cx="12"
+                          cy="12"
+                          r="8.5"
+                          stroke="currentColor"
+                          strokeWidth="2.4"
+                          opacity="0.25"
+                        />
+                        <path
+                          d="M20.5 12a8.5 8.5 0 0 0-8.5-8.5"
+                          stroke="currentColor"
+                          strokeWidth="2.4"
+                          strokeLinecap="round"
+                        />
+                      </svg>
+                    ) : (
+                      <svg viewBox="0 0 24 24" width="18" height="18" fill="none">
+                        <path
+                          d="M4 12h15m0 0-6-6m6 6-6 6"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        />
+                      </svg>
+                    )}
+                  </span>
+                </button>
 
-              {done && (
-                <p className="auth__result" role="status" tabIndex={-1} ref={resultRef}>
-                  {auth.demoResult}
-                </p>
-              )}
+                {/* Present from the first paint so the message lands in a live
+                    region that already existed; empty, it takes no space. */}
+                <div className="auth__result" data-state={done ? 'done' : 'idle'} role="status">
+                  {done && (
+                    <>
+                      <span className="auth__result-mark" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" width="16" height="16" fill="none">
+                          <path
+                            d="m5 12.5 4.5 4.5L19 7"
+                            stroke="currentColor"
+                            strokeWidth="2.2"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          />
+                        </svg>
+                      </span>
+                      <span className="auth__result-text" tabIndex={-1} ref={resultRef}>
+                        {auth.demoResult}
+                      </span>
+                    </>
+                  )}
+                </div>
+              </div>
             </form>
 
             <p className="auth__switch">

@@ -8,61 +8,114 @@
  */
 
 :root {
-  /* ---- Palette. Three anchors plus the two gradients. ---------------- */
+  /* ---- Ground ---------------------------------------------------------
+   *
+   * Black, everywhere, with no light chapter anywhere on the site. The old
+   * deck alternated dark and light; this world does not, because the fields
+   * below are the only thing that should ever change the temperature of a
+   * section, and a white panel between two of them reads as a different site.
+   */
   --black: #000;
   --white: #fff;
   --off-white: #fdfdfd;
 
-  /* Dark maroon, text on light panels, deepest tone on dark ones. */
-  --ink: #42101c;
-  --crimson: #e3355d;
-  --wine: #7d1d33;
-  --plum: #a82947;
+  /* Containers sit barely off the ground. The fields supply every colour, so
+     the boxes holding them have to stay almost invisible or the page turns
+     into a grid of grey rectangles with pictures in them. */
+  --surface: #070607;
+  --surface-2: #0d0a0c;
 
-  /* Secondary text, per surface. */
-  --white-dim: rgba(255, 255, 255, 0.64);
-  --ink-dim: rgba(66, 16, 28, 0.64);
-  --white-faint: rgba(255, 255, 255, 0.38);
-  --ink-faint: rgba(66, 16, 28, 0.42);
-
-  /* Glass. The nav's 50% white is far too bright away from the light, so
-     cards on dark surfaces get their own much dimmer value. */
-  --glass: rgba(255, 255, 255, 0.5);
-  --card: rgba(255, 255, 255, 0.055);
-  --card-line: rgba(255, 255, 255, 0.13);
-  --card-light: rgba(66, 16, 28, 0.04);
-  --card-light-line: rgba(66, 16, 28, 0.12);
-
-  --grad-contact: linear-gradient(to right, var(--wine) 0%, var(--crimson) 100%);
-  --grad-cta: linear-gradient(to right, var(--ink) 0%, var(--plum) 155.18%);
-
-  /* ---- Type ----------------------------------------------------------
+  /* ---- The family -----------------------------------------------------
    *
-   * One typeface for the whole page, and only one webfont to download: the
-   * wordmark is vector artwork, so the serif it was set in is not loaded at
-   * runtime and cannot arrive late or substitute.
-   * Labels stay in the same family, size and case as body copy: uppercase
-   * with wide tracking reads as a second typeface and cheapens the page.
+   * One crimson family, widened just far enough that six fields can differ
+   * from each other and still read as one brand. Warm to cool THROUGH
+   * magenta; nothing crosses into blue or green, which is where the
+   * reference's palette lives and Claro's does not.
    */
+  --ember: #ff5a1f;
+  --crimson: #e3355d;
+  --magenta: #c62a8a;
+  --violet: #6d2ea8;
+  --plum: #a82947;
+  --wine: #7d1d33;
+  --ink: #42101c;
+
+  /* ---- Text -----------------------------------------------------------
+   *
+   * Tinted from the ground's own hue, never neutral grey. A true grey on a
+   * crimson-lit black reads as dirty, and the tint is what makes secondary
+   * copy sit in the same light as everything around it.
+   *
+   * Measured on black: --fg-2 is 8.1:1 and carries body copy; --fg-3 is
+   * 3.7:1, which clears large text and nothing else. Never set --fg-3 on
+   * anything under 24px.
+   */
+  --fg: #fff;
+  --fg-2: rgba(255, 240, 244, 0.66);
+  --fg-3: rgba(255, 240, 244, 0.42);
+
+  --line: rgba(255, 255, 255, 0.1);
+  --line-2: rgba(255, 255, 255, 0.2);
+
+  /* Kept: the nav and the drawer still reference these. */
+  --white-dim: var(--fg-2);
+  --white-faint: var(--fg-3);
+  --ink-dim: rgba(66, 16, 28, 0.64);
+  --ink-faint: rgba(66, 16, 28, 0.42);
+  --card: rgba(255, 255, 255, 0.055);
+  --card-line: var(--line);
+  --glass: rgba(255, 255, 255, 0.5);
+
+  /* ---- Type -----------------------------------------------------------
+   *
+   * Bodoni Moda for display, Inter Tight for everything else.
+   *
+   * The serif is not a trend pick: the Claro wordmark is already a
+   * high-contrast didone with ball terminals, so the display face is read off
+   * the client's own lettering rather than chosen from a list. Bodoni is its
+   * closest obtainable relative, which is why the headlines and the logo look
+   * like they come from one hand.
+   *
+   * One weight of it, at opsz 96. Bodoni's whole character is the thick-thin
+   * contrast, and a second weight would only be used to blunt that.
+   */
+  --font-display: 'Bodoni Moda', 'Didot', 'Bodoni MT', 'Times New Roman', serif;
   --font-sans: 'Inter Tight', system-ui, 'Segoe UI', Roboto, sans-serif;
 
-  /* Fluid throughout. Only two weights are ever used, 400 and 500. */
-  --fs-hero: clamp(3.2rem, 10.5vw, 9.5rem);
-  --fs-title: clamp(2rem, 4.6vw, 3.9rem);
-  --fs-lede: clamp(1.15rem, 1.75vw, 1.5rem);
-  --fs-body: clamp(1.05rem, 1.3vw, 1.2rem);
-  --fs-label: clamp(0.95rem, 1.05vw, 1.05rem);
+  /*
+   * Mobile-first: every lower bound is the phone size and is chosen first,
+   * the vw term does the work through the middle, the upper bound stops the
+   * desktop from shouting. Read the lower number as the real design.
+   */
+  --fs-display: clamp(3.35rem, 12.2vw, 8.5rem);
+  --fs-title: clamp(2.3rem, 6.4vw, 4.6rem);
+  --fs-sub: clamp(1.6rem, 3.4vw, 2.3rem);
+  --fs-stat: clamp(3rem, 10vw, 6rem);
+  --fs-lede: clamp(1.08rem, 1.7vw, 1.4rem);
+  --fs-body: clamp(1rem, 1.2vw, 1.0625rem);
+  --fs-label: clamp(0.9rem, 1vw, 0.95rem);
 
-  /* ---- Layout -------------------------------------------------------- */
+  /* ---- Layout ---------------------------------------------------------- */
   --container: 1240px;
   --pad-x: clamp(20px, 4vw, 48px);
   --nav-h: 64px;
 
-  /* ---- Motion -------------------------------------------------------- */
+  /* One corner language for the whole site. Cards, fields and inputs all
+     draw from this so nothing invents its own radius. */
+  --r-card: clamp(20px, 3vw, 30px);
+  --r-inner: 14px;
+  --r-pill: 999px;
+
+  /* ---- Motion ---------------------------------------------------------- */
   --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
   --ease-pop: cubic-bezier(0.34, 1.4, 0.64, 1);
 
-  /* Film-grain tile, one small repeating feTurbulence square. */
+  /* ---- Grain -----------------------------------------------------------
+   *
+   * One 180px fractalNoise tile, used at two scales: small for film texture
+   * over a whole panel, large for the coarse dissolve on a field. One asset,
+   * rasterised once, tiled by the compositor.
+   */
   --grain-tile: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.82' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23n)' opacity='0.45'/%3E%3C/svg%3E");
 
   color-scheme: dark;
@@ -71,6 +124,36 @@
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+
+  /* The caret is a browser surface nobody themes; on a crimson site a blue
+     one is the tell that the page was assembled rather than built. */
+  caret-color: var(--crimson);
+  accent-color: var(--crimson);
+}
+
+/* =====================================================================
+ * Faces
+ *
+ * Self-hosted so first paint owes nothing to a third party. `swap` because
+ * a phone on a Moroccan mobile network should read the copy in a fallback
+ * rather than stare at nothing, and the metric overrides below keep that
+ * swap from moving the layout when the real face lands.
+ * ===================================================================== */
+
+@font-face {
+  font-family: 'Inter Tight';
+  src: url('/fonts/inter-tight.woff2') format('woff2-variations');
+  font-weight: 400 500;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Bodoni Moda';
+  src: url('/fonts/bodoni-moda.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
 }
 
 * {
@@ -185,9 +268,15 @@ html.is-loading body {
   color: var(--white);
 }
 
+/*
+ * There are no light chapters in this world. The class survives because
+ * usePanelStack and the nav's palette probe both read it, and because a
+ * future light section should still be one class away, but it resolves to
+ * the same ground as every other panel.
+ */
 .panel--light {
-  background: var(--off-white);
-  color: var(--ink);
+  background: var(--black);
+  color: var(--white);
 }
 
 /*
@@ -219,11 +308,11 @@ html.is-loading body {
 }
 
 .panel--light .panel__shade {
-  background: var(--ink);
+  background: var(--black);
 }
 
 /* ---- Film grain, dark panels only, never on the off-white ---------- */
-.panel--dark .panel__grain {
+.panel__grain {
   position: absolute;
   /*
    * Negative, not 0, and a percentage of the panel rather than a fixed
@@ -370,33 +459,44 @@ html.is-loading body {
  * size as body copy. Uppercase with wide tracking reads as a different
  * typeface and cheapens it, so the mark carries the emphasis instead.
  */
-.eyebrow {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.6em;
-  margin: 0 0 clamp(18px, 2.4vw, 28px);
-  font-size: var(--fs-label);
-  font-weight: 500;
+/*
+ * The eyebrow is deleted, not restyled. A small coloured label above a
+ * heading is the category's default way of saying "this is a section", and
+ * the heading it sits on always said that already. The mark it carried moves
+ * into the places that actually need a mark.
+ */
+.mark-inline {
+  width: 1em;
   color: var(--crimson);
-}
-
-.eyebrow__mark {
-  width: 1.1em;
-  color: var(--crimson);
+  vertical-align: -0.08em;
 }
 
 .section-title {
   margin: 0;
+  font-family: var(--font-display);
   font-size: var(--fs-title);
-  font-weight: 500;
-  line-height: 1.06;
+  font-weight: 400;
+  line-height: 1.02;
   /*
    * Large type looks indented next to small type even when the CSS boxes
    * match, because glyph side bearing scales with size. Corrected in `em`
    * so it holds across the clamp, and logical so RTL corrects the far edge.
+   * Bodoni needs more of this correction than Inter did.
    */
-  margin-inline-start: -0.045em;
-  letter-spacing: -0.02em;
+  margin-inline-start: -0.055em;
+  letter-spacing: -0.012em;
+  text-wrap: balance;
+}
+
+/* The one place the serif is set below display scale. */
+.sub-title {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: var(--fs-sub);
+  font-weight: 400;
+  line-height: 1.1;
+  letter-spacing: -0.01em;
+  text-wrap: balance;
 }
 
 .section-lede {
@@ -411,19 +511,34 @@ html.is-loading body {
   color: var(--ink-dim);
 }
 
-/* IntersectionObserver toggles .is-in; --i staggers children. */
+/*
+ * IntersectionObserver toggles .is-in; --i staggers children.
+ *
+ * The default is VISIBLE, and only a page that has confirmed its JavaScript
+ * is running is allowed to hide anything. Hiding by default means every
+ * failure downstream, a dead observer, a remounted node, a throttled tab,
+ * renders as permanently missing content, and this site has shipped exactly
+ * that bug before.
+ *
+ * The movement is small and quick on purpose. This is copy settling, not an
+ * entrance; the authored entrance belongs to the fields.
+ */
 .reveal {
-  opacity: 0;
-  transform: translateY(22px);
-  transition:
-    opacity 0.8s var(--ease-out),
-    transform 0.8s var(--ease-out);
-  transition-delay: calc(var(--i, 0) * 90ms);
+  opacity: 1;
 }
 
-.reveal.is-in {
+html.js .reveal {
+  opacity: 0;
+  translate: 0 14px;
+  transition:
+    opacity 0.55s var(--ease-out),
+    translate 0.55s var(--ease-out);
+  transition-delay: calc(var(--i, 0) * 60ms);
+}
+
+html.js .reveal.is-in {
   opacity: 1;
-  transform: none;
+  translate: none;
 }
 
 /* =====================================================================
@@ -747,4 +862,348 @@ html.is-loading body {
   .panel__grain {
     animation: none;
   }
+}
+
+/* =====================================================================
+ * The field
+ *
+ * The one material this site is made of, and the only thing that ever
+ * changes a section's temperature.
+ *
+ * Two soft radial stops from the family, then coarse grain blended over
+ * them. The grain is not decoration on top of a gradient; it IS the
+ * difference between this and the smooth gradient wash the client rejected
+ * by name. A gradient with no grain reads as a default; the same gradient
+ * dissolved into visible particles reads as a printed thing.
+ *
+ * Deliberately no `filter: blur()`. A large blurred layer is one of the few
+ * things that will genuinely drop a mid-range phone below 60fps, and the
+ * softness is already in the gradient's own stops. Radial gradients rasterise
+ * once and cost nothing to composite after that.
+ * ===================================================================== */
+
+.field {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  border-radius: inherit;
+  pointer-events: none;
+  /* Contains the grain's blend so it cannot reach the page behind the card. */
+  isolation: isolate;
+}
+
+.field::before,
+.field::after {
+  content: '';
+  position: absolute;
+}
+
+/* The light. Each instance aims its own with --fx/--fy. */
+.field::before {
+  inset: -25%;
+  /*
+   * Each stop HOLDS its colour before it falls off.
+   *
+   * Ramping straight from the colour to transparent, which is what this used
+   * to do, leaves the average alpha across the blob so low that the field
+   * reads as grey: measured, the service cards came out at chroma 1-7 against
+   * the hero’s 14-28, and a sweep of the whole chapter never exceeded 2. The
+   * reference’s blobs are saturated to roughly a third of their radius and
+   * only then dissolve, which is what makes them read as light rather than as
+   * a tint.
+   */
+  background:
+    radial-gradient(48% 46% at var(--fx, 66%) var(--fy, 20%), var(--f-1) 0%, var(--f-1) 30%, transparent 72%),
+    radial-gradient(58% 54% at var(--fx2, 90%) var(--fy2, 66%), var(--f-2) 0%, var(--f-2) 26%, transparent 70%);
+  opacity: var(--f-strength, 1);
+}
+
+/* The grain, coarse. 300px against the 180px tile the panels use, so the
+   particles read as material at card scale rather than as noise. */
+.field::after {
+  inset: 0;
+  background-image: var(--grain-tile);
+  background-size: 300px 300px;
+  mix-blend-mode: overlay;
+  opacity: 0.62;
+}
+
+.field[data-hue='ember'] {
+  --f-1: #ff5a1f;
+  --f-2: #c81e3c;
+}
+
+.field[data-hue='crimson'] {
+  --f-1: #e3355d;
+  --f-2: #7d1d33;
+}
+
+.field[data-hue='magenta'] {
+  --f-1: #c62a8a;
+  --f-2: #6d2ea8;
+}
+
+.field[data-hue='violet'] {
+  --f-1: #6d2ea8;
+  --f-2: #2a1155;
+}
+
+.field[data-hue='wine'] {
+  --f-1: #a82947;
+  --f-2: #42101c;
+}
+
+/*
+ * The authored moment: a field blooms open as its section arrives, while the
+ * copy beside it only settles. Two different behaviours, so the page is not
+ * one entrance repeated eleven times.
+ *
+ * Starts already visible. Everything that hides content by default is one
+ * failed observer away from a blank section, and this site has shipped that
+ * bug once already.
+ */
+.field {
+  scale: 1;
+  opacity: 1;
+  transition:
+    scale 1.1s var(--ease-out),
+    opacity 0.9s var(--ease-out);
+}
+
+html.js .field:not(.is-in) {
+  scale: 1.08;
+  opacity: 0;
+}
+
+/* =====================================================================
+ * Surfaces
+ * ===================================================================== */
+
+.card {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: var(--r-card);
+  background: var(--surface);
+}
+
+/* Everything inside a card sits above its field. */
+.card > *:not(.field) {
+  position: relative;
+  z-index: 1;
+}
+
+/* =====================================================================
+ * Browser surfaces
+ *
+ * The parts nobody draws still ship with somebody's design. A blue caret
+ * and a blue focus ring on a crimson page are the cheapest possible tell
+ * that the page was assembled rather than built.
+ * ===================================================================== */
+
+::selection {
+  background: var(--crimson);
+  color: var(--white);
+}
+
+:focus-visible {
+  outline: 2px solid var(--crimson);
+  outline-offset: 3px;
+}
+
+/* Prose links, so the underline sits off the baseline instead of through
+   the descenders. */
+a:not([class]) {
+  text-decoration: underline;
+  text-decoration-color: var(--line-2);
+  text-underline-offset: 0.22em;
+  text-decoration-thickness: 1px;
+  transition: text-decoration-color 0.3s var(--ease-out);
+}
+
+a:not([class]):hover {
+  text-decoration-color: var(--crimson);
+}
+
+/*
+ * Figures line up in a column only if the digits are the same width. Every
+ * statistic, price and measurement on the site goes through this.
+ */
+.tnum,
+.hero__stat dt,
+.about__stat-value,
+.sectors__stats dt,
+.method__stat-value {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: 'tnum' 1;
+}
+
+/* =====================================================================
+ * Skeletons
+ *
+ * For waits the visitor can actually see. A skeleton that flashes for 40ms
+ * is worse than no skeleton, so these are only used where the wait is real:
+ * the client screenshot, and a route that has not painted yet.
+ * ===================================================================== */
+
+.skeleton {
+  position: relative;
+  overflow: hidden;
+  background: var(--surface-2);
+  border-radius: var(--r-inner);
+}
+
+.skeleton::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  translate: -100% 0;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255, 240, 244, 0.055) 50%,
+    transparent 100%
+  );
+  animation: skeleton-sweep 1.5s var(--ease-out) infinite;
+}
+
+@keyframes skeleton-sweep {
+  to {
+    translate: 100% 0;
+  }
+}
+
+/* Held until the real thing is decoded, then crossfaded rather than swapped:
+   a hard swap at the end of a wait reads as a flash. */
+.media {
+  position: relative;
+  overflow: hidden;
+  border-radius: inherit;
+}
+
+.media__img {
+  display: block;
+  width: 100%;
+  height: auto;
+  opacity: 0;
+  transition: opacity 0.5s var(--ease-out);
+}
+
+.media__img.is-ready {
+  opacity: 1;
+}
+
+.media__skeleton {
+  position: absolute;
+  inset: 0;
+  transition: opacity 0.4s var(--ease-out);
+}
+
+.media__img.is-ready + .media__skeleton,
+.media.is-ready .media__skeleton {
+  opacity: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .field,
+  .media__img,
+  .media__skeleton {
+    transition: none;
+  }
+
+  .skeleton::after {
+    animation: none;
+  }
+
+  html.js .field:not(.is-in) {
+    scale: 1;
+    opacity: 1;
+  }
+}
+
+/* =====================================================================
+ * Cost control for the field
+ *
+ * Every field isolates a stacking context and runs an overlay blend pass.
+ * That is cheap for one hero and not cheap for the dozen-odd cards a phone
+ * scrolls past. Below the tablet breakpoint the grain drops to a plain
+ * composite: the particles still read, the blend pass does not happen.
+ * ===================================================================== */
+
+/*
+ * The blend STAYS on a phone; only its strength comes down.
+ *
+ * Dropping to a normal composite was cheaper but it laid a white-ish noise
+ * over the colour, which washes it toward grey: that alone cost the card
+ * fields most of their remaining chroma. Overlay keeps the hue and only
+ * modulates lightness, which is the whole reason it reads as grain in film
+ * rather than as dust on the screen.
+ */
+@media (max-width: 680px) {
+  .field::after,
+  .hero__field::after {
+    opacity: 0.42;
+  }
+}
+
+/* =====================================================================
+ * The scrollbar
+ *
+ * It used to be deleted outright, on both axes, which on a document this
+ * many viewports tall left no indication of position at all. Deleting a
+ * browser surface is not the same as designing it. Themed thin instead, from
+ * the palette, so it reads as part of the page rather than as the OS.
+ *
+ * Firefox takes the two-value shorthand; WebKit needs the pseudo-elements.
+ * ===================================================================== */
+
+html {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(227, 53, 93, 0.34) transparent;
+}
+
+html::-webkit-scrollbar {
+  display: block;
+  width: 10px;
+}
+
+html::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+html::-webkit-scrollbar-thumb {
+  border: 3px solid transparent;
+  border-radius: var(--r-pill);
+  background-clip: content-box;
+  background-color: rgba(227, 53, 93, 0.34);
+}
+
+html::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(227, 53, 93, 0.6);
+}
+
+/* Touch devices paint their own overlay scrollbar and hide it when idle;
+   a permanent gutter there is just lost width. */
+@media (pointer: coarse) {
+  html {
+    scrollbar-width: none;
+  }
+
+  html::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+/* =====================================================================
+ * Placeholders
+ *
+ * Measured: the two placeholder colours in use were 3.55:1 and 2.79:1 on
+ * their own fields, both under the 4.5:1 a placeholder needs. Tinted from
+ * the ground's hue at an alpha that clears it.
+ * ===================================================================== */
+
+::placeholder {
+  color: var(--fg-2);
+  opacity: 1;
 }

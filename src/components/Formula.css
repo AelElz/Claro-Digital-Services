@@ -1,4 +1,11 @@
 /*
+ * Chapter two: the sequence.
+ *
+ * Three cards, each with its own field, under one chapter-scale light. The
+ * numbers are set in the display serif at stat scale because they ARE the
+ * argument the chapter makes; they were small crimson labels, which read as
+ * list bullets and said nothing.
+ *
  * --enter is written by the scrub in Formula.jsx: 0 while the panel is still
  * a viewport away, 1 once it has landed over the hero.
  */
@@ -8,63 +15,185 @@
   will-change: transform;
 }
 
+/*
+ * The positioning context for the chapter's field, and the layer the copy
+ * sits on. Absolutely positioned children paint above in-flow content, so
+ * without the z-index below the field would cover the heading.
+ */
+.formula__scene {
+  position: relative;
+}
+
+.formula__scene > *:not(.field) {
+  position: relative;
+  z-index: 1;
+}
+
+/*
+ * The chapter light. Bled well past the container on both sides so it reads
+ * as weather over the section rather than as a rectangle behind it, and
+ * masked out before the cards begin: a field that simply stops leaves a hard
+ * horizontal edge between lit and unlit black, which is the seam the hero's
+ * mask exists to prevent. Masking the element rather than the gradient takes
+ * the grain with it in one composite.
+ */
+.formula__field {
+  inset: -16% -16vw 34%;
+  --fx: 16%;
+  --fy: 22%;
+  --fx2: 98%;
+  --fy2: 2%;
+  --f-strength: 0.5;
+  -webkit-mask-image: linear-gradient(to bottom, #000 0%, #000 44%, transparent 96%);
+  mask-image: linear-gradient(to bottom, #000 0%, #000 44%, transparent 96%);
+}
+
+/* ---- The steps ------------------------------------------------------- */
+
+/*
+ * One column is the real design. Three long steps side by side is a desktop
+ * shape; on a phone they are three screens of reading and stack.
+ */
 .formula__steps {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: clamp(24px, 3.4vw, 56px);
+  grid-template-columns: minmax(0, 1fr);
+  gap: clamp(12px, 1.6vw, 20px);
   margin: 0;
   padding: 0;
   list-style: none;
-  counter-reset: none;
 }
 
+/*
+ * No `transition` on this element. It carries .reveal, and the shorthand
+ * would replace the reveal's own transition and its stagger outright, which
+ * kills the entrance silently (see BUILD-SPEC).
+ */
 .formula__step {
-  position: relative;
-  padding-top: clamp(22px, 2.4vw, 32px);
-  border-top: 1px solid var(--card-light-line);
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: clamp(10px, 1.4vw, 14px) clamp(24px, 3vw, 40px);
+  padding: clamp(24px, 4.4vw, 40px);
 }
 
+/*
+ * Aimed at the top right, away from the copy, and faded out over the body.
+ * At full strength the light sits behind the paragraph and greys it out.
+ */
+.formula__step .field {
+  --fx: 92%;
+  --fy: 6%;
+  --fx2: 68%;
+  --fy2: -16%;
+  --f-strength: 0.62;
+  -webkit-mask-image: linear-gradient(to bottom, #000 0%, #000 30%, transparent 88%);
+  mask-image: linear-gradient(to bottom, #000 0%, #000 30%, transparent 88%);
+}
+
+/*
+ * The field blooms with its card.
+ *
+ * useReveal only writes .is-in onto .reveal nodes, and putting .reveal on the
+ * field itself would hand it the reveal's transition shorthand, replacing the
+ * bloom with a 14px nudge. The card is the .reveal node and the field takes
+ * its cue from the card's state, keeping the two entrances distinct: the copy
+ * settles, the light opens.
+ */
+html.js .formula__step.reveal.is-in .field {
+  scale: 1;
+  opacity: 1;
+}
+
+/*
+ * The number, in the serif at stat scale. Bodoni's side bearing scales with
+ * the type, so at this size it needs the same optical indent correction the
+ * section titles get or it hangs inside the card's padding.
+ *
+ * These are '01' to '03': digits only, no suffix, so none of the hairline
+ * symbol trouble applies here.
+ */
 .formula__n {
   display: block;
-  margin-bottom: clamp(28px, 4vw, 56px);
-  font-size: var(--fs-label);
-  font-weight: 500;
-  color: var(--crimson);
+  font-family: var(--font-display);
+  font-size: var(--fs-stat);
+  font-weight: 400;
+  line-height: 0.86;
+  letter-spacing: -0.02em;
+  margin-inline-start: -0.055em;
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: 'tnum' 1;
+  color: var(--fg);
 }
 
+/* The sans, so the serif number is the only display element in the card. */
 .formula__title {
-  margin: 0 0 12px;
-  font-size: clamp(1.4rem, 2.2vw, 1.85rem);
+  margin: 0;
+  font-size: var(--fs-sub);
+  font-family: var(--font-sans);
   font-weight: 500;
-  line-height: 1.15;
+  line-height: 1.14;
   letter-spacing: -0.02em;
+  color: var(--fg);
 }
 
 .formula__body {
   margin: 0;
-  max-width: 38ch;
-  color: var(--ink-dim);
+  max-width: 46ch;
+  font-size: var(--fs-body);
+  line-height: 1.6;
+  color: var(--fg-2);
 }
 
-@media (max-width: 860px) {
+/* ---- Tablet: the number moves beside the copy ------------------------ */
+
+@media (min-width: 560px) {
+  .formula__step {
+    grid-template-columns: auto minmax(0, 1fr);
+    align-items: start;
+  }
+
+  /* Spans the title and the body, so the copy column reads as one block. */
+  .formula__n {
+    grid-row: 1 / span 2;
+  }
+
+  .formula__step .field {
+    --fx: 94%;
+    --fy: 14%;
+    --fx2: 74%;
+    --fy2: -22%;
+  }
+}
+
+/* ---- Desktop: three across ------------------------------------------- */
+
+@media (min-width: 1100px) {
   .formula__steps {
-    grid-template-columns: 1fr;
-    gap: 28px;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .formula__step {
+    grid-template-columns: minmax(0, 1fr);
+    align-content: start;
   }
 
   .formula__n {
-    margin-bottom: 16px;
+    grid-row: auto;
+    margin-bottom: clamp(20px, 2.4vw, 34px);
   }
 }
 
 @media (max-width: 680px) {
   .formula .panel__inner {
     transform: none;
+    will-change: auto;
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
+  /* The field's own reduced-motion fallback is in index.css, which already
+     resolves `.field:not(.is-in)` to its settled state. */
   .formula .panel__inner {
     transform: none;
+    will-change: auto;
   }
 }

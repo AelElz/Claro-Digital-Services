@@ -1,32 +1,79 @@
+/*
+ * The page twenty-three links resolve to.
+ *
+ * Built as a chapter, not as an error: the same black ground, one crimson
+ * field, the display serif carrying the sentence, and the requested path set
+ * as code in a pill. Nothing here says 404 in a box.
+ */
+
 .notfound {
   position: relative;
+  isolation: isolate;
   display: flex;
   align-items: center;
   min-height: 100svh;
+  /* Clips the field and the grain, both of which overhang the box. Safe
+     here: nothing inside this page is sticky. */
+  overflow: clip;
   background: var(--black);
   color: var(--white);
+  --grain-opacity: 0.05;
+}
+
+/*
+ * The field at page scale, aimed high and right so the light sits above the
+ * headline and the copy reads against black. Phone first: in a portrait
+ * viewport a light anchored low sits directly behind the buttons.
+ */
+.notfound__field {
+  --fx: 84%;
+  --fy: 14%;
+  --fx2: 108%;
+  --fy2: 54%;
+  --f-strength: 0.9;
+}
+
+/*
+ * Fades before the bottom of the page rather than being clipped by it. A
+ * gradient cut off by its own box leaves a hard horizontal edge between lit
+ * and unlit black. -webkit- first, standard second: the minifier keeps the
+ * last of a duplicate pair.
+ */
+.notfound__field::before {
+  -webkit-mask-image: linear-gradient(to bottom, #000 0%, #000 56%, transparent 94%);
+  mask-image: linear-gradient(to bottom, #000 0%, #000 56%, transparent 94%);
 }
 
 .notfound__inner {
-  padding-block: clamp(140px, 18vh, 220px) clamp(80px, 12vh, 140px);
-  max-width: 62ch;
+  position: relative;
+  z-index: 2;
+  padding-block: clamp(132px, 20vh, 200px) clamp(84px, 12vh, 140px);
 }
 
+/*
+ * The one display line. Bodoni, one weight, with the optical indent
+ * correction the serif needs, and held to a short measure so it breaks into
+ * two or three lines rather than running the container's full width.
+ */
 .notfound__title {
+  max-width: 15ch;
   margin: 0;
-  font-size: clamp(2.2rem, 5.6vw, 4.4rem);
-  font-weight: 500;
-  line-height: 1.04;
-  letter-spacing: -0.03em;
-  /* Optical correction, as on every other display heading. */
-  margin-inline-start: -0.045em;
+  font-family: var(--font-display);
+  font-size: var(--fs-title);
+  font-weight: 400;
+  line-height: 1.02;
+  letter-spacing: -0.012em;
+  margin-inline-start: -0.055em;
+  text-wrap: balance;
+  color: var(--white);
 }
 
 .notfound__body {
-  margin: clamp(18px, 2.4vw, 28px) 0 0;
-  max-width: 52ch;
+  max-width: 46ch;
+  margin: clamp(20px, 2.6vw, 30px) 0 0;
   font-size: var(--fs-lede);
-  color: var(--white-dim);
+  line-height: 1.55;
+  color: var(--fg-2);
 }
 
 .notfound__path {
@@ -34,21 +81,41 @@
   flex-wrap: wrap;
   align-items: center;
   gap: 10px 14px;
-  margin: clamp(26px, 3.2vw, 38px) 0 0;
+  margin: clamp(28px, 3.4vw, 40px) 0 0;
 }
 
-.notfound__path span {
+/*
+ * --fg-2, not --fg-3. This label sits at --fs-label, around 14px, and --fg-3
+ * is 3.7:1: it clears large text and nothing else.
+ */
+.notfound__path-label {
   font-size: var(--fs-label);
-  color: var(--white-faint);
+  color: var(--fg-2);
 }
 
-.notfound__path code {
-  padding: 7px 14px;
-  border: 1px solid var(--card-line);
-  border-radius: 999px;
-  background: var(--card);
-  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-  font-size: 0.92rem;
+/*
+ * The path, as code.
+ *
+ * Set in the sans rather than a system monospace stack: there is no mono
+ * token in this design system, and pulling in ui-monospace puts a fourth
+ * typeface on the page to render fifteen characters. Weight 500 and tabular
+ * figures do the work, and it is a pill on --surface-2 like every other
+ * small container on the site.
+ */
+.notfound__code {
+  min-width: 0;
+  padding: 8px 16px;
+  border: 1px solid var(--line);
+  border-radius: var(--r-pill);
+  background: var(--surface-2);
+  font-family: var(--font-sans);
+  font-size: var(--fs-label);
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.4;
+  /* A long unbuilt path such as /services/marketing-automation has to be
+     able to break rather than push the pill past the viewport. */
+  overflow-wrap: anywhere;
   color: var(--crimson);
 }
 
@@ -56,5 +123,20 @@
   display: flex;
   flex-wrap: wrap;
   gap: 12px;
-  margin-top: clamp(30px, 4vw, 48px);
+  margin-top: clamp(30px, 4vw, 46px);
+}
+
+/* ---- Tablet up -------------------------------------------------------- */
+
+@media (min-width: 680px) {
+  /*
+   * With room to the side, the light moves off the right edge and down, so
+   * it sits beside the headline instead of over it.
+   */
+  .notfound__field {
+    --fx: 88%;
+    --fy: 26%;
+    --fx2: 104%;
+    --fy2: 74%;
+  }
 }

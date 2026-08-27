@@ -6,6 +6,16 @@ import { useEffect, useRef } from 'react'
  * Deliberately NOT threshold-based: a section taller than the viewport never
  * reaches 50% visible, so a 0.5 threshold would simply never fire. This
  * triggers on any sliver crossing a band above the fold.
+ *
+ * The contract with the stylesheet, which must not be inverted: `.reveal` is
+ * VISIBLE by default, and only `html.js .reveal` is hidden. main.jsx sets that
+ * class synchronously before the first render, so the hidden state exists only
+ * where this hook is guaranteed to be running to lift it. A bundle that fails
+ * to load, or a route chunk that never arrives, shows its content instead of a
+ * column of invisible sections. Never move the hiding onto `.reveal` itself,
+ * and never let this hook be the only thing that can make content visible:
+ * both safety nets below exist because that failure is invisible in a
+ * screenshot. The page renders, the DOM is correct, and nothing is painted.
  */
 export function useReveal(options = {}) {
   const { rootMargin = '0px 0px -12% 0px', once = true } = options

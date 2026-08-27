@@ -2,7 +2,6 @@ import { useEffect, useRef } from 'react'
 import Footer from '../components/Footer'
 import Link from '../components/Link'
 import Logo from '../components/Logo'
-import Mark from '../components/Mark'
 import Navbar from '../components/Navbar'
 import PromptBar from '../components/PromptBar'
 import { useContent } from '../content'
@@ -10,21 +9,35 @@ import { useReveal } from '../hooks/useReveal'
 import { clamp, onFrame, reducedMotion, trackRect, write } from '../lib/motion'
 import './AboutPage.css'
 
-/* How far in the scene starts, and how far the mark leads it. */
+/* How far in the scene starts, and how far the dome leads it. */
 const ZOOM_FROM = 1.24
 const DRIFT_PX = 50
 
 /*
+ * The four principles walk the family in order, warm to cool, so the column
+ * reads as one spectrum rather than four unrelated cards. Fixed length, and
+ * paired with the items by position.
+ */
+const PRINCIPLE_HUES = ['ember', 'crimson', 'magenta', 'violet']
+
+/*
  * The window.
  *
- * Depth without a 3D library: three layers at different distances inside one
- * perspective. The glow sits behind, the mark stands in front of it, and the
+ * Depth without a 3D library: layers at different distances inside one
+ * perspective. The dome sits behind, the mark stands in front of it, and the
  * two move by different amounts, which is the whole trick. Scroll drives a
  * slow zoom out, the pointer drives a small tilt.
  *
  * Zoom and tilt live on two nested elements on purpose. Both would otherwise
  * want to write `transform` on the same node and the second one would simply
  * replace the first.
+ *
+ * The dome itself used to be four hand-blurred radial ellipses traced off
+ * design/Design 6.svg, which predated the field primitive and was therefore a
+ * second material doing the field's job. It is three `.field`s now, at three
+ * depths, hues walking ember over crimson over wine: the same gradient stops
+ * and the same grain rule as every card on the site, only arranged into a
+ * dome and pushed apart in Z.
  */
 function Stage() {
   const { about } = useContent()
@@ -106,7 +119,10 @@ function Stage() {
 
       <div className="stage__zoom" ref={zoomRef}>
         <div className="stage__tilt" ref={tiltRef}>
-          <span className="stage__glow" aria-hidden="true" />
+          {/* Farthest and widest first, so the near ones paint over them. */}
+          <span className="field stage__field stage__field--far" data-hue="wine" aria-hidden="true" />
+          <span className="field stage__field stage__field--mid" data-hue="crimson" aria-hidden="true" />
+          <span className="field stage__field stage__field--near" data-hue="ember" aria-hidden="true" />
 
           <div className="stage__front">
             <Logo as="div" className="stage__logo" />
@@ -122,29 +138,76 @@ function AboutPage() {
   const { about } = useContent()
   const revealRef = useReveal()
 
+  /*
+   * Fields bloom on arrival; `useReveal` only adopts `.reveal`.
+   *
+   * A field must NOT carry `.reveal` as well. `html.js .reveal` declares a
+   * `transition` shorthand at a specificity `.field` cannot beat, so the
+   * shorthand would replace the field's own scale transition and the bloom
+   * would silently become a plain fade. Same trap as the one this page had
+   * on `.about__item`; the fix is a separate pass, not a shared class.
+   *
+   * Shape copied from useReveal deliberately: synchronous rect check first,
+   * because IntersectionObserver delivers its first callback only after a
+   * rendering step and a background tab never gets one, then observe. The
+   * default state is visible, so a browser with no observer at all still
+   * shows every field.
+   */
+  useEffect(() => {
+    const root = revealRef.current
+    if (!root) return
+
+    const fields = [...root.querySelectorAll('.field')]
+    if (!fields.length) return
+
+    const show = (el) => el.classList.add('is-in')
+
+    if (!('IntersectionObserver' in window)) {
+      fields.forEach(show)
+      return
+    }
+
+    /* threshold 0, never 0.5: the window is taller than a phone viewport and
+       would never reach half visible. */
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (!entry.isIntersecting) return
+          show(entry.target)
+          observer.unobserve(entry.target)
+        })
+      },
+      { rootMargin: '0px 0px -8% 0px', threshold: 0 },
+    )
+
+    const viewport = window.innerHeight
+    fields.forEach((el) => {
+      const rect = el.getBoundingClientRect()
+      if (rect.top < viewport && rect.bottom > 0) show(el)
+      observer.observe(el)
+    })
+
+    return () => observer.disconnect()
+  }, [revealRef])
+
   return (
     <>
       <Navbar />
 
       <main className="about" ref={revealRef}>
         {/*
-         * The mark is the headline here, set large and hard against the left
-         * column, with the copy stacked beside it.
+         * The headline IS the headline. This used to open on the full lockup
+         * at 620px as its own title, which put the wordmark twice on one
+         * screen: once here and once in the bar sixty pixels above it. The
+         * serif carries the page; one field runs behind the whole header, at
+         * page scale, the way the home page opens.
          */}
-        <header className="about__hero container">
-          <div className="about__hero-mark">
-            <Logo as="div" full className="about__logo reveal" />
-          </div>
+        <header className="about__hero">
+          <span className="field about__hero-field" data-hue="crimson" aria-hidden="true" />
 
-          <div className="about__hero-copy">
-            <p className="eyebrow reveal" style={{ '--i': 1 }}>
-              <Mark className="eyebrow__mark" />
-              {about.eyebrow}
-            </p>
-            <h1 className="about__title reveal" style={{ '--i': 2 }}>
-              {about.title}
-            </h1>
-            <p className="about__lede reveal" style={{ '--i': 3 }}>
+          <div className="container about__hero-inner">
+            <h1 className="about__title reveal">{about.title}</h1>
+            <p className="about__lede reveal" style={{ '--i': 1 }}>
               {about.lede}
             </p>
           </div>
@@ -152,14 +215,8 @@ function AboutPage() {
 
         <section className="about__stage-section">
           <div className="container about__stage-head">
-            <p className="eyebrow reveal">
-              <Mark className="eyebrow__mark" />
-              {about.stage.eyebrow}
-            </p>
-            <h2 className="section-title reveal" style={{ '--i': 1 }}>
-              {about.stage.title}
-            </h2>
-            <p className="section-lede reveal" style={{ '--i': 2 }}>
+            <h2 className="section-title reveal">{about.stage.title}</h2>
+            <p className="section-lede reveal" style={{ '--i': 1 }}>
               {about.stage.lede}
             </p>
           </div>
@@ -171,18 +228,21 @@ function AboutPage() {
 
         <section className="container about__story">
           <div className="about__story-head">
-            <p className="eyebrow reveal">
-              <Mark className="eyebrow__mark" />
-              {about.story.eyebrow}
-            </p>
-            <h2 className="section-title reveal" style={{ '--i': 1 }}>
-              {about.story.title}
-            </h2>
+            <h2 className="section-title reveal">{about.story.title}</h2>
           </div>
 
           <div className="about__story-body">
             {about.story.paragraphs.map((paragraph, index) => (
-              <p className="reveal" key={index} style={{ '--i': index + 1 }}>
+              /*
+               * The opening paragraph is the argument of the whole page, so
+               * it is set in the display serif and the rest run as body
+               * beneath it. One emphasis, at the top, not three.
+               */
+              <p
+                className={index === 0 ? 'about__story-lead reveal' : 'reveal'}
+                key={index}
+                style={{ '--i': index + 1 }}
+              >
                 {paragraph}
               </p>
             ))}
@@ -191,18 +251,25 @@ function AboutPage() {
 
         <section className="container about__principles">
           <div className="about__principles-head">
-            <p className="eyebrow reveal">
-              <Mark className="eyebrow__mark" />
-              {about.principles.eyebrow}
-            </p>
-            <h2 className="section-title reveal" style={{ '--i': 1 }}>
-              {about.principles.title}
-            </h2>
+            <h2 className="section-title reveal">{about.principles.title}</h2>
           </div>
 
           <ol className="about__list">
             {about.principles.items.map((item, index) => (
-              <li className="about__item reveal" key={item.n} style={{ '--i': index + 1 }}>
+              <li className="card about__item reveal" key={item.n} style={{ '--i': index + 1 }}>
+                <span
+                  className="field"
+                  data-hue={PRINCIPLE_HUES[index % PRINCIPLE_HUES.length]}
+                  aria-hidden="true"
+                />
+                {/*
+                 * The hover rim is its own element, not a `transition` on the
+                 * card. This <li> carries `.reveal`, and a transition
+                 * shorthand on it would replace the reveal's own transition
+                 * and its stagger, killing the entrance outright. That bug
+                 * shipped here once.
+                 */}
+                <span className="about__item-ring" aria-hidden="true" />
                 <span className="about__n">{item.n}</span>
                 <h3 className="about__item-title">{item.title}</h3>
                 <p className="about__item-body">{item.body}</p>
@@ -211,43 +278,52 @@ function AboutPage() {
           </ol>
         </section>
 
-        <section className="container about__stats">
+        <dl className="container about__stats">
           {about.stats.map((stat, index) => (
             <div className="about__stat reveal" key={index} style={{ '--i': index + 1 }}>
-              <p className="about__stat-value">
+              {/*
+               * The suffix drops out of the serif. Bodoni draws "+" and "/"
+               * as near-hairlines and at this size in crimson on black they
+               * vanish outright, so "70+" reads as "70".
+               */}
+              <dt>
                 {stat.value}
-                <span>{stat.suffix}</span>
-              </p>
-              <p className="about__stat-label">{stat.label}</p>
+                {stat.suffix ? <span>{stat.suffix}</span> : null}
+              </dt>
+              <dd>{stat.label}</dd>
             </div>
           ))}
-        </section>
+        </dl>
 
         <section className="container about__cta">
-          <h2 className="section-title reveal">{about.cta.title}</h2>
-          <p className="section-lede reveal" style={{ '--i': 1 }}>
-            {about.cta.body}
-          </p>
+          <div className="card about__cta-card">
+            <span className="field" data-hue="wine" aria-hidden="true" />
 
-          <div className="about__cta-actions reveal" style={{ '--i': 2 }}>
-            <Link className="btn btn--primary" to="/contact">
-              {about.cta.action}
-              <span className="btn__icon" aria-hidden="true">
-                <svg viewBox="0 0 24 24" width="18" height="18" fill="none">
-                  <path
-                    d="M4 12h15m0 0-6-6m6 6-6 6"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                </svg>
-              </span>
-            </Link>
+            <h2 className="section-title reveal">{about.cta.title}</h2>
+            <p className="section-lede reveal" style={{ '--i': 1 }}>
+              {about.cta.body}
+            </p>
 
-            <Link className="btn btn--ghost" to="/method">
-              {about.cta.secondary}
-            </Link>
+            <div className="about__cta-actions reveal" style={{ '--i': 2 }}>
+              <Link className="btn btn--primary" to="/contact">
+                {about.cta.action}
+                <span className="btn__icon" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" width="18" height="18" fill="none">
+                    <path
+                      d="M4 12h15m0 0-6-6m6 6-6 6"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                  </svg>
+                </span>
+              </Link>
+
+              <Link className="btn btn--ghost" to="/method">
+                {about.cta.secondary}
+              </Link>
+            </div>
           </div>
         </section>
       </main>

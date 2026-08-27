@@ -96,9 +96,13 @@ function PromptBar({ phrases }) {
     <div className="prompt" ref={rootRef} aria-hidden="true">
       <span className="prompt__icon prompt__plus" />
 
+      {/* The line is its own element so it can overflow the box it sits in
+          and keep its tail, and the caret with it, in view. */}
       <span className="prompt__text">
-        {text}
-        <span className="prompt__caret" />
+        <span className="prompt__line">
+          {text}
+          <span className="prompt__caret" />
+        </span>
       </span>
 
       <span className="prompt__icon prompt__clear" />

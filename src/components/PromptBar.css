@@ -1,22 +1,32 @@
 /*
- * Proportions come straight from design/Design 6.svg: a 1225 x 157 pill on a
- * 1920 frame, fully rounded, white at 10%. Everything here is expressed
- * against --prompt-h so the bar scales as one object.
+ * The prompt bar from design/Design 6.svg.
+ *
+ * Proportions are the artwork's: a 1225 x 157 pill, fully rounded, a
+ * translucent white over whatever light is behind it. Everything here is
+ * expressed against --prompt-h so the bar scales as one object rather than
+ * as six independently sized parts, which is why the type in it is the one
+ * font-size on the site not taken from the scale: it is a picture of an
+ * interface, and the picture has to keep its own proportions.
+ *
+ * There is no backdrop-filter. The artwork's pill is glass, but this one
+ * sits inside a 3D-transformed subtree, where a backdrop root is both the
+ * most expensive thing a phone would composite here and the least
+ * predictable. Over a soft gradient dome, a translucent fill and a hairline
+ * read as the same object for none of the cost.
  */
 .prompt {
-  --prompt-h: clamp(56px, 7.4vw, 92px);
+  --prompt-h: clamp(46px, 6.2vw, 92px);
 
   display: flex;
   align-items: center;
-  gap: clamp(14px, 1.6vw, 26px);
+  gap: clamp(10px, 1.6vw, 26px);
   width: min(1225px, 100%);
   height: var(--prompt-h);
-  padding: 0 calc(var(--prompt-h) * 0.28);
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.1);
-  -webkit-backdrop-filter: blur(14px) saturate(1.3);
-  backdrop-filter: blur(14px) saturate(1.3);
-  color: #ffe1e9;
+  padding-inline: calc(var(--prompt-h) * 0.28);
+  border: 1px solid var(--line-2);
+  border-radius: var(--r-pill);
+  background: var(--card);
+  color: var(--fg-2);
   user-select: none;
 }
 
@@ -60,14 +70,32 @@
 
 /* ---- The line -------------------------------------------------------- */
 
+/*
+ * The typed line has to behave like a field that has been typed into: once
+ * the phrase is longer than the box, the END stays in view and the start
+ * scrolls off, because the caret is the thing you are watching.
+ *
+ * That is the auto margin, not a script. An auto margin absorbs free space
+ * before `justify-content` is applied, so a short phrase is pushed to the
+ * start; once the line overflows there is no free space left, the margin
+ * collapses to zero, `flex-end` takes over and the overflow goes off the
+ * start edge with the caret still on screen.
+ */
 .prompt__text {
+  display: flex;
+  justify-content: flex-end;
   flex: 1;
   min-width: 0;
-  font-size: calc(var(--prompt-h) * 0.34);
-  line-height: 1;
-  white-space: nowrap;
   overflow: hidden;
-  color: var(--white);
+  font-size: calc(var(--prompt-h) * 0.34);
+  line-height: 1.25;
+  color: var(--fg);
+}
+
+.prompt__line {
+  flex: none;
+  margin-inline-end: auto;
+  white-space: nowrap;
 }
 
 .prompt__caret {
@@ -76,7 +104,7 @@
   height: 1em;
   margin-inline-start: 2px;
   vertical-align: -0.14em;
-  background: var(--white);
+  background: var(--crimson);
   animation: prompt-blink 1.05s steps(1, end) infinite;
 }
 
@@ -93,17 +121,26 @@
 
 /* ---- Right-hand controls --------------------------------------------- */
 
-.prompt__divider {
+/*
+ * Hidden by default, shown at 560. On a phone the bar is about 270px wide
+ * and the line is the only part of it carrying meaning; the mic and the rule
+ * beside it would take a third of that to say nothing.
+ */
+.prompt__divider,
+.prompt__mic {
+  display: none;
   flex: none;
+}
+
+.prompt__divider {
   width: 2px;
   height: calc(var(--prompt-h) * 0.62);
   border-radius: 2px;
-  background: #ff93ae;
+  background: var(--crimson);
   opacity: 0.75;
 }
 
 .prompt__mic {
-  flex: none;
   width: calc(var(--prompt-h) * 0.42);
   height: calc(var(--prompt-h) * 0.42);
 }
@@ -114,8 +151,9 @@
   flex: none;
   width: calc(var(--prompt-h) * 0.68);
   height: calc(var(--prompt-h) * 0.68);
-  border-radius: calc(var(--prompt-h) * 0.16);
-  background: rgba(255, 255, 255, 0.08);
+  border-radius: var(--r-inner);
+  background: var(--card);
+  color: var(--fg);
 }
 
 .prompt__send svg {
@@ -123,16 +161,13 @@
   height: 62%;
 }
 
-@media (max-width: 620px) {
-  .prompt {
-    gap: 10px;
-    padding: 0 16px;
+@media (min-width: 560px) {
+  .prompt__divider {
+    display: block;
   }
 
-  /* The mic is the one control that carries no meaning here. */
-  .prompt__mic,
-  .prompt__divider {
-    display: none;
+  .prompt__mic {
+    display: block;
   }
 }
 

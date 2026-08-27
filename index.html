@@ -3,21 +3,48 @@
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/simbol.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <meta name="theme-color" content="#000000" />
     <meta
       name="description"
       content="Claro Digital, AI and development agency in Morocco. Custom solutions for companies building for the long term."
     />
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;500&display=swap"
-      rel="stylesheet"
-    />
+
+    <!--
+      Self-hosted, latin subset only, 58KB for both faces. Every accented
+      character the French copy sets lives in Latin-1 Supplement, so latin-ext
+      would add 114KB to gain nothing. Preloaded because both are used in the
+      first viewport, and `crossorigin` is required even same-origin: a font
+      fetch is anonymous-mode CORS, and without it the preload is discarded
+      and the file downloads a second time.
+    -->
+    <link rel="preload" href="/fonts/inter-tight.woff2" as="font" type="font/woff2" crossorigin />
+    <link rel="preload" href="/fonts/bodoni-moda.woff2" as="font" type="font/woff2" crossorigin />
+
     <title>Claro Digital · AI &amp; development agency, Morocco</title>
   </head>
   <body>
+    <!--
+      THESIS: One light source moving through a black page; the agency's own
+      record is the only ornament. Refuses the alternating light/dark chapter
+      deck and the eyebrow-above-heading template it used to ship.
+      OWN-WORLD: Black ground, never a light section. Bodoni Moda at display
+      scale against Inter Tight. Grain fields in one crimson family (ember,
+      crimson, magenta, violet, wine) bleeding off hairline-bordered near-black
+      cards. Pills, not rectangles. Numbers set large in the serif.
+      STORY: A visitor on a phone learns Claro builds software companies still
+      run on years later, sees the record (70+, 4.8/5, twelve cities, no
+      unreported delay), and starts a project.
+      FIRST VIEWPORT: Floating glass bar with wordmark and EN/FR. The name at
+      display scale on the left, over one crimson field rising from the lower
+      right. Tagline, then a single filled pill: Start a project.
+      FORM: Brief-pinned. Framer "State of Sites '26", supplied as a URL and
+      six screenshots, plus four locked answers on palette, type, structure and
+      scope. A pinned direction beats the concept roll, so none was dealt.
+      FINISH: unreviewed and undocumented is unfinished; this build ends with
+      the finish review, the verdict, DESIGN.md, and every shipping raster
+      carrying its provenance.
+    -->
     <div id="root"></div>
     <script type="module" src="/src/main.jsx"></script>
   </body>
