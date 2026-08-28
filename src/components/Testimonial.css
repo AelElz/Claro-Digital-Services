@@ -79,21 +79,28 @@
   mask-image: radial-gradient(58% 56% at 50% 46%, #000 0%, #000 22%, transparent 74%);
 }
 
+/*
+ * The quote is SET IN THE SANS, not the display serif.
+ *
+ * Bodoni is a display face: its whole character is the thick-thin contrast,
+ * and the thin strokes are hairlines. That is right for four words at 90px
+ * and wrong for 250 characters of somebody's actual sentence, where the
+ * hairlines break up and the reader is asked to work for it. This is a
+ * testimonial, which is to say it is prose, and prose is Inter Tight.
+ *
+ * Sized and coloured off .about__lede so the two read as the same voice: the
+ * lede scale, 1.5 line-height, --fg-2 for the body of it. The measure goes
+ * wider than 34ch because the sans sets far more characters per line.
+ */
 .testimonial__quote {
   margin: 0 auto;
-  max-width: 34ch;
-  font-family: var(--font-display);
-  /*
-   * Capped well below display scale. This is 250 characters of prose, not a
-   * six-word pull quote, and Bodoni's hairlines break up badly when a long
-   * paragraph is set at 40px. The old ceiling of 2.6rem ran the quote to
-   * seven lines on a desktop and was most of why the chapter did not fit.
-   */
-  font-size: clamp(1.28rem, 2.1vw, 1.85rem);
+  max-width: 52ch;
+  font-family: var(--font-sans);
+  font-size: var(--fs-lede);
   font-weight: 400;
-  line-height: 1.28;
-  letter-spacing: -0.012em;
-  color: var(--fg);
+  line-height: 1.5;
+  letter-spacing: 0;
+  color: var(--fg-2);
   /*
    * `pretty`, not `balance`. Balancing is capped at a handful of lines and
    * this quote is eight of them, so it would do nothing here; pretty is the
@@ -354,6 +361,12 @@ html.js .testimonial__figure.reveal.is-in .field {
   .testimonial__quote,
   .testimonial__caption {
     margin-inline: 0;
+  }
+
+  /* In the two-column row the quote has half the width, so the measure is
+     the column rather than the 52ch it can use when centred. */
+  .testimonial__quote {
+    max-width: none;
   }
 
   .testimonial__metric {

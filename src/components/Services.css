@@ -149,6 +149,38 @@ html.js .services__item.reveal.is-in .field {
   }
 }
 
+/*
+ * Four across once the stack engages.
+ *
+ * Two rows of two ran the chapter 268px past the viewport it is pinned in,
+ * which is what made it scroll during its own pin and then stop dead. One row
+ * of four is half the height and it is the only arrangement that fits.
+ *
+ * The title steps down with the column: 2.3rem Bodoni in a 300px column would
+ * set two words a line. It is the same face and the same card, read smaller,
+ * which is what a four-up grid asks for anyway.
+ */
+@media (min-width: 1100px) {
+  .services__list {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 14px;
+  }
+
+  .services__card {
+    padding: 22px 20px 20px;
+  }
+
+  .services__title {
+    font-size: 1.42rem;
+    line-height: 1.12;
+  }
+
+  .services__body {
+    font-size: 0.95rem;
+    line-height: 1.5;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .services__card,
   .services__cta,

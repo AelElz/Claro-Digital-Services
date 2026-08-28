@@ -145,6 +145,73 @@ which thing it is. `useLayoutEffect` therefore depends on `nav` as well as on
 
 *Symptom: the pill under-hangs the word by a few pixels, on one language only.*
 
+### The display serif is for headlines and numbers. Never for prose.
+
+Bodoni Moda is a display face: its whole character is the thick-thin
+contrast, and the thin strokes are hairlines. That is right for four words at
+90px and wrong for a paragraph, where the hairlines break up and the reader
+is asked to work for it.
+
+The testimonial shipped set in it at 22-30px and had to be moved back to
+Inter Tight at the lede scale. Anything that is somebody's sentence rather
+than a title is prose: quotes, ledes, body, form copy, captions.
+
+`var(--font-display)`: hero name, section titles, `.sub-title`, statistics,
+the closing line. `var(--font-sans)`: everything else.
+
+**And the suffix trap.** Bodoni draws `+`, `/`, `%` and `-` as near-hairlines
+that vanish at stat size in crimson on black. Any symbol attached to a number
+goes in the SANS at ~0.44em, weight 500, raised with `vertical-align`. See
+`.hero__stat dt span`. This shipped as a visible bug once: "70+" read as
+"70" and "4.8/5" read as "4.8  5".
+
+### Dwell is dead scroll, and the hero gets none
+
+While a chapter is pinned the wheel turns and the screen does not change.
+Measured at `DWELL = 0.55`, the hero moved its content **0.00x for 400px of
+scrolling** and the whole stacked half averaged 0.68-0.78x, against exactly
+1.00x for the flat chapters below it. That contrast is what gets reported as
+"lagging and slowing", and it is not a frame-rate problem: frame times through
+that same stretch were a clean 17ms median.
+
+`DWELL` is 0.22 (about 200px, a beat rather than a stall) and the FIRST
+chapter gets none at all, because the very first thing anyone does on the site
+is turn the wheel and a hold there means the page does not answer.
+
+*Symptom: the top of the page feels heavy and the bottom feels fine, with no
+dropped frames anywhere.*
+### The stack ends at #work, on purpose
+
+`FLAT_FROM` in usePanelStack names the first chapter that does NOT pin. Home,
+The Agency, Services and Solutions layer; Work, Clients and Contact scroll
+normally, the way /about does. Set it to null to put every chapter back in.
+
+This was the client's call, after the stack produced three separate rounds of
+visual defects in the lower half of the page, and it measures out as the
+better build: desktop scroll went from 7-21 dropped frames a run with a p90 of
+33ms to a stable 1-2 with a p90 of 17ms, and the home page lost 1,679px of
+height.
+
+### A chapter must FIT the viewport it pins in
+
+This is the invariant behind most of the stack's defects.
+
+A chapter whose content is taller than the viewport gets a NEGATIVE sticky
+offset from usePanelStack, so that its own bottom is reachable before it
+locks. That means it is still scrolling while it is supposedly pinned, and
+then it stops dead. Measured on the work chapter: it went from -10px/frame to
+0 in a single frame while the page carried on at 13px/frame. That instant
+stop, in the middle of something you are reading, is what gets reported as a
+glitch.
+
+Four of the seven were over budget: services by 268px, work by 203, sectors by
+185, contact by 33. They were brought back under by trimming the panel
+padding, taking Services to four across above 1100px, and tightening the
+sectors stat band and the work rows.
+
+**The one-line test:** every panel's inline `top` must be `0px`. A negative one
+means that chapter does not fit the viewport it pins in.
+
 ### A black-on-black stack has no visible edge, so draw one
 
 The deck used to alternate dark and light, so a chapter sliding over the one
@@ -380,33 +447,55 @@ prefixed `VITE_`, since anything so prefixed is inlined into the public bundle.
 
 ---
 
-## 5. Future enhancements
+## 5. Where the 2026 redesign stands
 
-Roughly in order of value.
+The site was rebuilt in a new visual world: black everywhere, Bodoni Moda
+display against Inter Tight, and one material called **the field** (grainy
+crimson-family gradients) doing all the colour. `.impeccable/BUILD-SPEC.md`
+is the vocabulary; read it before touching any surface.
 
-1. **A backend for the contact form.** The mailto flow works but loses anyone
-   without a configured mail client. Needs server-side validation, rate
-   limiting and spam filtering.
-2. **Build the unbuilt routes.** 23 links currently resolve to `NotFound`:
-   six project case studies, fifteen service pages, two legal pages. The
-   paths and slugs already exist (`slug()` in `content.js`).
-3. **Delete the unused assets.** About 1MB in `src/assets/`; only
-   `kintsugi-people.jpg` is imported.
-4. **Real authentication**, if accounts are actually wanted. See above.
-5. **A third locale, if one is ever wanted.** English and French are done.
-   Adding one is a new file in `src/content/`, an entry in `LOCALES`, and
-   nothing else; the toggle measures its own options, so it grows on its own.
-   Layout already uses logical properties, so RTL would not be a rewrite,
-   though the pill would need more than two positions to stay readable.
-6. **Tests.** The invariants in section 2 are exactly what a small Playwright
-   suite should assert: no gaps across the scroll, nav targets landing, grain
-   coverage, no uncovered band at the bottom.
-7. **An image pipeline.** The one screenshot was hand-optimised with `sips`
-   (951KB PNG to 138KB JPEG). Anything more than a couple of images wants
-   responsive `srcset` and AVIF/WebP.
+### Done and verified
 
----
+- Foundations: tokens, type scale, the field primitive, browser surfaces
+  (`::selection`, focus rings, themed scrollbar, tabular numerals).
+- Fonts self-hosted, latin subset only, 58KB for both faces. `latin-ext` is
+  deliberately absent: every accented character the French copy sets lives in
+  Latin-1 Supplement, so it would cost 114KB to gain nothing.
+- Hero, Formula, Services, Sectors, Work, Testimonial, Contact, Footer,
+  Navbar, MenuOverlay, /about, /method, /contact, /sign-in, 404.
+- Routes code-split; five lazy chunks.
+- EN and FR both render every surface. `node .impeccable/verify.mjs` checks
+  shape parity, locale-independent paths, banned patterns and the security
+  floor. It should exit 0.
 
+### Not done
+
+- **Dead content keys.** Every `eyebrow` key in `src/content/{en,fr}.js` is
+  now unreferenced (the eyebrow is deleted site-wide). They must be removed
+  from BOTH files together or the parity check fails.
+- **Work, Sectors, Footer and MethodPage** were rebuilt by agents that were
+  cut off mid-run and never got a dedicated finishing pass. They are coherent
+  and pass every check, but they have had less attention than the rest.
+- `/work`, `/insights` and `/legal/*` are still unbuilt and render `NotFound`.
+- No test suite. The measurement harness below is the substitute.
+
+### How this work was verified
+
+A Playwright harness lives in the session scratchpad (not in the repo). It is
+worth rebuilding rather than working by eye, because every defect in this
+redesign was found by measuring and several were invisible in a screenshot:
+
+- **frame times** under 4x CPU throttling, per scroll region
+- **luminance sweeps** to catch a flash (a frame darker than BOTH neighbours)
+- **content-travel ratio**: how far the page moves per pixel of scroll, which
+  is what caught the dwell
+- **pixel sampling** of rendered captures, because the eye files a drifted
+  colour under the same colour word and the number is what catches it
+- **contrast** computed from the actual rendered ground, not from tokens
+
+**Profile the production build.** The dev bundle ships `jsxDEV` and Fast
+Refresh wrappers that dominate a CPU profile and send you chasing phantoms.
+Build, `vite preview`, then measure.
 ## 6. Do not
 
 - Do not reintroduce a site-wide custom cursor. It was removed deliberately.

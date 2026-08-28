@@ -6,7 +6,9 @@
  */
 .panel__head {
   max-width: 62ch;
-  margin-bottom: clamp(48px, 6vw, 84px);
+  /* 84px below a heading is generous on a page that scrolls freely and
+     expensive on one where every chapter must fit the viewport it pins in. */
+  margin-bottom: clamp(40px, 4vw, 56px);
 }
 
 /*

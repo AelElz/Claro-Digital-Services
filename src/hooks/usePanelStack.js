@@ -35,10 +35,38 @@ const MAX_SHADE = 0.55
 const SHADE_RAMP = 1
 
 /*
- * How long a pinned chapter holds, as a share of the viewport. This is the
- * value --dwell used to fall back to, and it is now written explicitly.
+ * How long a pinned chapter holds, as a share of the viewport.
+ *
+ * This is dead scroll: while a chapter is pinned, the wheel turns and the
+ * screen does not change. At 0.55 that was 495px per chapter, and measured,
+ * the hero moved its content 0.00x for 400px of scrolling. It reads as the
+ * page having stopped responding, and it is worst at the hero because that is
+ * the first thing anyone does on the site.
+ *
+ * The flat chapters below the stack track the scroll at exactly 1.00x, so the
+ * contrast made the top half feel broken by comparison.
+ *
+ * 0.22 is about 200px: a beat where the chapter holds, rather than a third of
+ * a screen of nothing happening.
  */
-const DWELL = 0.55
+const DWELL = 0.22
+
+/*
+ * Where the stack stops.
+ *
+ * This chapter and every one after it scrolls normally, the way /about does:
+ * no pinning, no dwell, no shade, no per-frame work. Only the chapters above
+ * it layer.
+ *
+ * The client asked for this after the stack produced three separate rounds of
+ * visual defects in the lower half of the page. It is also the honest reading
+ * of what each half is for: the chapters above are the argument and they
+ * benefit from being held one at a time, and the ones below are the record,
+ * which people scan rather than dwell on.
+ *
+ * Set to null to put every chapter back in the stack.
+ */
+const FLAT_FROM = 'work'
 
 /*
  * Turns the plain section list into the layered stack: each panel sticks and
@@ -88,6 +116,7 @@ export function usePanelStack(rootRef) {
         panel.style.zIndex = ''
         panel.style.removeProperty('--shade')
         delete panel.dataset.covered
+        delete panel.dataset.edge
         panel.style.setProperty('--dwell', '0px')
       })
     }
@@ -115,12 +144,40 @@ export function usePanelStack(rootRef) {
       })
 
       const last = panels.length - 1
+      const flatFrom = FLAT_FROM ? panels.findIndex((p) => p.id === FLAT_FROM) : -1
+      const stackEnds = flatFrom === -1 ? last : flatFrom - 1
 
       panels.forEach((panel, index) => {
         const height = heights[index]
         const overflow = Math.max(0, height - viewport)
+        const stacked = flatFrom === -1 || index < flatFrom
 
+        /*
+         * The z-index ladder continues through the flat run. A sticky panel
+         * carries an explicit z-index and an unpositioned one does not, so
+         * without this the last pinned chapter would paint OVER the flat
+         * chapter scrolling up in front of it.
+         */
         panel.style.zIndex = String(index + 1)
+
+        /*
+         * Only a chapter that slides over another needs its leading edge
+         * drawn; between two flat sections there is no overlap and a hairline
+         * would just be a rule nobody asked for. The first flat chapter still
+         * slides over the last pinned one, so it keeps its edge.
+         */
+        if (index > 0 && index <= stackEnds + 1) panel.dataset.edge = ''
+        else delete panel.dataset.edge
+
+        if (!stacked) {
+          panel.style.position = 'relative'
+          panel.style.top = ''
+          panel.style.setProperty('--dwell', '0px')
+          panel.style.removeProperty('--shade')
+          delete panel.dataset.covered
+          return
+        }
+
         panel.style.position = 'sticky'
         panel.style.top = overflow > 0 ? `${viewport - height}px` : '0px'
 
@@ -141,7 +198,23 @@ export function usePanelStack(rootRef) {
          * range is zero and it cannot pin; its dwell would ride up the bottom
          * of the screen as a growing black band before the footer.
          */
-        const dwell = index === last ? 0 : Math.round(overflow + DWELL * viewport)
+        /*
+         * The last PINNED chapter keeps its dwell. The rule below is about
+         * main's final child, which has no sticky range at all because there
+         * is nothing after it in its containing block; the last stacked
+         * chapter still has the whole flat run after it, so it pins normally
+         * and the first flat chapter rises over it.
+         */
+        /*
+         * The hero gets none.
+         *
+         * Dwell is dead scroll, and the first chapter is the worst possible
+         * place for it: the very first thing anyone does on the site is turn
+         * the wheel, and with a hold there the screen does not answer. The
+         * chapter below still slides up over it, so the layering is intact;
+         * the hero simply does not hold first.
+         */
+        const dwell = index === 0 || index === last ? 0 : Math.round(overflow + DWELL * viewport)
         panel.style.setProperty('--dwell', `${dwell}px`)
       })
     }
@@ -152,9 +225,14 @@ export function usePanelStack(rootRef) {
 
       // Read every rect first, then queue the writes: setting a custom
       // property between two reads forces a fresh layout for the second.
+      const flatFrom = FLAT_FROM ? panels.findIndex((p) => p.id === FLAT_FROM) : -1
       const shades = panels.map((panel, index) => {
         const next = panels[index + 1]
         if (!next) return 0
+        /* A flat chapter is never covered; the one after it follows in flow
+           rather than sliding over it. Only the last pinned chapter still
+           dims, because the first flat one does slide over it. */
+        if (flatFrom !== -1 && index >= flatFrom) return 0
         // 0 when the next panel's leading edge is at the fold, 1 once it has
         // travelled a full viewport and completely covers this one.
         return clamp((viewport - next.getBoundingClientRect().top) / (viewport * SHADE_RAMP)) * MAX_SHADE

@@ -291,7 +291,15 @@ html.is-loading body {
   justify-content: center;
   width: 100%;
   min-height: 100svh;
-  padding-block: clamp(96px, 12vh, 160px);
+  /*
+   * 108px top and bottom at a 900px viewport left only 684px for a chapter,
+   * and four of the seven did not fit in it. A chapter that does not fit gets
+   * a NEGATIVE sticky offset from usePanelStack, which means it is still
+   * scrolling while it is supposedly pinned and then stops dead: measured, the
+   * work chapter went from -10px/frame to 0 in a single frame while the page
+   * carried on at 13. That instant stop is the stutter.
+   */
+  padding-block: clamp(64px, 9vh, 120px);
 }
 
 /*
@@ -1251,10 +1259,12 @@ html::-webkit-scrollbar-thumb:hover {
  * composited, and it is what makes the handoff read as depth rather than as
  * a cut.
  *
- * Not on the first chapter: nothing slides over the hero.
+ * usePanelStack marks the chapters that actually slide over something with
+ * data-edge. The hero never does, and neither does anything in the flat run
+ * below the stack, where the sections simply follow one another.
  * ===================================================================== */
 
-.panel:not(:first-child)::before {
+.panel[data-edge]::before {
   content: '';
   position: absolute;
   inset: 0 0 auto;
@@ -1273,7 +1283,7 @@ html::-webkit-scrollbar-thumb:hover {
  * rule nobody asked for.
  */
 @media (max-width: 1100px) {
-  .panel:not(:first-child)::before {
+  .panel[data-edge]::before {
     display: none;
   }
 }
