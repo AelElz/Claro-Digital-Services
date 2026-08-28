@@ -144,10 +144,6 @@ function App() {
       <Suspense fallback={<RouteSkeleton />}>
         <Page />
       </Suspense>
-
-      {/* Fixed glass edges over everything, top and bottom. */}
-      <span className="edge-blur edge-blur--top" aria-hidden="true" />
-      <span className="edge-blur edge-blur--bottom" aria-hidden="true" />
     </>
   )
 }

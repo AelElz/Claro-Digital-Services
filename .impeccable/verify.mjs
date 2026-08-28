@@ -75,12 +75,33 @@ scan(
 {
   const hits = []
   for (const p of files.filter((f) => f.endsWith('.css'))) {
-    const css = read(p)
+    const css = decomment(read(p))
     /* Selectors that set the transition SHORTHAND. */
     const shorthand = new Set()
     for (const m of css.matchAll(/([^{}]+)\{([^}]*)\}/g)) {
       if (/(^|;|\s)transition:\s/.test(m[2])) {
-        m[1].split(',').forEach((s) => shorthand.add(s.trim().replace(/^\./, '').split(/[\s:>]/)[0]))
+        for (const sel of m[1].split(',')) {
+          /*
+           * The SUBJECT of a selector is its last compound, not its first.
+           * Taking the first token reported `.footer__col a { transition }`
+           * as a transition on .footer__col, which carries .reveal, when it
+           * is actually on the anchors inside it and harmless. Two of the
+           * three findings this check produced were that mistake.
+           */
+          const compounds = sel.trim().split(/[\s>+~]+/).filter(Boolean)
+          const subject = compounds[compounds.length - 1]
+          if (!subject) continue
+          /*
+           * A pseudo-ELEMENT is a separate box, so `.x::after { transition }`
+           * says nothing about `.x` — and it is in fact the correct way to
+           * give a `.reveal` element a hover transition without stepping on
+           * its entrance. A pseudo-CLASS is the same box, so `.x:hover`
+           * still counts as `.x`.
+           */
+          if (subject.includes('::')) continue
+          const base = subject.split(':')[0]
+          if (base.startsWith('.')) shorthand.add(base.slice(1))
+        }
       }
     }
     /* Classes that also carry .reveal in any JSX. */
@@ -91,7 +112,7 @@ scan(
        * break, so \breveal\b matched every fill row on the site and reported
        * five components that were never affected.
        */
-      for (const m of read(j).matchAll(/className=["'`]([^"'`]+)["'`]/g)) {
+      for (const m of decomment(read(j)).matchAll(/className=["'`]([^"'`]+)["'`]/g)) {
         const tokens = m[1].split(/\s+/)
         if (!tokens.includes("reveal")) continue
         for (const cls of tokens) {

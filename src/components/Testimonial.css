@@ -83,7 +83,13 @@
   margin: 0 auto;
   max-width: 34ch;
   font-family: var(--font-display);
-  font-size: clamp(1.35rem, 4.6vw, 2.6rem);
+  /*
+   * Capped well below display scale. This is 250 characters of prose, not a
+   * six-word pull quote, and Bodoni's hairlines break up badly when a long
+   * paragraph is set at 40px. The old ceiling of 2.6rem ran the quote to
+   * seven lines on a desktop and was most of why the chapter did not fit.
+   */
+  font-size: clamp(1.28rem, 2.1vw, 1.85rem);
   font-weight: 400;
   line-height: 1.28;
   letter-spacing: -0.012em;
@@ -312,5 +318,52 @@ html.js .testimonial__figure.reveal.is-in .field {
 
   .shot:hover .shot__img {
     scale: 1;
+  }
+}
+
+/* =====================================================================
+ * The row
+ *
+ * One column on a phone, which is the design; two from 1100px, which is the
+ * enhancement and the only way a pinned chapter fits the viewport it is
+ * pinned in.
+ * ===================================================================== */
+
+.testimonial__body {
+  display: grid;
+  gap: clamp(30px, 4vw, 56px);
+  width: 100%;
+}
+
+@media (min-width: 1100px) {
+  .testimonial__body {
+    grid-template-columns: minmax(0, 1.02fr) minmax(0, 1fr);
+    align-items: center;
+    text-align: start;
+  }
+
+  /* The centring belonged to the single column; in a row it would leave the
+     quote floating away from the edge it is set against. */
+  .testimonial__col,
+  .testimonial__figure,
+  .testimonial__metric {
+    align-items: flex-start;
+    text-align: start;
+  }
+
+  .testimonial__quote,
+  .testimonial__caption {
+    margin-inline: 0;
+  }
+
+  .testimonial__metric {
+    margin-top: clamp(28px, 3vw, 40px);
+  }
+
+  /* The glow follows the quote to the left rather than staying centred on a
+     column that is no longer the whole width. */
+  .testimonial__figure .testimonial__glow {
+    --fx: 38%;
+    --fx2: 62%;
   }
 }

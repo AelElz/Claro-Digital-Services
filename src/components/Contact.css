@@ -1,33 +1,98 @@
-.contact__display {
-  margin: 0;
-  font-size: clamp(3.4rem, 13vw, 11rem);
-  font-weight: 500;
-  line-height: 0.92;
-  letter-spacing: -0.04em;
-  /* Optical correction, the glyph side bearing on display type is wide
-     enough to read as an indent next to the eyebrow above it. */
-  margin-inline-start: -0.05em;
-  background: linear-gradient(
-    100deg,
-    var(--white) 0%,
-    var(--white) 38%,
-    var(--crimson) 78%,
-    var(--plum) 100%
-  );
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
+/*
+ * The closing chapter, and the last thing anyone reads.
+ *
+ * It carries the biggest field on the site after the hero: the light that
+ * entered in the first viewport comes back at page scale to close on, the way
+ * the reference ends on one line over one glow. Everything is centred here and
+ * nowhere else, because this is the only section with a single thing to say.
+ */
+
+.contact {
+  --grain-opacity: 0.05;
 }
 
-/* ---- Ticker ---------------------------------------------------------- */
+.contact__scene {
+  position: relative;
+  text-align: center;
+}
 
+/*
+ * Bled well past the container on every side and masked at both ends, so the
+ * light has somewhere to come from and somewhere to go. A field that stops at
+ * the panel edge leaves a hard horizontal seam where lit black meets flat.
+ */
+.contact__field {
+  position: absolute;
+  z-index: 0;
+  /*
+   * Inset from the sides, not bled past them.
+   *
+   * Bleeding it -18vw wide at 0.82 strength turned the closing chapter into a
+   * crimson BACKGROUND rather than a light on black: measured, chroma held
+   * between 79 and 113 across the full width for half the height of the
+   * section, and the glass bar above it went muddy crossing over. A light
+   * source needs somewhere dark to be a light against.
+   */
+  inset: -8% 12% -6%;
+  --fx: 50%;
+  --fy: 30%;
+  --fx2: 78%;
+  --fy2: 72%;
+  --f-strength: 0.52;
+  /* -webkit- first, standard last: the minifier treats the pair as duplicate
+     declarations and keeps the last one (AGENTS.md). */
+  -webkit-mask-image: radial-gradient(58% 52% at 50% 40%, #000 0%, #000 34%, transparent 78%);
+  mask-image: radial-gradient(58% 52% at 50% 40%, #000 0%, #000 34%, transparent 78%);
+}
+
+.contact__scene > *:not(.contact__field) {
+  position: relative;
+  z-index: 1;
+}
+
+/*
+ * The statement. Bodoni, and solid.
+ *
+ * It used to be Inter at weight 500 under a linear-gradient clipped to the
+ * text, which faded the last word out to crimson and read as a rendering
+ * fault rather than as emphasis. Gradient text is banned site-wide for that
+ * reason: emphasis is size and weight.
+ */
+.contact__display {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: var(--fs-display);
+  font-weight: 400;
+  line-height: 0.94;
+  letter-spacing: -0.018em;
+  color: var(--white);
+  text-wrap: balance;
+}
+
+/* ---- Ticker ----------------------------------------------------------
+ *
+ * Quieter than it was: this is texture under the statement, not a second
+ * headline. It stops entirely for anyone who asked for less motion.
+ */
+
+/*
+ * The band carries its own ground.
+ *
+ * Measured, the ticker sat at 2.41:1: it is small text and it crosses the
+ * hottest part of the field, and it was using --fg-3, which this design
+ * documents as large-text-only. Moving it to --fg-2 alone only reaches
+ * 3.87:1, because the problem is the ground rather than the ink. A dark band
+ * under it fixes both, and the band is already a bordered rule, so it reads
+ * as part of the same object rather than as a patch.
+ */
 .contact__marquee {
   overflow: hidden;
-  margin: clamp(26px, 3.4vw, 44px) 0 clamp(56px, 7vw, 96px);
-  padding-block: 14px;
-  border-block: 1px solid var(--card-line);
-  mask-image: linear-gradient(to right, transparent, #000 8%, #000 92%, transparent);
-  -webkit-mask-image: linear-gradient(to right, transparent, #000 8%, #000 92%, transparent);
+  background: rgba(0, 0, 0, 0.55);
+  margin: clamp(30px, 4vw, 52px) 0 clamp(44px, 6vw, 80px);
+  padding-block: 13px;
+  border-block: 1px solid var(--line);
+  -webkit-mask-image: linear-gradient(to right, transparent, #000 10%, #000 90%, transparent);
+  mask-image: linear-gradient(to right, transparent, #000 10%, #000 90%, transparent);
 }
 
 .contact__track {
@@ -35,75 +100,64 @@
   width: max-content;
   gap: clamp(28px, 4vw, 64px);
   /* One third of the track, because the list is tripled. */
-  animation: contact-marquee 26s linear infinite;
+  animation: contact-marquee 34s linear infinite;
 }
 
 .contact__track span {
   font-size: var(--fs-label);
-  font-weight: 500;
   white-space: nowrap;
-  color: var(--white-faint);
+  color: var(--fg-2);
 }
 
 @keyframes contact-marquee {
   to {
-    transform: translateX(-33.333%);
+    translate: -33.333% 0;
   }
 }
 
-/* ---- Closing block --------------------------------------------------- */
-
-.contact__grid {
-  display: grid;
-  grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
-  gap: clamp(28px, 4vw, 64px);
-  align-items: end;
-}
+/* ---- The close -------------------------------------------------------- */
 
 .contact__title {
+  display: grid;
   margin: 0;
-  font-size: clamp(2.1rem, 5vw, 4.2rem);
-  font-weight: 500;
-  line-height: 1.04;
-  letter-spacing: -0.03em;
-  margin-inline-start: -0.045em;
-}
-
-.contact__title span {
-  display: block;
+  font-family: var(--font-display);
+  font-size: var(--fs-title);
+  font-weight: 400;
+  line-height: 1.02;
+  letter-spacing: -0.012em;
+  color: var(--white);
 }
 
 .contact__body {
-  margin: 0;
-  max-width: 42ch;
+  max-width: 46ch;
+  margin: clamp(18px, 2.4vw, 26px) auto 0;
   font-size: var(--fs-lede);
-  color: var(--white-dim);
+  line-height: 1.55;
+  color: var(--fg-2);
 }
 
 .contact__actions {
   display: flex;
   flex-wrap: wrap;
+  justify-content: center;
   align-items: center;
-  gap: 16px clamp(18px, 2.4vw, 30px);
-  margin-top: clamp(24px, 3vw, 38px);
+  gap: 14px clamp(16px, 2.4vw, 28px);
+  margin-top: clamp(28px, 3.6vw, 40px);
 }
 
 .contact__email {
   font-size: var(--fs-label);
-  font-weight: 500;
-  color: var(--white-faint);
-  transition: color 0.35s var(--ease-out);
+  color: var(--fg-2);
+  text-decoration: underline;
+  text-decoration-color: var(--line-2);
+  text-underline-offset: 0.24em;
+  transition: color 0.3s var(--ease-out), text-decoration-color 0.3s var(--ease-out);
 }
 
-.contact__email:hover {
-  color: var(--crimson);
-}
-
-@media (max-width: 860px) {
-  .contact__grid {
-    grid-template-columns: 1fr;
-    align-items: start;
-  }
+.contact__email:hover,
+.contact__email:focus-visible {
+  color: var(--white);
+  text-decoration-color: var(--crimson);
 }
 
 @media (prefers-reduced-motion: reduce) {

@@ -63,30 +63,41 @@
  */
 .navbar--dark {
   --nav-glass: blur(22px) saturate(0.92) brightness(0.5);
-  --nav-fill: color-mix(in srgb, var(--black) 42%, transparent);
+  --nav-fill: rgba(0, 0, 0, 0.42);
   --nav-line: var(--line-2);
   --nav-ink: var(--white);
   --nav-ink-dim: var(--fg-2);
-  --nav-pill: color-mix(in srgb, var(--white) 92%, transparent);
-  --nav-pill-ink: var(--ink);
+  /*
+   * A wash with an edge, not a white slab.
+   *
+   * The slab inverted its label to dark ink, and the pill takes 0.42s to
+   * travel between chapters. For that whole slide the outgoing label sat
+   * light-on-white and the incoming one sat dark-on-dark: both unreadable,
+   * which read as the nav flickering every time the scroll-spy changed
+   * chapter. A wash needs no inversion, so every label stays legible for the
+   * whole journey, and it matches the language pill three controls along.
+   */
+  --nav-pill: rgba(255, 255, 255, 0.13);
+  --nav-pill-edge: rgba(255, 255, 255, 0.4);
+  --nav-pill-ink: var(--white);
   /*
    * The dropdown gets its own fill rather than reusing --nav-fill. The bar
    * sits on a blurred slab of the page and reads fine at 42% black; a panel
    * hanging over live copy at that value leaves the section text legible
    * through its own links.
    */
-  --nav-menu-fill: color-mix(in srgb, var(--surface-2) 92%, transparent);
-  --nav-menu-hover: color-mix(in srgb, var(--white) 9%, transparent);
+  --nav-menu-fill: rgba(13, 10, 12, 0.92);
+  --nav-menu-hover: rgba(255, 255, 255, 0.09);
   --nav-drawer-fill: var(--surface-2);
   /* The drawer's active row. Its own value, because --nav-fill is now a
      darkening tint and darkening a row on an already dark drawer marks
      nothing. */
-  --nav-active: color-mix(in srgb, var(--white) 8%, transparent);
+  --nav-active: rgba(255, 255, 255, 0.08);
   /* The language pill's highlight. Its own pair rather than --nav-pill,
      which is a near-solid slab: this one is a wash the label reads through,
      and it has an edge, which the chapter pill does not. */
-  --lang-fill: color-mix(in srgb, var(--white) 14%, transparent);
-  --lang-edge: color-mix(in srgb, var(--white) 78%, transparent);
+  --lang-fill: rgba(255, 255, 255, 0.14);
+  --lang-edge: rgba(255, 255, 255, 0.78);
 }
 
 .navbar--light {
@@ -95,8 +106,9 @@
   --nav-line: rgba(66, 16, 28, 0.12);
   --nav-ink: var(--ink);
   --nav-ink-dim: var(--ink-dim);
-  --nav-pill: var(--ink);
-  --nav-pill-ink: var(--off-white);
+  --nav-pill: rgba(66, 16, 28, 0.1);
+  --nav-pill-edge: rgba(66, 16, 28, 0.32);
+  --nav-pill-ink: var(--ink);
   --nav-menu-fill: rgba(253, 253, 253, 0.94);
   --nav-menu-hover: rgba(66, 16, 28, 0.06);
   --nav-drawer-fill: var(--off-white);
@@ -154,6 +166,7 @@
   left: 0;
   width: 0;
   height: 38px;
+  border: 1px solid var(--nav-pill-edge);
   border-radius: var(--r-pill);
   background: var(--nav-pill);
   transform: translateY(-50%);

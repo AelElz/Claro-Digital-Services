@@ -22,17 +22,19 @@ import './Preloader.css'
  *   EXIT      the fade out
  *   BAIL      wall clock, for the tab that is never painting at all
  *
- * Worst case on screen is MAX_HOLD + EXIT, a little over 1.3s. Best case is
- * FLOOR + EXIT, under a second. Nothing animates a blur radius; the exit is
+ * Worst case on screen is MAX_HOLD + EXIT, a little over 1.2s. Best case is
+ * FLOOR + EXIT, about three quarters of a second. The floor came down from
+ * 620ms once the production numbers were in: the page is genuinely ready far
+ * sooner than the curtain was waiting, and the client asked for no delay. Nothing animates a blur radius; the exit is
  * an opacity fade of an opaque sheet, which is one composited layer.
  */
 
 const ONCE_PER_SESSION = true
 const SESSION_KEY = 'claro:intro-played'
 
-const FLOOR = 620
+const FLOOR = 460
 const MAX_HOLD = 1000
-const EXIT = 0.34
+const EXIT = 0.28
 /*
  * GSAP runs on rAF, which browsers pause outright in a background tab, and
  * the readiness probe below waits on a painted frame, which never arrives

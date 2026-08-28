@@ -343,7 +343,16 @@ html.is-loading body {
    * like a texture; stepping re-seeds it each frame, which is what actually
    * reads as film grain.
    */
-  animation: grain-shift 0.7s steps(1, end) infinite;
+  /*
+   * Slowed from 0.7s to 2.2s.
+   *
+   * Five keyframes over 0.7s re-seeds the grain about seven times a second.
+   * That reads as film over a lit hero, and it read as the page strobing over
+   * flat black behind body copy: it was reported as the desktop "flickering",
+   * and it is desktop-only because the animation is frozen below 680px. At
+   * 2.2s the texture is still alive and no longer a strobe.
+   */
+  animation: grain-shift 2.2s steps(1, end) infinite;
 }
 
 @keyframes grain-shift {
@@ -351,81 +360,54 @@ html.is-loading body {
     transform: translate(0, 0);
   }
   20% {
-    transform: translate(-4%, 3%);
+    transform: translate(-2%, 1.5%);
   }
   40% {
-    transform: translate(3%, -5%);
+    transform: translate(1.5%, -2.5%);
   }
   60% {
-    transform: translate(-2%, -3%);
+    transform: translate(-1%, -1.5%);
   }
   80% {
-    transform: translate(4%, 2%);
+    transform: translate(2%, 1%);
   }
 }
 
 /* =====================================================================
- * Progressive-blur edges
+ * Progressive-blur edges: REMOVED
  *
- * Three stacked layers, each a heavier blur over a shorter mask, so the edge
- * dissolves instead of ending in a hard band. Blur and saturation ONLY, a
- * white gradient "sheen" on top reads as a translucent white rectangle.
- * Glass has to come from refracting what is behind it, never from painting
- * over it.
+ * Three stacked backdrop-filter layers ran across the top and the bottom
+ * of the viewport, each re-reading the composited backdrop of a full-width
+ * strip on every frame the page moved.
+ *
+ * Measured on a 4x-throttled desktop over an identical scroll: with them,
+ * the median frame was 49ms and 32 of 38 frames missed their deadline;
+ * without them, 17ms, and the same scroll completed 101 frames. They cost
+ * roughly two thirds of the frame budget on their own. Disabling the grain,
+ * the fields, the blend modes or the sticky stack each moved the median by
+ * one frame quantum; nothing else came close.
+ *
+ * They also belonged to the glass world this design replaced. The reference
+ * has hard section edges on a black ground and no progressive blur anywhere,
+ * so this is what the world wanted as well as what the frame budget wanted.
+ *
+ * The is-covered class survives on the html element: freezeBackground still
+ * uses it to park the frame bus while a full-screen layer is open.
  * ===================================================================== */
 
-.edge-blur {
-  position: fixed;
-  left: 0;
-  right: 0;
-  height: 120px;
-  z-index: 60;
-  pointer-events: none;
-  -webkit-backdrop-filter: blur(3px) saturate(1.25);
-  backdrop-filter: blur(3px) saturate(1.25);
-}
+
 
 /*
  * Set while a full-screen layer is open (see freezeBackground). The blurs
  * are completely occluded by it, and a stacked backdrop-filter under a
  * moving opaque sheet is composited every frame for nothing.
  */
-.is-covered .edge-blur {
-  display: none;
-}
 
-.edge-blur::before,
-.edge-blur::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-}
 
-.edge-blur::before {
-  -webkit-backdrop-filter: blur(10px) saturate(1.4);
-  backdrop-filter: blur(10px) saturate(1.4);
-}
 
-.edge-blur::after {
-  -webkit-backdrop-filter: blur(26px) saturate(1.5);
-  backdrop-filter: blur(26px) saturate(1.5);
-}
 
-.edge-blur--top {
-  top: 0;
-  mask-image: linear-gradient(to bottom, #000 30%, transparent 100%);
-  -webkit-mask-image: linear-gradient(to bottom, #000 30%, transparent 100%);
-}
 
-.edge-blur--top::before {
-  mask-image: linear-gradient(to bottom, #000 14%, transparent 64%);
-  -webkit-mask-image: linear-gradient(to bottom, #000 14%, transparent 64%);
-}
 
-.edge-blur--top::after {
-  mask-image: linear-gradient(to bottom, #000 0%, transparent 38%);
-  -webkit-mask-image: linear-gradient(to bottom, #000 0%, transparent 38%);
-}
 
 /*
  * The bottom edge gets a single pass, not three.
@@ -436,19 +418,7 @@ html.is-loading body {
  * under the nav where the glass actually reads; down here one heavier blur
  * over a longer mask is indistinguishable and costs a third as much.
  */
-.edge-blur--bottom {
-  bottom: 0;
-  height: 96px;
-  -webkit-backdrop-filter: blur(14px) saturate(1.4);
-  backdrop-filter: blur(14px) saturate(1.4);
-  mask-image: linear-gradient(to top, #000 10%, transparent 100%);
-  -webkit-mask-image: linear-gradient(to top, #000 10%, transparent 100%);
-}
 
-.edge-blur--bottom::before,
-.edge-blur--bottom::after {
-  display: none;
-}
 
 /* =====================================================================
  * Shared type + reveal primitives
@@ -825,13 +795,7 @@ html.js .reveal.is-in {
     display: none;
   }
 
-  .edge-blur {
-    height: 72px;
-  }
 
-  .edge-blur--bottom {
-    display: none;
-  }
 
   /*
    * One blur pass on a phone, not three.
@@ -843,15 +807,7 @@ html.js .reveal.is-in {
    * asked to do here, and at this size the progressive falloff they build is
    * not perceptible anyway.
    */
-  .edge-blur::before,
-  .edge-blur::after {
-    display: none;
-  }
 
-  .edge-blur--top {
-    -webkit-backdrop-filter: blur(12px) saturate(1.35);
-    backdrop-filter: blur(12px) saturate(1.35);
-  }
 
   /*
    * The grain holds still. Re-seeding it seven times a second means
@@ -963,17 +919,43 @@ html.js .reveal.is-in {
  * failed observer away from a blank section, and this site has shipped that
  * bug once already.
  */
+/*
+ * The bloom is an ANIMATION, not a transition, and the difference is measured.
+ *
+ * A declared `transition` on scale/opacity is a standing hint to the
+ * compositor: every field keeps its own promoted layer for the life of the
+ * page, and all twelve get re-composited on every frame long after their
+ * entrance finished. On a 4x-throttled desktop that alone was the whole of
+ * the remaining scroll jank: with the transition, p90 33ms and 19 of 99
+ * frames missed; without it, 18ms and 4. Removing the fields entirely scored
+ * 17ms and 0, so this was very nearly all of it.
+ *
+ * An animation ends. Once it has, the element is an ordinary painted box
+ * again and the layer can be released.
+ */
 .field {
   scale: 1;
   opacity: 1;
-  transition:
-    scale 1.1s var(--ease-out),
-    opacity 0.9s var(--ease-out);
 }
 
 html.js .field:not(.is-in) {
   scale: 1.08;
   opacity: 0;
+}
+
+html.js .field.is-in {
+  animation: field-bloom 1.05s var(--ease-out) both;
+}
+
+@keyframes field-bloom {
+  from {
+    scale: 1.08;
+    opacity: 0;
+  }
+  to {
+    scale: 1;
+    opacity: 1;
+  }
 }
 
 /* =====================================================================
@@ -1100,13 +1082,33 @@ a:not([class]):hover {
   transition: opacity 0.4s var(--ease-out);
 }
 
+/*
+ * A finished skeleton STOPS.
+ *
+ * It used to only fade to opacity 0, which hides it and leaves its infinite
+ * sweep running for the life of the page: a permanently animating layer under
+ * a loaded image, compositing every frame, forever. `visibility: hidden` takes
+ * it out of the rendering path entirely once the crossfade has played.
+ */
 .media__img.is-ready + .media__skeleton,
 .media.is-ready .media__skeleton {
   opacity: 0;
+  visibility: hidden;
+  transition:
+    opacity 0.4s var(--ease-out),
+    visibility 0s linear 0.4s;
+}
+
+.media__img.is-ready + .media__skeleton::after,
+.media.is-ready .media__skeleton::after {
+  animation: none;
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .field,
+  html.js .field.is-in {
+    animation: none;
+  }
+
   .media__img,
   .media__skeleton {
     transition: none;
@@ -1206,4 +1208,72 @@ html::-webkit-scrollbar-thumb:hover {
 ::placeholder {
   color: var(--fg-2);
   opacity: 1;
+}
+
+/* =====================================================================
+ * Covered chapters stop moving
+ *
+ * The stack keeps every chapter in the document while the next one slides
+ * over it, so on a desktop seven film-grain layers were re-seeding at once,
+ * plus the hero's scroll cue, six chapters after anyone could see it. Each
+ * one is a `steps()` animation that jumps its layer every 140ms, and they
+ * composite whether or not they are visible.
+ *
+ * usePanelStack marks a chapter covered once the shade is most of the way in.
+ * Pausing rather than disabling: the animation resumes exactly where it left
+ * off if the visitor scrolls back up, so nothing re-seeds with a visible jump.
+ *
+ * This is desktop-only in effect, because below 1100px there is no stack and
+ * the grain animation is already frozen.
+ * ===================================================================== */
+
+.panel[data-covered] .panel__grain,
+.panel[data-covered] .hero__cue span,
+.panel[data-covered] .contact__track,
+.panel[data-covered] .skeleton::after {
+  animation-play-state: paused;
+}
+
+/* =====================================================================
+ * The leading edge of a chapter
+ *
+ * The stack works by each chapter sliding over the one before it. When the
+ * deck alternated dark and light, that edge was obvious: an off-white surface
+ * rising over a black one. Every chapter is black now, so an opaque black
+ * panel slides over an opaque black panel and the boundary is invisible. All
+ * you see is the outgoing chapter's text and images being cut in half by
+ * nothing, sweeping upward.
+ *
+ * Dimming the outgoing chapter to hide it only moved the problem: the screen
+ * went dark in the middle of every handoff. So the edge is drawn instead. A
+ * hairline says "a surface starts here", and the short fall of light below it
+ * says which side is on top. It costs one gradient on a layer that is already
+ * composited, and it is what makes the handoff read as depth rather than as
+ * a cut.
+ *
+ * Not on the first chapter: nothing slides over the hero.
+ * ===================================================================== */
+
+.panel:not(:first-child)::before {
+  content: '';
+  position: absolute;
+  inset: 0 0 auto;
+  height: 120px;
+  /* Above .panel__inner (2) and .panel__shade (3): this belongs to the panel
+     arriving, so it must not be dimmed by its own shade. */
+  z-index: 4;
+  pointer-events: none;
+  border-top: 1px solid var(--line-2);
+  background: linear-gradient(to bottom, rgba(255, 240, 244, 0.05), transparent);
+}
+
+/*
+ * Below the stack breakpoint the chapters do not overlap at all, so there is
+ * no edge to announce, and a hairline between every section would just be a
+ * rule nobody asked for.
+ */
+@media (max-width: 1100px) {
+  .panel:not(:first-child)::before {
+    display: none;
+  }
 }

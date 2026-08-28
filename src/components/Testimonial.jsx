@@ -118,6 +118,18 @@ function Testimonial() {
          * directly would hand it the reveal's transition shorthand in place
          * of its own scale bloom.
          */}
+        {/*
+         * Quote and screenshot are one row from 1100px up.
+         *
+         * They were a single centred column, which made the chapter 1239px of
+         * content inside a 900px viewport. Every chapter here is a PINNED
+         * panel, so a chapter taller than the viewport can never be seen
+         * whole: you scroll, it stays put, and the parts that do not fit are
+         * simply gone. Measured before the change, the section was 1950px for
+         * 900px of screen.
+         */}
+        <div className="testimonial__body">
+          <div className="testimonial__col">
         <figure className="testimonial__figure reveal" style={{ '--i': 1 }}>
           <span className="field testimonial__glow" data-hue="magenta" aria-hidden="true" />
 
@@ -133,6 +145,7 @@ function Testimonial() {
           <span className="testimonial__metric-value">{testimonial.metric}</span>
           <span className="testimonial__metric-label">{testimonial.metricLabel}</span>
         </p>
+          </div>
 
         {/*
          * The wrapper carries .reveal and the card carries the hover, so the
@@ -177,6 +190,7 @@ function Testimonial() {
               </svg>
             </span>
           </Link>
+        </div>
         </div>
       </div>
     </Panel>

@@ -145,6 +145,113 @@ which thing it is. `useLayoutEffect` therefore depends on `nav` as well as on
 
 *Symptom: the pill under-hangs the word by a few pixels, on one language only.*
 
+### A black-on-black stack has no visible edge, so draw one
+
+The deck used to alternate dark and light, so a chapter sliding over the one
+below announced itself by its own colour. Every chapter is black now: an opaque
+black panel slides over an opaque black panel and the boundary is invisible.
+All you see is the outgoing chapter being cut in half by nothing, sweeping
+upward as you scroll. It was reported as flickering, and it is desktop-only
+because below 1100px there is no stack.
+
+**The first fix was wrong and is worth knowing about.** Raising `MAX_SHADE` to
+0.88 to dim the outgoing chapter out of the way removed the slicing and
+introduced a black flash instead: the chapter underneath reached full dim while
+the incoming one still had half the screen to cross, so the middle of every
+handoff was two thirds near-black. Measured, mean screen luminance fell from
+23.5 to 14.5 and climbed back to 28.4. The screen visibly went dark and came
+back, which is what a black flash IS.
+
+The edge is drawn explicitly instead: `.panel:not(:first-child)::before` is a
+hairline plus a short fall of light, at z-index 4 so the arriving panel is not
+dimmed by its own shade. `MAX_SHADE` is back to 0.55 and its ramp completes at
+full cover, so the dim is depth again rather than a blackout.
+
+*Symptom of no edge: content chopped mid-glyph by an invisible line.*
+*Symptom of over-dimming instead: the screen darkens and recovers mid-handoff.*
+
+### The nav pill must not invert its label while it travels
+
+The indicator takes 0.42s to slide between chapters. While it was a near-solid
+white slab whose active label flipped to dark ink, that whole slide left the
+outgoing label light-on-white and the incoming one dark-on-dark: both
+unreadable, every time the scroll-spy changed chapter.
+
+It is a 13% wash with a hairline edge now and the label stays light throughout,
+so nothing has to invert. Measured after the change, every nav label sits
+between 7.9:1 and 13.6:1.
+
+### Nothing should animate inside a covered chapter
+
+Every chapter stays in the document while the next slides over it. Seven film
+grain layers were re-seeding at once, plus the hero scroll cue six chapters
+after anyone could see it, plus an image skeleton that faded to `opacity: 0` and
+then swept forever underneath a loaded photograph.
+
+`usePanelStack` sets `data-covered` once the shade is most of the way in, and
+index.css pauses the infinite animations inside. Paused, not disabled, so
+scrolling back up resumes them without a visible re-seed. A finished skeleton
+also takes `visibility: hidden`, which removes it from the rendering path
+instead of merely hiding it.
+
+*Symptom: nothing visible. It costs frames and battery and shows up only as
+compositing you cannot account for.*
+
+### Lenis never finishes easing, so it poisons any "is it still?" test
+
+Diffing consecutive screenshots to look for flicker reported 0.6% of pixels
+changing on every frame pair, on a page that was not moving. That was Lenis
+easing asymptotically toward its target and never arriving, so the whole page
+drifted by a subpixel between shots. `window.__lenis.stop()` first; with it
+stopped the same test reports 0.01%, which is noise.
+
+### Stacked backdrop-filters are the most expensive thing you can ship
+
+The site used to carry progressive-blur edges: three nested `backdrop-filter`
+layers across the top and the bottom of the viewport, each re-reading the
+composited backdrop of a full-width strip on every frame the page moved.
+
+Measured on a 4x-throttled desktop over an identical scroll: median frame 49ms
+with them, 17ms without, and the same scroll completed 38 frames against 101.
+They cost roughly two thirds of the frame budget on their own. Disabling the
+grain, the fields, the blend modes or the whole sticky stack each moved the
+median by one frame quantum; nothing else came close.
+
+They are gone. Do not reintroduce a stacked backdrop-filter. One is a cost you
+can argue for; three over each other is not.
+
+*Symptom if broken: the page scrolls at 20fps on desktop and nobody can say why,
+because every individual layer looks cheap.*
+
+### A declared transition on a compositable property never lets the layer go
+
+`.field` used to carry `transition: scale …, opacity …`. That declaration is a
+standing hint to the compositor: all twelve fields kept their own promoted
+layer for the life of the page and were re-composited every frame, long after
+their entrance had finished.
+
+Measured: with the transition, p90 33ms and 19 of 99 frames missed; without it,
+18ms and 4. Removing the fields entirely scored 17ms and 0, so the transition
+was very nearly the whole cost of having them.
+
+The bloom is a `@keyframes` animation on `.is-in` now. An animation ends; once
+it has, the element is an ordinary painted box again. **Prefer an animation
+over a transition for anything that plays once.**
+
+*Symptom: periodic frame hitches with no obvious cause, on a page whose paint
+cost looks fine.*
+
+### Profile the production build, not the dev server
+
+The dev bundle ships `jsxDEV`, `runWithFiberInDEV` and Fast Refresh wrappers,
+and they dominate a CPU profile. A whole afternoon went into an anonymous
+function in `LangToggle.jsx` that showed as the hottest thing on the page; it
+was a Fast Refresh wrapper, and instrumenting the actual forced-layout reads
+found four, not thousands.
+
+Desktop p90 measured 33ms in dev and 18ms in production off the same commit.
+Build, `vite preview`, then measure.
+
 ### Hover fill rows need `overflow: hidden`
 
 `.reveal-row` clips the fill disc, which is always larger than the row.
