@@ -173,6 +173,17 @@ const fr = (await import(join(ROOT, 'src/content/fr.js'))).default
     ...d.work.items.map((i) => i.client),
     ...d.sectors.items.map((i) => i.caseStudy),
     ...d.contactPage.fields.map((f) => f.name),
+    /*
+     * The /work index. A slug builds /work/<slug> AND names the screenshot
+     * at public/work/<slug>.webp, a tag key drives the filter and the field
+     * hue, and a client's name is a proper noun. All three would break in
+     * one language only, which is exactly the kind of drift nothing else
+     * catches: the page renders, and half of it points at nothing.
+     */
+    ...d.workPage.projects.map((p) => p.slug),
+    ...d.workPage.projects.map((p) => p.name),
+    ...d.workPage.projects.map((p) => p.tags.join('|')),
+    ...d.workPage.filters.map((f) => f.key),
     d.contact.email,
     d.footer.phone,
   ]
@@ -180,6 +191,36 @@ const fr = (await import(join(ROOT, 'src/content/fr.js'))).default
   const b = keyed(fr)
   const drift = a.map((v, i) => (v === b[i] ? null : `en "${v}" vs fr "${b[i]}"`)).filter(Boolean)
   if (drift.length) fails.push({ label: 'A path, slug or field name changed with language.', hits: drift })
+}
+
+/* ---- Every /work card has a screenshot to show -------------------------- */
+
+/*
+ * The grid names its image from the slug, so a project with no file under
+ * public/work renders a card with a skeleton that never resolves, and a file
+ * with no project is dead weight in the bundle. Neither shows up in a lint,
+ * a build, or a screenshot of the top of the page.
+ */
+{
+  const shots = new Set(
+    readdirSync(join(ROOT, 'public/work'))
+      .filter((f) => f.endsWith('.webp'))
+      .map((f) => f.slice(0, -'.webp'.length)),
+  )
+  const slugs = new Set(en.workPage.projects.map((p) => p.slug))
+  const problems = [
+    ...[...slugs].filter((s) => !shots.has(s)).map((s) => `${s}: no public/work/${s}.webp`),
+    ...[...shots].filter((s) => !slugs.has(s)).map((s) => `public/work/${s}.webp: no project`),
+  ]
+  if (problems.length) fails.push({ label: 'A /work project and its screenshot disagree.', hits: problems })
+
+  /* The headline's own count, checked against the list it describes. */
+  const claimed = en.workPage.meta[0].value
+  if (Number(claimed) !== slugs.size)
+    fails.push({
+      label: 'The /work hero claims a project count the list does not hold.',
+      hits: [`meta says ${claimed}, projects.length is ${slugs.size}`],
+    })
 }
 
 /* ---- Copy rules -------------------------------------------------------- */

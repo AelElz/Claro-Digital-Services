@@ -212,6 +212,34 @@ sectors stat band and the work rows.
 **The one-line test:** every panel's inline `top` must be `0px`. A negative one
 means that chapter does not fit the viewport it pins in.
 
+### The /work bar is sticky, so that subtree must stay free of `overflow`
+
+`.works__bar` carries the filter, the counter and the progress rail, and it
+holds under the nav for the length of the index. `position: sticky` is
+silently ignored if ANY ancestor has `overflow: hidden/clip/auto/scroll`, so
+`.works`, `.works__browse` and the `.container` inside must never take one.
+The two elements on that page that DO scroll or clip, `.works__filters` and
+`.works__light`, are a descendant and a leaf respectively, never an ancestor
+of the bar.
+
+*Symptom if broken: the bar scrolls away with the page, no error anywhere.*
+
+### The /work filter re-deals by remounting, and that is deliberate
+
+The grid is keyed on the filter key, so changing it replaces every `<li>`.
+That is the only way to replay an entrance: `useReveal` adopts fresh nodes
+through its MutationObserver inside the same task, and a class added before
+the browser has ever computed the "before" style produces no transition at
+all. So the first pass carries `.reveal` (scroll-triggered, per row) and
+every pass after it carries `.works__item--dealt`, which is a keyframe
+animation on nodes that have never been laid out.
+
+The key is the filter KEY, never a label. A key from copy would re-deal the
+whole grid on a language switch.
+
+*Symptom if the mechanism is swapped for a transition: the filter changes the
+list instantly, with no animation, and nothing looks broken.*
+
 ### A black-on-black stack has no visible edge, so draw one
 
 The deck used to alternate dark and light, so a chapter sliding over the one
@@ -462,8 +490,9 @@ is the vocabulary; read it before touching any surface.
   deliberately absent: every accented character the French copy sets lives in
   Latin-1 Supplement, so it would cost 114KB to gain nothing.
 - Hero, Formula, Services, Sectors, Work, Testimonial, Contact, Footer,
-  Navbar, MenuOverlay, /about, /method, /contact, /sign-in, 404.
-- Routes code-split; five lazy chunks.
+  Navbar, MenuOverlay, /about, /work, /method, /contact, /sign-in, 404.
+- Routes code-split; six lazy chunks, plus `useFieldBloom` as a shared one
+  because /about and /work both pull it.
 - EN and FR both render every surface. `node .impeccable/verify.mjs` checks
   shape parity, locale-independent paths, banned patterns and the security
   floor. It should exit 0.
@@ -476,7 +505,9 @@ is the vocabulary; read it before touching any surface.
 - **Work, Sectors, Footer and MethodPage** were rebuilt by agents that were
   cut off mid-run and never got a dedicated finishing pass. They are coherent
   and pass every check, but they have had less attention than the rest.
-- `/work`, `/insights` and `/legal/*` are still unbuilt and render `NotFound`.
+- `/insights`, `/legal/*` and the individual `/work/<slug>` case studies are
+  still unbuilt and render `NotFound`. The 36 cards on `/work` all link into
+  that last group on purpose: a dead link points at its real path.
 - No test suite. The measurement harness below is the substitute.
 
 ### How this work was verified

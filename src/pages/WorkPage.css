@@ -1,0 +1,951 @@
+/*
+ * /work
+ *
+ * The sibling of /about: one field at page scale behind a serif headline,
+ * hairline-separated bands, `.card` plus `.field` for every surface, the
+ * four-stat record, the wine CTA card, black throughout. What it adds is an
+ * index of thirty six engagements, and three things that only make sense on
+ * an index that long: a hue per discipline, one light behind the whole grid,
+ * and a bar that stays with you while you read it.
+ *
+ * Written phone first. Every layout here starts as one column at 390px and
+ * the wider viewports are the enhancement, so the lower bound of each clamp
+ * is the real design rather than a floor the desktop happens to stop at.
+ */
+
+/*
+ * Registered so they can be transitioned. An unregistered custom property is
+ * not an animatable type, so the smoothing on the grid light would simply
+ * not happen and it would snap to the pointer.
+ *
+ * Deliberately NOT --px / --py: Hero.css already registers those as
+ * inherited numbers, and registering one name twice is not additive.
+ */
+@property --wx {
+  syntax: '<number>';
+  inherits: false;
+  initial-value: 0.5;
+}
+
+@property --wy {
+  syntax: '<number>';
+  inherits: false;
+  initial-value: 0.26;
+}
+
+/*
+ * No `overflow` here, and none on anything between here and `.works__bar`.
+ * `position: sticky` is silently ignored if ANY ancestor has
+ * overflow hidden/clip/auto/scroll, and the bar would just scroll away with
+ * nothing in the console to say why.
+ */
+.works {
+  position: relative;
+  min-height: 100svh;
+  background: var(--black);
+  color: var(--fg);
+}
+
+/* =====================================================================
+ * Hero
+ * ===================================================================== */
+
+.works__hero {
+  position: relative;
+  /* Keeps the field's grain blend from reaching the page behind it. */
+  isolation: isolate;
+  padding-block: clamp(124px, 20vh, 220px) clamp(44px, 7vh, 84px);
+}
+
+/*
+ * Upper right on a phone: the copy runs the full height of a portrait
+ * viewport, so a light anchored low sits behind the lede and greys it out.
+ * Above the headline it reads as sky. The desktop aim is set at 680.
+ */
+.works__hero-field {
+  --fx: 84%;
+  --fy: 16%;
+  --fx2: 106%;
+  --fy2: 2%;
+  --f-strength: 0.72;
+}
+
+/*
+ * Fades out before the section ends. Without it the gradient is simply
+ * clipped by the header box and leaves a hard horizontal edge between lit
+ * and unlit black. -webkit- first, standard second: the minifier treats the
+ * pair as duplicate declarations and keeps the last one.
+ */
+.works__hero-field::before {
+  -webkit-mask-image: linear-gradient(to bottom, #000 0%, #000 58%, transparent 96%);
+  mask-image: linear-gradient(to bottom, #000 0%, #000 58%, transparent 96%);
+}
+
+.works__hero-inner {
+  position: relative;
+  z-index: 1;
+}
+
+.works__title {
+  max-width: 16ch;
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: var(--fs-title);
+  font-weight: 400;
+  line-height: 1.02;
+  /* Large type looks indented beside small type even when the boxes match,
+     because side bearing scales with size. Corrected in em so it holds
+     across the clamp, and logical so RTL would correct the far edge. */
+  margin-inline-start: -0.055em;
+  letter-spacing: -0.012em;
+  text-wrap: balance;
+  color: var(--fg);
+}
+
+.works__lede {
+  max-width: 48ch;
+  margin: clamp(16px, 2vw, 24px) 0 0;
+  font-size: var(--fs-lede);
+  line-height: 1.5;
+  color: var(--fg-2);
+}
+
+/*
+ * Four small facts under the lede. Two across on a phone, four from 560,
+ * because at 390px four columns give each figure 78px and "projects on this
+ * page" sets one word to the line.
+ */
+.works__meta {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: clamp(18px, 3vw, 30px);
+  margin: clamp(28px, 4vh, 44px) 0 0;
+  max-width: 46rem;
+}
+
+.works__fact dt {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: clamp(1.7rem, 4.4vw, 2.3rem);
+  font-weight: 400;
+  line-height: 1;
+  letter-spacing: -0.015em;
+  font-variant-numeric: tabular-nums;
+  color: var(--fg);
+}
+
+/*
+ * The suffix drops OUT of the serif. Bodoni draws "+" as a near-hairline,
+ * and at this size in crimson on black it vanishes outright, so "12+" reads
+ * as "12". Set in the sans at under half the size and raised, it reads as
+ * the annotation it is and it always renders.
+ */
+.works__fact dt span {
+  font-family: var(--font-sans);
+  font-size: 0.44em;
+  font-weight: 500;
+  letter-spacing: 0;
+  vertical-align: 0.72em;
+  margin-inline-start: 0.06em;
+  color: var(--crimson);
+}
+
+.works__fact dd {
+  margin: 6px 0 0;
+  font-size: var(--fs-label);
+  line-height: 1.35;
+  color: var(--fg-2);
+}
+
+/* =====================================================================
+ * The bar
+ *
+ * Filter, counter and progress, held under the nav for as long as the index
+ * lasts. Opaque black with a hairline rather than a second glass surface:
+ * the nav above it already carries a backdrop-filter, and stacking a second
+ * one over it is the single most expensive thing this site can ship
+ * (AGENTS.md measured three of them at two thirds of the frame budget).
+ * ===================================================================== */
+
+.works__browse {
+  position: relative;
+  border-top: 1px solid var(--line);
+}
+
+.works__bar {
+  position: sticky;
+  /* The nav is fixed at top: 12px and 64px tall, so its lower edge is at 76.
+     Eight pixels of black between the two. */
+  top: calc(var(--nav-h) + 20px);
+  z-index: 20;
+  padding-block: 12px;
+  background: var(--black);
+  border-bottom: 1px solid var(--line);
+}
+
+/*
+ * The cards dissolve under the bar instead of being cut off by it. A short
+ * fall of black below the edge, not a blur: it costs one gradient, once.
+ */
+.works__bar::after {
+  content: '';
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  height: clamp(20px, 4vh, 34px);
+  pointer-events: none;
+  background: linear-gradient(to bottom, var(--black), transparent);
+}
+
+.works__bar-inner {
+  display: flex;
+  align-items: center;
+  gap: clamp(12px, 2vw, 24px);
+}
+
+/*
+ * The five pills do not fit in 350px, so the row scrolls until 680. The
+ * indicator is positioned inside this box, so it travels with the content
+ * and needs no scroll listener.
+ *
+ * `overflow-x` here is safe: this is a DESCENDANT of the sticky element, not
+ * an ancestor of it. Never move it up onto .works__bar or .works__browse.
+ */
+.works__filters {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  min-width: 0;
+  flex: 1 1 auto;
+  overflow-x: auto;
+  scrollbar-width: none;
+  /* The last pill fades at the edge rather than being sliced, so it reads as
+     "there is more" instead of as a rendering fault. */
+  -webkit-mask-image: linear-gradient(to right, #000 0%, #000 92%, transparent 100%);
+  mask-image: linear-gradient(to right, #000 0%, #000 92%, transparent 100%);
+}
+
+.works__filters::-webkit-scrollbar {
+  display: none;
+}
+
+/*
+ * A 13% wash with a hairline edge, never a solid slab. The pill takes 0.42s
+ * to travel, and while it does, a near-white fill would leave the outgoing
+ * label light-on-white and the incoming one dark-on-dark: both unreadable,
+ * every time. Nothing inverts here, so nothing has to.
+ *
+ * Placed by `top` and `left`, NEVER by `transform`. The nav's indicator is
+ * centred with `translateY(-50%)` and must animate `left`/`width` only,
+ * because a transform transition would replace that centring and drop it
+ * half its height (AGENTS.md). This one avoids the trap at the source: it
+ * takes the button's own `offsetTop`, so it is not centred on anything and
+ * it stays correct when the row wraps to two lines, which it does between
+ * 680 and about 1000px.
+ */
+.works__pill {
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 0;
+  height: 34px;
+  border: 1px solid var(--line-2);
+  border-radius: var(--r-pill);
+  background: rgba(255, 255, 255, 0.13);
+  opacity: 0;
+  pointer-events: none;
+  transition:
+    top 0.42s cubic-bezier(0.65, 0, 0.35, 1),
+    left 0.42s cubic-bezier(0.65, 0, 0.35, 1),
+    width 0.42s cubic-bezier(0.65, 0, 0.35, 1),
+    opacity 0.3s var(--ease-out);
+}
+
+.works__filter {
+  position: relative;
+  z-index: 1;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  flex: 0 0 auto;
+  height: 34px;
+  padding: 0 14px;
+  border: 0;
+  border-radius: var(--r-pill);
+  background: none;
+  font-family: var(--font-sans);
+  font-size: var(--fs-label);
+  font-weight: 400;
+  line-height: 1;
+  white-space: nowrap;
+  color: var(--fg-2);
+  cursor: pointer;
+  transition: color 0.3s var(--ease-out);
+}
+
+.works__filter[aria-pressed='true'] {
+  color: var(--fg);
+}
+
+/*
+ * The legend for the whole page. Each discipline carries the hue its cards
+ * are lit with, so the colour in the grid is readable as information rather
+ * than as decoration. "All" is the absence of a filter and gets no dot.
+ */
+.works__filter[data-hue]::before {
+  content: '';
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--dot, var(--crimson));
+}
+
+.works__filter[data-hue='ember'] {
+  --dot: var(--ember);
+}
+
+.works__filter[data-hue='crimson'] {
+  --dot: var(--crimson);
+}
+
+.works__filter[data-hue='magenta'] {
+  --dot: var(--magenta);
+}
+
+.works__filter[data-hue='violet'] {
+  --dot: #8f47d4;
+}
+
+/*
+ * How many projects carry this discipline. Tabular so the column of numerals
+ * does not jitter as the labels change width between languages.
+ */
+.works__filter-n {
+  font-size: 0.8em;
+  font-variant-numeric: tabular-nums;
+  color: var(--fg-3);
+}
+
+.works__filter[aria-pressed='true'] .works__filter-n {
+  color: var(--fg-2);
+}
+
+/*
+ * Not on a phone.
+ *
+ * At 375px the bar has 335px of content width, and the counter takes sixty of
+ * them off a row that already cannot hold five pills. The result was the
+ * fifth pill sliced under the counter, which reads as a broken layout rather
+ * than as a scrollable row. The rail below carries the same information at no
+ * width at all, and the counter is aria-hidden, so nothing is lost.
+ */
+.works__count {
+  display: none;
+  flex: 0 0 auto;
+  margin: 0;
+  align-items: baseline;
+  line-height: 1;
+}
+
+.works__count-n {
+  font-family: var(--font-display);
+  font-size: clamp(1.25rem, 2.6vw, 1.6rem);
+  font-weight: 400;
+  letter-spacing: -0.01em;
+  font-variant-numeric: tabular-nums;
+  color: var(--fg);
+}
+
+/*
+ * The "/" and the total go in the SANS. Bodoni draws a solidus as a
+ * near-hairline and at this size in crimson on black it disappears, so
+ * "07/36" would read as "07 36".
+ */
+.works__count-total {
+  font-family: var(--font-sans);
+  font-size: 0.62em;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+  margin-inline-start: 0.1em;
+  color: var(--crimson);
+}
+
+/* How far down the index you are, drawn on the bar's own edge. */
+.works__rail {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -1px;
+  height: 1px;
+  overflow: hidden;
+}
+
+.works__rail-fill {
+  display: block;
+  height: 100%;
+  background: var(--crimson);
+  transform-origin: left center;
+  /* Written every frame the page moves; the fallback is the settled state so
+     the rail is correct before the first frame and in a background tab,
+     where rAF never runs at all. */
+  scale: var(--fill, 0) 1;
+}
+
+/*
+ * Announced, not shown. The count changes when the filter changes, which is
+ * the one thing a screen reader needs to hear; the counter above it changes
+ * on every scroll tick and is aria-hidden for exactly that reason.
+ */
+.works__status {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+/* =====================================================================
+ * The index
+ * ===================================================================== */
+
+.works__index {
+  position: relative;
+  isolation: isolate;
+  padding-block: clamp(28px, 5vh, 56px) clamp(56px, 10vh, 120px);
+}
+
+/*
+ * One light source for thirty six cards.
+ *
+ * The site's thesis, stated literally: the cards are near-black boxes on a
+ * black page and this is what they are lit by. It is ONE element, so the
+ * pointer costs a single re-composite rather than a hover glow on every
+ * card, and it is smoothed by a CSS transition on two registered custom
+ * properties rather than by a frame loop, so there is nothing to fall behind
+ * under throttling and nothing runs while the pointer is still.
+ *
+ * `overflow: hidden` is fine here: this is a leaf, and the sticky bar is its
+ * uncle rather than its descendant.
+ */
+.works__light {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  isolation: isolate;
+  pointer-events: none;
+  transition:
+    --wx 1.1s var(--ease-out),
+    --wy 1.1s var(--ease-out);
+}
+
+.works__light::before,
+.works__light::after {
+  content: '';
+  position: absolute;
+}
+
+/*
+ * Each stop HOLDS its colour before it falls off, the way `.field` does. A
+ * ramp straight from the colour to transparent leaves the average alpha low
+ * enough that the whole thing reads as grey rather than as light.
+ *
+ * Masked at both ends so the light does not cut hard where the index meets
+ * the bar above it and the record below it.
+ */
+.works__light::before {
+  inset: -10% -20%;
+  background:
+    radial-gradient(
+      34% 22% at calc(var(--wx) * 100%) calc(var(--wy) * 100%),
+      var(--crimson) 0%,
+      rgba(227, 53, 93, 0.4) 32%,
+      transparent 70%
+    ),
+    radial-gradient(46% 30% at 6% 12%, var(--violet) 0%, transparent 62%),
+    radial-gradient(40% 26% at 98% 84%, var(--wine) 0%, transparent 64%);
+  opacity: 0.55;
+  -webkit-mask-image: linear-gradient(to bottom, transparent 0%, #000 10%, #000 84%, transparent 100%);
+  mask-image: linear-gradient(to bottom, transparent 0%, #000 10%, #000 84%, transparent 100%);
+}
+
+/* The grain is not decoration on the gradient, it IS the material. */
+.works__light::after {
+  inset: 0;
+  background-image: var(--grain-tile);
+  background-size: 340px 340px;
+  mix-blend-mode: overlay;
+  opacity: 0.5;
+}
+
+/*
+ * `dense`, because five of the thirty six take a double-width cell from 680
+ * up and normal flow would leave a hole beside each of them, and because
+ * filtering changes which cells are wide.
+ */
+.works__grid {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-auto-flow: dense;
+  grid-template-columns: minmax(0, 1fr);
+  gap: clamp(12px, 1.8vw, 20px);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/*
+ * Layout only. This element carries `.reveal` on the first pass, and NOTHING
+ * here may declare a `transition` shorthand: the reveal's own transition is
+ * declared at the same specificity earlier in the bundle, so a shorthand
+ * would delete the entrance and its stagger outright. The hover lives on the
+ * link inside, which carries no `.reveal` and is free to transition.
+ */
+.works__item {
+  display: grid;
+}
+
+/*
+ * The re-deal.
+ *
+ * A filter change remounts the list, so these are nodes the browser has
+ * never laid out before and an animation on them plays. A transition could
+ * not do this job: `useReveal` adopts the fresh nodes inside the same task,
+ * and a class added before the browser has ever computed the "before" style
+ * produces no transition at all.
+ *
+ * An animation also ENDS. Once it has, the card is an ordinary painted box
+ * again and the compositor can release the layer, which a standing
+ * transition on opacity would never let it do (AGENTS.md).
+ */
+html.js .works__item--dealt {
+  animation: card-deal 0.62s var(--ease-out) both;
+  animation-delay: calc(var(--i, 0) * 42ms);
+}
+
+@keyframes card-deal {
+  from {
+    opacity: 0;
+    translate: 0 18px;
+    scale: 0.985;
+  }
+  to {
+    opacity: 1;
+    translate: none;
+    scale: 1;
+  }
+}
+
+.works__card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  text-decoration: none;
+  color: inherit;
+  transition:
+    border-color 0.45s var(--ease-out),
+    background-color 0.45s var(--ease-out);
+}
+
+/*
+ * Held well under full strength and pushed off the trailing edge. This is
+ * the one place on the page where body copy sits directly over a field, and
+ * the client's name has to stay on near-black.
+ */
+.works__card-field {
+  --fx: 96%;
+  --fy: 66%;
+  --fx2: 6%;
+  --fy2: 104%;
+  --f-strength: 0.42;
+}
+
+/*
+ * The screenshot bleeds to the card's top edge. No radius of its own: the
+ * card clips it, so the two top corners follow `--r-card` exactly and the
+ * bottom two stay square against the body.
+ */
+.works__shot {
+  flex: 0 0 auto;
+  aspect-ratio: 16 / 10;
+  border-radius: 0;
+  background: var(--surface-2);
+}
+
+.works__img {
+  height: 100%;
+  object-fit: cover;
+  object-position: 50% 0;
+}
+
+/*
+ * The picture melts into the card body instead of ending on a hard line.
+ * One gradient, painted once; `--surface` is the card's own ground, so the
+ * seam is the same colour on both sides of it.
+ */
+.works__shot::after {
+  content: '';
+  position: absolute;
+  inset: auto 0 0;
+  height: 34%;
+  pointer-events: none;
+  background: linear-gradient(to bottom, transparent, var(--surface));
+}
+
+.works__body {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  gap: 6px;
+  padding: clamp(18px, 2.4vw, 26px) clamp(18px, 2.4vw, 26px) clamp(20px, 2.6vw, 28px);
+}
+
+.works__tags {
+  font-size: var(--fs-label);
+  line-height: 1.3;
+  color: var(--crimson);
+}
+
+.works__name {
+  margin: 2px 0 0;
+  font-family: var(--font-display);
+  font-size: clamp(1.55rem, 5vw, 1.95rem);
+  font-weight: 400;
+  line-height: 1.05;
+  letter-spacing: -0.012em;
+  margin-inline-start: -0.055em;
+  color: var(--fg);
+}
+
+.works__blurb {
+  margin: 0;
+  font-size: var(--fs-body);
+  line-height: 1.5;
+  color: var(--fg-2);
+}
+
+/*
+ * The five engagements the record can put a number on. Set apart by a rule
+ * and a colour rather than by a badge, so it reads as evidence attached to
+ * the project and not as a label stuck on it.
+ */
+.works__metric {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  margin-top: auto;
+  padding-top: clamp(12px, 1.6vh, 18px);
+}
+
+/*
+ * --fg-2, not --fg-3. This sits at --fs-label, around 14px, and --fg-3 is
+ * 3.7:1: it clears large text and nothing else.
+ */
+.works__metric-label {
+  font-size: var(--fs-label);
+  line-height: 1.3;
+  color: var(--fg-2);
+}
+
+.works__metric-value {
+  font-size: var(--fs-body);
+  font-weight: 500;
+  line-height: 1.35;
+  font-variant-numeric: tabular-nums;
+  color: var(--fg);
+}
+
+.works__go {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  margin-top: clamp(14px, 2vh, 20px);
+  border: 1px solid var(--line);
+  border-radius: 50%;
+  color: var(--fg-2);
+  transition:
+    border-color 0.4s var(--ease-out),
+    color 0.4s var(--ease-out),
+    translate 0.4s var(--ease-out);
+}
+
+/* A card with a metric puts the arrow beside it rather than under it, so the
+   evidence keeps the bottom of the card to itself. */
+.works__metric + .works__go {
+  margin-top: clamp(14px, 2vh, 20px);
+}
+
+/* =====================================================================
+ * The record and the close
+ * ===================================================================== */
+
+.works__stats {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: clamp(26px, 4vw, 48px);
+  margin: 0;
+  padding-block: clamp(52px, 9vh, 110px);
+  border-top: 1px solid var(--line);
+}
+
+.works__stat dt {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: clamp(2.4rem, 6vw, 3.4rem);
+  font-weight: 400;
+  line-height: 1;
+  letter-spacing: -0.015em;
+  font-variant-numeric: tabular-nums;
+  color: var(--fg);
+}
+
+.works__stat dt span {
+  font-family: var(--font-sans);
+  font-size: 0.44em;
+  font-weight: 500;
+  letter-spacing: 0;
+  vertical-align: 0.72em;
+  margin-inline-start: 0.06em;
+  color: var(--crimson);
+}
+
+.works__stat dd {
+  margin: 8px 0 0;
+  font-size: var(--fs-label);
+  line-height: 1.35;
+  color: var(--fg-2);
+}
+
+.works__cta {
+  padding-block: clamp(10px, 2vh, 24px) clamp(80px, 14vh, 170px);
+}
+
+.works__cta-card {
+  padding: clamp(30px, 6vw, 72px) clamp(22px, 5vw, 60px);
+  text-align: center;
+}
+
+/*
+ * The page closes on one dome rising from the bottom edge, centred, behind
+ * the buttons. Both stops are aimed a gradient radius below the crest they
+ * draw, so the light rises into the card and its centre stays outside it.
+ */
+.works__cta-card .field {
+  --fx: 50%;
+  --fy: 83%;
+  --fx2: 50%;
+  --fy2: 96%;
+  --f-strength: 0.55;
+}
+
+.works__cta-card .section-title {
+  max-width: 18ch;
+  margin-inline: auto;
+}
+
+.works__cta-card .section-lede {
+  max-width: 48ch;
+  margin-inline: auto;
+  color: var(--fg-2);
+}
+
+.works__cta-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  justify-content: center;
+  margin-top: clamp(26px, 4vh, 44px);
+}
+
+/* ---- 560: the facts get their own columns ---------------------------- */
+
+@media (min-width: 560px) {
+  .works__meta {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
+  /* There is room for the counter beside the pills from here up. */
+  .works__count {
+    display: flex;
+  }
+}
+
+/* ---- 680: two columns, and the measured work goes wide --------------- */
+
+@media (min-width: 680px) {
+  .works__hero-field {
+    /* Low and right on a landscape viewport: the light comes up behind the
+       headline the way a horizon does, instead of sitting on top of it. */
+    --fx: 82%;
+    --fy: 62%;
+    --fx2: 104%;
+    --fy2: 28%;
+  }
+
+  .works__filters {
+    overflow-x: visible;
+    flex-wrap: wrap;
+    row-gap: 6px;
+    -webkit-mask-image: none;
+    mask-image: none;
+  }
+
+  .works__grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  /*
+   * The five with a number on them take the full row and turn side by side,
+   * so the screenshot and the result read as one statement rather than as a
+   * caption under a picture.
+   */
+  .works__item[data-wide] {
+    grid-column: span 2;
+  }
+
+  .works__item[data-wide] .works__card {
+    flex-direction: row;
+  }
+
+  /*
+   * The shot stretches to the row's height rather than keeping 16/10, so its
+   * box is close to square and `cover` has to crop the picture sideways.
+   * Anchored to the left edge, because the left of a website screenshot is
+   * where its logo, its navigation and the start of its headline are: a
+   * centred crop takes an equal bite out of both and leaves the middle of a
+   * sentence. Measured on Overto and Perfect Drive, which lost their first
+   * two words to `50%`.
+   */
+  .works__item[data-wide] .works__shot {
+    flex: 0 0 54%;
+    align-self: stretch;
+    aspect-ratio: auto;
+  }
+
+  .works__item[data-wide] .works__img {
+    object-position: 0 0;
+  }
+
+  /* Sideways, so the fade runs into the body rather than down onto it. */
+  .works__item[data-wide] .works__shot::after {
+    inset: 0 0 0 auto;
+    width: 26%;
+    height: auto;
+    background: linear-gradient(to right, transparent, var(--surface));
+  }
+
+  /*
+   * No `justify-content` here. A wide card is by definition one that carries
+   * a result, the metric takes `margin-top: auto` to hold the bottom edge,
+   * and an auto margin absorbs the free space before any justification can
+   * distribute it. Centring would be a rule that never fires.
+   */
+  .works__item[data-wide] .works__body {
+    padding-block: clamp(22px, 3vh, 34px);
+    padding-inline: clamp(24px, 3vw, 40px);
+  }
+
+  .works__item[data-wide] .works__name {
+    font-size: clamp(1.9rem, 3.4vw, 2.5rem);
+  }
+
+  .works__stats {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+/* ---- 1100: three across ---------------------------------------------- */
+
+@media (min-width: 1100px) {
+  .works__grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+/* ---- Hover, fine pointers only --------------------------------------- */
+
+/*
+ * A touch device gets none of this. There is no hover to leave, so a card
+ * that lit up on tap would simply stay lit until you tapped another one, and
+ * the image scale would be a standing compositable transition on thirty six
+ * elements for a state that can never be entered.
+ */
+@media (pointer: fine) {
+  .works__card:hover,
+  .works__card:focus-visible {
+    border-color: var(--line-2);
+    background-color: var(--surface-2);
+  }
+
+  .works__img {
+    transition: scale 0.55s var(--ease-out);
+  }
+
+  .works__card:hover .works__img,
+  .works__card:focus-visible .works__img {
+    scale: 1.04;
+  }
+
+  .works__card:hover .works__go,
+  .works__card:focus-visible .works__go {
+    border-color: var(--crimson);
+    color: var(--fg);
+    translate: 3px 0;
+  }
+}
+
+/* ---- Touch targets --------------------------------------------------- */
+
+/*
+ * The pills are 34px tall, which is under the 44px target. Expanded with an
+ * out-of-flow pseudo-element so it costs no layout, and `::after` because
+ * `::before` is the discipline dot.
+ */
+@media (pointer: coarse) {
+  .works__filter::after {
+    content: '';
+    position: absolute;
+    inset: -6px 0;
+  }
+}
+
+/* ---- Reduced motion --------------------------------------------------- */
+
+@media (prefers-reduced-motion: reduce) {
+  /* The light is composed and still; JS does not attach the pointer handler
+     at all, so this only cancels the smoothing that would never run. */
+  .works__light {
+    transition: none;
+  }
+
+  html.js .works__item--dealt {
+    animation: none;
+  }
+
+  .works__pill,
+  .works__filter,
+  .works__card,
+  .works__img,
+  .works__go {
+    transition: none;
+  }
+
+  .works__card:hover .works__img,
+  .works__card:focus-visible .works__img {
+    scale: 1;
+  }
+
+  .works__card:hover .works__go,
+  .works__card:focus-visible .works__go {
+    translate: none;
+  }
+}

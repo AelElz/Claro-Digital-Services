@@ -433,6 +433,280 @@ const about = {
   },
 }
 
+/*
+ * L'index /work, porté depuis clarodigi.com/fr/projets.
+ *
+ * Trente-six missions clients en ligne. `slug`, `name` et `tags` sont
+ * indépendants de la langue et doivent rester identiques à en.js, au
+ * caractère près : le slug construit /work/<slug> et nomme la capture dans
+ * public/work/<slug>.webp, et les clés de tag pilotent le filtre et la
+ * teinte du field. Seuls `body` et `result` se traduisent.
+ */
+const workPage = {
+  title: 'Les réalisations, et pour qui.',
+  lede: 'Développement sur mesure, e-commerce, design web et automatisation, livrés pour des PME et des cabinets de conseil partout au Maroc depuis 2022. Chaque mission ci-dessous est en ligne.',
+
+  /* Small facts under the headline. `36` is asserted here and checked
+     against projects.length by the page, so the two cannot drift. */
+  meta: [
+    { value: '36', suffix: '', label: 'projets sur cette page' },
+    { value: '5', suffix: '', label: 'avec un résultat publié' },
+    { value: '12', suffix: '+', label: 'villes' },
+    { value: '2022', suffix: '', label: 'depuis' },
+  ],
+
+  /* `key` is locale-independent; only `label` translates. 'all' is not a
+     tag, it is the absence of a filter. */
+  filterLabel: 'Filtrer l’index par discipline',
+  filters: [
+    { key: 'all', label: 'Tout' },
+    { key: 'web', label: 'Développement web' },
+    { key: 'ecommerce', label: 'E-commerce' },
+    { key: 'design', label: 'Design web' },
+    { key: 'mobile', label: 'Application mobile' },
+  ],
+  resultsLabel: 'projets affichés',
+  resultLabel: 'Résultat',
+
+  projects: [
+    {
+      slug: 'mernissi-motors',
+      name: 'MM Motorsports',
+      tags: ['web'],
+      body: 'Développement d’un showroom virtuel.',
+    },
+    {
+      slug: 'klit',
+      name: 'KLIT',
+      tags: ['ecommerce'],
+      body: 'Plateforme e-commerce moderne.',
+      result: '4 M DH de commandes · 100+ restaurants',
+    },
+    {
+      slug: 'overto',
+      name: 'Overto',
+      tags: ['design'],
+      body: 'Solutions digitales innovantes.',
+      result: '45 pages · PageSpeed 95+',
+    },
+    {
+      slug: 'tarik-rami-immobilier',
+      name: 'Tarik Rami Immobilier',
+      tags: ['web'],
+      body: 'Plateforme immobilière professionnelle.',
+    },
+    {
+      slug: 'perfect-drive',
+      name: 'Perfect Drive',
+      tags: ['design'],
+      body: 'Location de voitures de luxe à Nador.',
+      result: '4 activités digitalisées · 4,9/5',
+    },
+    {
+      slug: 'zaphs',
+      name: 'Zaphs',
+      tags: ['ecommerce'],
+      body: 'Boutique en ligne moderne.',
+    },
+    {
+      slug: 'chorouk-market',
+      name: 'Chorouk Market',
+      tags: ['ecommerce', 'mobile'],
+      body: 'Place de marché en ligne.',
+    },
+    {
+      slug: 'startup-olympus',
+      name: 'Startup Olympus',
+      tags: ['web'],
+      body: 'Incubateur africain.',
+      result: '50+ entrepreneurs incubés',
+    },
+    {
+      slug: 'cineride-log',
+      name: 'Cineride Log',
+      tags: ['design'],
+      body: 'Logistique pour les productions cinéma et audiovisuel au Maroc.',
+    },
+    {
+      slug: 'pastaleena',
+      name: 'Pastaleena',
+      tags: ['ecommerce'],
+      body: 'Pâtes artisanales marocaines sans gluten.',
+    },
+    {
+      slug: 'kintsugi-people',
+      name: 'Kintsugi People',
+      tags: ['design'],
+      body: 'Plateforme de développement personnel.',
+      result: 'Partenariat de 3 ans · réservation intégrée',
+    },
+    {
+      slug: 'winhub',
+      name: 'Winhub',
+      tags: ['web'],
+      body: 'SaaS de gestion financière automatisée, IA et OCR.',
+    },
+    {
+      slug: 'wriqa',
+      name: 'Wriqa',
+      tags: ['design'],
+      body: 'Solutions digitales créatives.',
+    },
+    {
+      slug: 'up-up',
+      name: 'Up & Up',
+      tags: ['design'],
+      body: 'Agence de communication digitale.',
+    },
+    {
+      slug: 'declic-conseil',
+      name: 'Déclic Conseil',
+      tags: ['design'],
+      body: 'Conseil en transformation digitale.',
+    },
+    {
+      slug: 'assurances-lafia',
+      name: 'Assurances Lafia',
+      tags: ['design'],
+      body: 'Plateforme de courtage en assurance.',
+    },
+    {
+      slug: 'munch-mate',
+      name: 'Munch-mate',
+      tags: ['ecommerce'],
+      body: 'Développement d’un site e-commerce.',
+    },
+    {
+      slug: 'i-love-amlou',
+      name: 'I Love Amlou',
+      tags: ['ecommerce'],
+      body: 'Amlou marocain sain.',
+    },
+    {
+      slug: 'keshrise',
+      name: 'Keshrise',
+      tags: ['design'],
+      body: 'Architectes de la transformation de marque.',
+    },
+    {
+      slug: 'redinmo-tanger',
+      name: 'Redinmo Tanger',
+      tags: ['web'],
+      body: 'Plateforme d’agence immobilière.',
+    },
+    {
+      slug: 'next-level-car',
+      name: 'Next Level Car',
+      tags: ['design'],
+      body: 'Location de voitures premium à Casablanca.',
+    },
+    {
+      slug: 'santos',
+      name: 'Santos',
+      tags: ['ecommerce'],
+      body: 'Mode féminine, boutique en ligne.',
+    },
+    {
+      slug: 'maison-121',
+      name: 'Maison 121',
+      tags: ['ecommerce'],
+      body: 'Vêtements techniques et sportswear.',
+    },
+    {
+      slug: 'r7immo',
+      name: 'R7immo',
+      tags: ['web'],
+      body: 'Agence immobilière à Tanger, 20 ans de marché.',
+    },
+    {
+      slug: 'rackdiscount',
+      name: 'Rackdiscount',
+      tags: ['ecommerce'],
+      body: 'Rayonnages et systèmes de stockage industriel.',
+    },
+    {
+      slug: 'turmag',
+      name: 'Turmag',
+      tags: ['design'],
+      body: 'Conseil industriel et inspection tierce partie.',
+    },
+    {
+      slug: 'erzad-immobilier',
+      name: 'Erzad Immobilier',
+      tags: ['web'],
+      body: 'Plateforme immobilière moderne.',
+    },
+    {
+      slug: 'padelista',
+      name: 'Padelista',
+      tags: ['ecommerce'],
+      body: 'Plateforme e-commerce dédiée au padel.',
+    },
+    {
+      slug: 'o-maadness',
+      name: 'O-MAADNESS',
+      tags: ['design'],
+      body: 'Portfolio digital.',
+    },
+    {
+      slug: 'socco-immo',
+      name: 'Socco Immo',
+      tags: ['web'],
+      body: 'La maison de vos rêves, à un clic.',
+    },
+    {
+      slug: 'groupe-babati',
+      name: 'Groupe Babati',
+      tags: ['design'],
+      body: 'Site vitrine pour un groupe industriel.',
+    },
+    {
+      slug: 'expat-watan',
+      name: 'Expat Watan',
+      tags: ['design'],
+      body: 'Plateforme pour les expatriés.',
+    },
+    {
+      slug: 'tangiervisit',
+      name: 'TangierVisit',
+      tags: ['design'],
+      body: 'Excursions, location de véhicules et expériences de luxe à Tanger.',
+    },
+    {
+      slug: 'xcite-mena',
+      name: 'XCITE MENA',
+      tags: ['design'],
+      body: 'Site d’une agence de communication.',
+    },
+    {
+      slug: 'diyae-immobilier',
+      name: 'Diyae Immobilier',
+      tags: ['web'],
+      body: 'Solutions digitales pour l’immobilier.',
+    },
+    {
+      slug: 'savo',
+      name: 'Savo',
+      tags: ['web'],
+      body: 'E-learning\u00A0: langues, soutien scolaire et méthodes de travail.',
+    },
+  ],
+
+  stats: [
+    { value: '70', suffix: '+', label: 'Missions livrées' },
+    { value: '4,8', suffix: '/5', label: 'Satisfaction client' },
+    { value: '12', suffix: '+', label: 'Villes au Maroc' },
+    { value: '2022', suffix: '', label: 'Actifs depuis' },
+  ],
+
+  cta: {
+    title: 'Envie de figurer sur cette page\u00A0?',
+    body: 'Votre projet mérite une équipe qui se soucie du résultat, pas seulement de la livraison. Dites-nous ce que vous construisez et nous vous dirons ce que cela demande vraiment.',
+    action: 'Démarrer un projet',
+    secondary: 'Voir notre méthode',
+  },
+}
+
 const notFound = {
   eyebrow: '404',
   title: 'Cette page est encore en construction.',
@@ -606,6 +880,7 @@ export default {
   auth,
   method,
   about,
+  workPage,
   notFound,
   contactPage,
   footer,

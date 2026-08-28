@@ -5,6 +5,7 @@ import Logo from '../components/Logo'
 import Navbar from '../components/Navbar'
 import PromptBar from '../components/PromptBar'
 import { useContent } from '../content'
+import { useFieldBloom } from '../hooks/useFieldBloom'
 import { useReveal } from '../hooks/useReveal'
 import { clamp, onFrame, reducedMotion, trackRect, write } from '../lib/motion'
 import './AboutPage.css'
@@ -143,52 +144,12 @@ function AboutPage() {
    *
    * A field must NOT carry `.reveal` as well. `html.js .reveal` declares a
    * `transition` shorthand at a specificity `.field` cannot beat, so the
-   * shorthand would replace the field's own scale transition and the bloom
+   * shorthand would replace the field's own scale animation and the bloom
    * would silently become a plain fade. Same trap as the one this page had
-   * on `.about__item`; the fix is a separate pass, not a shared class.
-   *
-   * Shape copied from useReveal deliberately: synchronous rect check first,
-   * because IntersectionObserver delivers its first callback only after a
-   * rendering step and a background tab never gets one, then observe. The
-   * default state is visible, so a browser with no observer at all still
-   * shows every field.
+   * on `.about__item`; the fix is a separate pass over the same root, which
+   * is what this hook is.
    */
-  useEffect(() => {
-    const root = revealRef.current
-    if (!root) return
-
-    const fields = [...root.querySelectorAll('.field')]
-    if (!fields.length) return
-
-    const show = (el) => el.classList.add('is-in')
-
-    if (!('IntersectionObserver' in window)) {
-      fields.forEach(show)
-      return
-    }
-
-    /* threshold 0, never 0.5: the window is taller than a phone viewport and
-       would never reach half visible. */
-    const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (!entry.isIntersecting) return
-          show(entry.target)
-          observer.unobserve(entry.target)
-        })
-      },
-      { rootMargin: '0px 0px -8% 0px', threshold: 0 },
-    )
-
-    const viewport = window.innerHeight
-    fields.forEach((el) => {
-      const rect = el.getBoundingClientRect()
-      if (rect.top < viewport && rect.bottom > 0) show(el)
-      observer.observe(el)
-    })
-
-    return () => observer.disconnect()
-  }, [revealRef])
+  useFieldBloom(revealRef)
 
   return (
     <>

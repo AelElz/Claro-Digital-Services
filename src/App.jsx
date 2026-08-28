@@ -22,6 +22,7 @@ const AuthPage = lazy(() => import('./pages/AuthPage'))
 const ContactPage = lazy(() => import('./pages/ContactPage'))
 const MethodPage = lazy(() => import('./pages/MethodPage'))
 const NotFound = lazy(() => import('./pages/NotFound'))
+const WorkPage = lazy(() => import('./pages/WorkPage'))
 
 /*
  * Anything not listed here is a page that does not exist yet, and gets the
@@ -34,11 +35,13 @@ const ROUTES = {
   '/contact': ContactPage,
   '/method': MethodPage,
   '/sign-in': AuthPage,
+  '/work': WorkPage,
 }
 
 /* Warmed once the page is idle, so a click on the nav has nothing to wait for. */
 const PREFETCH = [
   () => import('./pages/AboutPage'),
+  () => import('./pages/WorkPage'),
   () => import('./pages/MethodPage'),
   () => import('./pages/ContactPage'),
   () => import('./pages/AuthPage'),
